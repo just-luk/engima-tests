@@ -14,9 +14,9 @@ def unsubscribe():
     # get the database connection
     db = sqlite3.connect("users.db")
     # get the user's id
-    user_id = db.execute("SELECT id FROM users WHERE email =?", (email,)).fetchone()
+    user_id = db.execute(f"SELECT id FROM users WHERE email = {email}").fetchone()
     # delete the user's entry from the database
-    db.execute("DELETE FROM users WHERE id =?", (user_id[0],))
+    db.execute(f"DELETE FROM users WHERE id = {user_id[0]}")
     # close the database connection
     db.close()
     # redirect to the unsubscribe page
