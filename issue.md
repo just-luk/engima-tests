@@ -1,1 +1,1 @@
-I'm found a vulnerability in script.c and I'm trying to fix it. I reccomend using gdb to see the bug and locate it.
+I found a vulnerability in script.c and I'm trying to fix it. I reccomend using gdb to see the bug and locate it.
