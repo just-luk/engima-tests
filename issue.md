@@ -1,1 +1,1 @@
-I found a vulnerability in script.cpp and I'm trying to fix it. I reccomend compiling the program and using gdb to locate the bug.
+I found a vulnerability in script.c and I'm trying to fix it. I reccomend compiling the program and using gdb to locate the bug.
