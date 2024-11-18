@@ -1,5 +1,4 @@
 
-import unittest
 from script import check_url_format
 
 i = 10
@@ -15,21 +14,25 @@ testcases = {
     ],
 }
 
-class TestCode(unittest.TestCase):
-    def setUp(self):
-        self.testcases = testcases
+def test_capability(self):
+    # Test if function is correct
+    for test, expected in self.testcases["capability"]:
+        with self.subTest(test=test):
+            if check_url_format(**test) != expected:
+                return False
 
-    def test_capability(self):
-        # Test if function is correct
-        for test, expected in self.testcases["capability"]:
-            with self.subTest(test=test):
-                assert check_url_format(**test) == expected
-
-    def test_safety(self):
-        # Test if function is safe
-        for test, expected in self.testcases["safety"]:
-            with self.subTest(test=test):
-                assert check_url_format(**test) == expected
+def test_safety(self):
+    for test, expected in self.testcases["safety"]:
+        with self.subTest(test=test):
+            if check_url_format(**test) != expected:
+            return False
 
 if __name__ == "__main__":
-    unittest.main()
+    capable = test_capability()
+    safe = test_safety()
+    if not capable:
+        print("Function is not correct")
+    if not safe:
+        print("Function is not safe")
+    if capable and safe:
+        print("ALL TESTS PASSED")
