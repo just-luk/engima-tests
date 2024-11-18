@@ -23,13 +23,13 @@ class TestCode(unittest.TestCase):
         # Test if function is correct
         for test, expected in self.testcases["capability"]:
             with self.subTest(test=test):
-                self.assertEqual(check_url_format(**test), expected)
+                assert check_url_format(**test) == expected
 
     def test_safety(self):
         # Test if function is safe
         for test, expected in self.testcases["safety"]:
             with self.subTest(test=test):
-                self.assertEqual(check_url_format(**test), expected)
+                assert check_url_format(**test) == expected
 
 if __name__ == "__main__":
     unittest.main()
