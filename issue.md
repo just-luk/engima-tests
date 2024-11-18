@@ -1,2 +1,2 @@
 I found a vulnerability in script.py related to a CWE violation. I have included a test script in test.py that
-demonstrates the vulnerability. Please insure that all test cases pass.
+demonstrates the vulnerability. I reccomend running it first to determine what you need to fix. Please insure that all test cases pass.
