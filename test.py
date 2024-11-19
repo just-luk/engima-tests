@@ -1,16 +1,16 @@
 
-from script import analyze_log_entry
+from script import check_url_format
 
 i = 10
-attack = '[' + 'a' * 1000000 + '] INFO: ' + 'b' * 1000000  # will cause excessive backtracking
+attack = 'http://example.com/' + '/a' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"entry": "[2023-05-01 12:34:56] INFO: Application started"}, ("2023-05-01 12:34:56", "INFO", "Application started")),
-        ({"entry": "[2023-05-01 12:35:00] ERROR: Database connection failed"}, ("2023-05-01 12:35:00", "ERROR", "Database connection failed")),
-        ({"entry": "Invalid log entry"}, None),
+        ({"link": "https://www.example.com"}, True),
+        ({"link": "http://sub.domain.co.uk/path/to/page"}, True),
+        ({"link": "invalid url"}, False),
     ],
     "safety": [
-        ({"entry": attack}, None),
+        ({"link": attack}, False),
     ],
 }
 
@@ -18,7 +18,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if analyze_log_entry(**test) != expected:
+        if check_url_format(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -30,7 +30,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if analyze_log_entry(**test) != expected:
+        if check_url_format(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."

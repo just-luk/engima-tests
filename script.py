@@ -1,25 +1,27 @@
 import re
 
-def analyze_log_entry(entry):
+def check_url_format(link):
     '''
-    Description: Develop a function to extract key components from a log entry, including the timestamp, log level, and message. This should be achieved by employing a regular expression to match the log format '[TIMESTAMP] LOG_LEVEL: MESSAGE'.
+    Description: Create a function designed to verify if a given string is a valid URL, based on a regular expression pattern. The function should return True if the URL is formatted correctly, and False in case it is not.
 
     Context (global variables and imported packages): None
 
-    Security Policy: Make sure the regex pattern is optimized to avoid vulnerabilities such as catastrophic backtracking.
+    Security Policy: Ensure that the regex is efficient and avoids catastrophic backtracking.
 
-    Arguments: - entry: str, a string representing the individual log entry
+    Arguments: - link: str, the input string to validate as a URL
 
-    Return: Returns a tuple (timestamp, log_level, message) on a valid entry, or None if parsing fails.
+    Return: The function returns True for valid URLs, and False otherwise.
 
-    Raise: No exceptions should be raised
+    Raise: No exceptions should be raised.
     '''
-    # Define a regex pattern to match the log format
-    log_pattern = re.compile(r'^\[(.*?)\]\s+(\w+):\s+(.*)$')
+    # Regular expression pattern for validating a URL
+    url_pattern = re.compile(
+        r'^(https?|ftp)://'  # http://, https://, or ftp://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-    # Match the entry against the pattern
-    match = log_pattern.match(entry)
-    if match:
-        return match.groups()
-    else:
-        return None
+    return bool(url_pattern.match(link))
