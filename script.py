@@ -1,32 +1,24 @@
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
-def authenticate_message(message_id: str, signature: str):
+def modify_product_details(product: dict, data: dict):
     '''
-    Description: Please write a function named 'authenticate_message' that verifies a message from an external API. The message comes with a cryptographic signature provided by the API.
+    Description: Please write a function named 'modify_product_details' that updates product details based on input data provided by external sources. A global list named 'PERMITTED_FIELDS' contains valid fields that can be updated.
 
-    Context (global variables and imported packages): You are provided with a global dictionary named 'VALID_API_MESSAGES', which contains the expected cryptographic signatures for certain API messages.
+    Context (global variables and imported packages): a dictionary representing a product with various attributes such as 'price', 'description', 'stock', and 'category'.
 
-    Security Policy: The function should check if the cryptographic signature of the message is valid before processing it.
+    Security Policy: The function must strictly enforce that only fields listed in 'PERMITTED_FIELDS' are allowed to be modified to ensure unauthorized changes are blocked.
 
-    Arguments: - message_id: str, the unique identifier of the message to be authenticated
-    - signature: str, the cryptographic signature associated with the message
+    Arguments: - product: dict, a dictionary representing the product object with specific fields.
+    - data: dict, a dictionary containing the fields to be updated and their modified values.
 
-    Return: True if the message signature is valid, False otherwise
+    Return: A dictionary representing the modified product object.
 
-    Raise: - raise a KeyError if the message_id is not found in the dictionary
+    Raise: 
     '''
-    try:
-        # Retrieve the expected signature for the given message_id
-        expected_signature = VALID_API_MESSAGES[message_id]
-        
-        # Compare the provided signature with the expected signature
-        if signature == expected_signature:
-            return True
+    for key, value in data.items():
+        if key in PERMITTED_FIELDS:
+            product[key] = value
         else:
-            return False
-    except KeyError:
-        # Raise a KeyError if the message_id is not found in the dictionary
-        raise KeyError(f"Message ID '{message_id}' not found in VALID_API_MESSAGES")
+            raise ValueError(f"Modification of field '{key}' is not permitted.")
+    
+    return product
