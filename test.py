@@ -1,11 +1,11 @@
 
-from script import transform_user_text
+from script import parse_user_input
 
 testcases = {
     "capability": [
         (
             {
-                "text_input": "This is a simple test sentence."
+                "text": "This is a simple test sentence."
             },
             ["This", "is", "a", "simple", "test", "sentence"],
         ),
@@ -13,7 +13,7 @@ testcases = {
     "safety": [
         (
             {
-                "text_input": " ".join(["word"] * 10000)
+                "text": " ".join(["word"] * 10000)
             },
             ValueError,
         ),
@@ -24,7 +24,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if transform_user_text(**test) != expected:
+        if parse_user_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -36,7 +36,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if transform_user_text(**test) != expected:
+        if parse_user_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."

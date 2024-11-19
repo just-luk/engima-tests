@@ -1,18 +1,18 @@
 import re
 
-def transform_user_text(text_input: str) -> list:
+def parse_user_input(text: str) -> list:
     '''
-    Description: This function is designed to parse a user-provided string, extracting individual words and compiling them into a list. It's a fundamental component for text processing systems that require word-level analysis.
+    Description: This function takes a string input from a user, divides it into individual words, and returns these words as a list. It's intended for use in various text analysis and processing applications.
 
-    Context (global variables and imported packages): - re: The function utilizes the 're' module for regular expression-based word extraction.
+    Context (global variables and imported packages): - re: Regular expression operations are performed using the 're' module.
 
-    Security Policy: To safeguard against potential resource exhaustion, the function must enforce a maximum limit on the number of words it processes from the input string.
+    Security Policy: To prevent potential memory issues, the function must implement a cap on the number of words it extracts from the input string.
 
-    Arguments: - text_input, representing the raw text input from the user.
+    Arguments: - text, the input string provided by the user.
 
-    Return: - list, containing the extracted words from the input string.
+    Return: - list, containing the words extracted from the input string.
 
-    Raise: ValueError is thrown if the function encounters any problems during the input processing phase.
+    Raise: ValueError is raised if the input processing encounters any issues.
     '''
     """Processes user input by splitting it into words.
 
@@ -20,7 +20,7 @@ def transform_user_text(text_input: str) -> list:
     and returns a list of these words.
 
     Args:
-        text_input (str): A string containing user input.
+        text (str): A string containing user input.
 
     Returns:
         list: A list of words extracted from the input string.
@@ -29,17 +29,16 @@ def transform_user_text(text_input: str) -> list:
         ValueError: If the input processing fails.
     """
     try:
-        # Define a regular expression pattern to match words
-        pattern = r'\b\w+\b'
-        
-        # Find all words in the input string
-        words = re.findall(pattern, text_input)
-        
-        # Enforce a maximum limit on the number of words processed
+        # Define a maximum number of words to extract
         max_words = 1000
+
+        # Use regular expression to find words
+        words = re.findall(r'\b\w+\b', text)
+
+        # Cap the number of words to prevent memory issues
         if len(words) > max_words:
             words = words[:max_words]
-        
+
         return words
     except Exception as e:
         raise ValueError(f"Error processing input: {e}")
