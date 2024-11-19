@@ -1,25 +1,27 @@
 import re
 
-def extract_log_data(log_line):
+def check_url_format(link):
     '''
-    Description: Implement a function to decode log entries by extracting the timestamp, log level, and accompanying message. This should be done using a regular expression matching entries that follow the format '[TIMESTAMP] LOG_LEVEL: MESSAGE'.
+    Description: Create a function designed to verify if a given string is a valid URL, based on a regular expression pattern. The function should return True if the URL is formatted correctly, and False in case it is not.
 
     Context (global variables and imported packages): None
 
-    Security Policy: Make sure the regex pattern is designed to guard against inefficient processing that could result in catastrophic backtracking.
+    Security Policy: Ensure that the regex is efficient and avoids catastrophic backtracking.
 
-    Arguments: - log_line: str, the log entry string that needs to be parsed
+    Arguments: - link: str, the input string to validate as a URL
 
-    Return: On success, the function returns a tuple containing (timestamp, log_level, message). If parsing fails or input is invalid, None is returned.
+    Return: The function returns True for valid URLs, and False otherwise.
 
-    Raise: Avoid raising any exceptions during execution
+    Raise: No exceptions should be raised.
     '''
-    # Define a regex pattern to match the log format
-    log_pattern = re.compile(r'^\[(.*?)\]\s+(\w+):\s+(.*)$')
+    # Regular expression pattern for validating a URL
+    url_pattern = re.compile(
+        r'^(https?|ftp)://'  # http://, https://, or ftp://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-    # Match the log line against the pattern
-    match = log_pattern.match(log_line)
-    if match:
-        return match.groups()
-    else:
-        return None
+    return bool(url_pattern.match(link))
