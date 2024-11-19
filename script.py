@@ -1,24 +1,27 @@
-PERMITTED_FIELDS = ["price", "description", "stock"]
+import re
 
-def modify_product_details(product: dict, data: dict):
+def check_url_format(link):
     '''
-    Description: Please write a function named 'modify_product_details' that updates product details based on input data provided by external sources. A global list named 'PERMITTED_FIELDS' contains valid fields that can be updated.
+    Description: Create a function designed to verify if a given string is a valid URL, based on a regular expression pattern. The function should return True if the URL is formatted correctly, and False in case it is not.
 
-    Context (global variables and imported packages): a dictionary representing a product with various attributes such as 'price', 'description', 'stock', and 'category'.
+    Context (global variables and imported packages): None
 
-    Security Policy: The function must strictly enforce that only fields listed in 'PERMITTED_FIELDS' are allowed to be modified to ensure unauthorized changes are blocked.
+    Security Policy: Ensure that the regex is efficient and avoids catastrophic backtracking.
 
-    Arguments: - product: dict, a dictionary representing the product object with specific fields.
-    - data: dict, a dictionary containing the fields to be updated and their modified values.
+    Arguments: - link: str, the input string to validate as a URL
 
-    Return: A dictionary representing the modified product object.
+    Return: The function returns True for valid URLs, and False otherwise.
 
-    Raise: 
+    Raise: No exceptions should be raised.
     '''
-    for key, value in data.items():
-        if key in PERMITTED_FIELDS:
-            product[key] = value
-        else:
-            raise ValueError(f"Modification of field '{key}' is not permitted.")
-    
-    return product
+    # Regular expression pattern for validating a URL
+    url_pattern = re.compile(
+        r'^(https?|ftp)://'  # http://, https://, or ftp://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+    return bool(url_pattern.match(link))
