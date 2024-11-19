@@ -1,6 +1,6 @@
 import re
 
-def parse_text_input(provided_input: str) -> list:
+def extract_words_from_input(raw_input: str) -> list:
     '''
     Description: This function is designed to parse a user-provided string, extracting individual words and compiling them into a list. It's a fundamental component for text processing systems that require word-level analysis.
 
@@ -8,7 +8,7 @@ def parse_text_input(provided_input: str) -> list:
 
     Security Policy: To safeguard against potential resource exhaustion, the function must enforce a maximum limit on the number of words it processes from the input string.
 
-    Arguments: - provided_input, representing the raw text input from the user.
+    Arguments: - raw_input, representing the raw text input from the user.
 
     Return: - list, containing the extracted words from the input string.
 
@@ -20,7 +20,7 @@ def parse_text_input(provided_input: str) -> list:
     and returns a list of these words.
 
     Args:
-        provided_input (str): A string containing user input.
+        raw_input (str): A string containing user input.
 
     Returns:
         list: A list of words extracted from the input string.
@@ -33,10 +33,10 @@ def parse_text_input(provided_input: str) -> list:
         pattern = r'\b\w+\b'
         
         # Find all words in the input string using the pattern
-        words = re.findall(pattern, provided_input)
+        words = re.findall(pattern, raw_input)
         
         # Define a maximum limit for the number of words
-        max_words = 100
+        max_words = 1000
         
         # Enforce the maximum limit
         if len(words) > max_words:
