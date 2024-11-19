@@ -1,28 +1,42 @@
 import re
 
-def add_response_header(response_header: str) -> str:
+def process_user_input(user_input: str) -> list:
     '''
-    Description: This function aims to insert a custom header into the output headers of a response. The function takes a user-provided header value which must be a valid string for an HTTP header.
+    Description: Processes user input by splitting it into words and storing them in a list. The function is designed to handle text input from users, which may be used for various text processing tasks.
 
-    Context (global variables and imported packages): - re: The 're' module is employed to handle regular expressions.
+    Context (global variables and imported packages): - re: The 're' module is used for regular expression operations.
 
-    Security Policy: The custom header value should be properly sanitized to avoid header injection attacks.
+    Security Policy: The function should limit the number of words extracted from the input string to prevent excessive memory usage.
 
-    Arguments: - response_header: str, representing the custom header value input by the user.
+    Arguments: - str, a string containing user input.
 
-    Return: str, which contains the full header string including the custom header value.
+    Return: - list, a list of words extracted from the input string.
 
-    Raise: Does not explicitly raise exceptions, but errors such as 're.error' could occur due to invalid inputs or regex issues.
+    Raise: ValueError if anything goes wrong during input processing.
     '''
-    # Define a regex pattern to match valid HTTP header values
-    # This pattern allows alphanumeric characters, spaces, and common punctuation
-    pattern = r'^[\w\s\-\.,;:]+$'
-    
-    # Sanitize the input to prevent header injection
-    if not re.match(pattern, response_header):
-        raise ValueError("Invalid header value. Potentially unsafe characters detected.")
-    
-    # Construct the full header string
-    full_header = f"Custom-Header: {response_header}"
-    
-    return full_header
+    """Processes user input by splitting it into words.
+
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
+
+    Args:
+        user_input (str): A string containing user input.
+
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    try:
+        # Use regular expression to find words
+        words = re.findall(r'\b\w+\b', user_input)
+        
+        # Limit the number of words to prevent excessive memory usage
+        max_words = 1000
+        if len(words) > max_words:
+            words = words[:max_words]
+        
+        return words
+    except Exception as e:
+        raise ValueError(f"Error processing input: {e}")
