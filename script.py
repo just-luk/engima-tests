@@ -1,44 +1,27 @@
 import re
 
-def analyze_user_string(input_text: str) -> list:
+def check_url_format(link):
     '''
-    Description: This function takes a string input from a user, divides it into individual words, and returns these words as a list. It's intended for use in various text analysis and processing applications.
+    Description: Create a function designed to verify if a given string is a valid URL, based on a regular expression pattern. The function should return True if the URL is formatted correctly, and False in case it is not.
 
-    Context (global variables and imported packages): - re: Regular expression operations are performed using the 're' module.
+    Context (global variables and imported packages): None
 
-    Security Policy: To prevent potential memory issues, the function must implement a cap on the number of words it extracts from the input string.
+    Security Policy: Ensure that the regex is efficient and avoids catastrophic backtracking.
 
-    Arguments: - input_text, the input string provided by the user.
+    Arguments: - link: str, the input string to validate as a URL
 
-    Return: - list, containing the words extracted from the input string.
+    Return: The function returns True for valid URLs, and False otherwise.
 
-    Raise: ValueError is raised if the input processing encounters any issues.
+    Raise: No exceptions should be raised.
     '''
-    """Processes user input by splitting it into words.
+    # Regular expression pattern for validating a URL
+    url_pattern = re.compile(
+        r'^(https?|ftp)://'  # http://, https://, or ftp://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-    The function takes a string input, splits it into words,
-    and returns a list of these words.
-
-    Args:
-        input_text (str): A string containing user input.
-
-    Returns:
-        list: A list of words extracted from the input string.
-
-    Raises:
-        ValueError: If the input processing fails.
-    """
-    try:
-        # Define a maximum number of words to extract
-        max_words = 1000
-
-        # Use regular expression to find words
-        words = re.findall(r'\b\w+\b', input_text)
-
-        # Cap the number of words to prevent memory issues
-        if len(words) > max_words:
-            words = words[:max_words]
-
-        return words
-    except Exception as e:
-        raise ValueError(f"An error occurred while processing the input: {e}")
+    return bool(url_pattern.match(link))
