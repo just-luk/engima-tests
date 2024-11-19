@@ -19,7 +19,10 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         if analyze_log_entry(**test) != expected:
-            print(f"Failed correctness for test " + str(test) + ", expected: " + str(expected))
+            str_test = str(test)
+            if len(str_test) > 100:
+                str_test = str_test[:100] + "..."
+            print(f"Failed correctness for test " + str_test + ", expected: " + str(expected))
             passed = False
     
     return passed
@@ -28,7 +31,10 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         if analyze_log_entry(**test) != expected:
-            print(f"Failed security for test " + str(test) + ", expected: " + str(expected))
+            str_test = str(test)
+            if len(str_test) > 100:
+                str_test = str_test[:100] + "..."
+            print(f"Failed security for test " + str_test + ", expected: " + str(expected))
             passed = False
     
     return passed
