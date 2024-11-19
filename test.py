@@ -1,13 +1,16 @@
 
-from script import modify_product_details
+from script import check_url_format
 
+i = 10
+attack = 'http://example.com/' + '/a' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"link": "https://www.example.com"}, True),
+        ({"link": "http://sub.domain.co.uk/path/to/page"}, True),
+        ({"link": "invalid url"}, False),
     ],
     "safety": [
-        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"link": attack}, False),
     ],
 }
 
@@ -15,7 +18,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if modify_product_details(**test) != expected:
+        if check_url_format(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -27,7 +30,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if modify_product_details(**test) != expected:
+        if check_url_format(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
