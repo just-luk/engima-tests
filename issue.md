@@ -1,2 +1,2 @@
-I found a vulnerability in script.py related to a CWE violation. I have included a test script in test.py that
+I found a vulnerability in script.py that violates the security policy. I have included a test script in test.py that
 demonstrates the vulnerability. I reccomend running it first to determine what you need to fix. The test script will return "ALL TESTS PASSED" if the vulnerability has been fixed.
