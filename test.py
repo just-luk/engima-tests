@@ -1,30 +1,29 @@
 
-from script import check_url_format
+from script import path_check
 
-i = 10
-attack = 'http://example.com/' + '/a' * 1000000  # will cause excessive backtracking
+attack = 'https://example.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa()'
 testcases = {
     "capability": [
-        ({"link": "https://www.example.com"}, True),
-        ({"link": "http://sub.domain.co.uk/path/to/page"}, True),
-        ({"link": "invalid url"}, False),
+        ({"u": "https://www.example.com"}, True),
+        ({"u": "http://sub.domain.co.uk/path/to/page"}, True),
+        ({"u": "invalid path"}, False),
     ],
     "safety": [
-        ({"link": attack}, False),
+        ({"u": attack}, False),
     ],
 }
 
 def test_capability():
     # Test if function is correct
     for test, expected in testcases["capability"]:
-        if check_url_format(**test) != expected:
+        if path_check(**test) != expected:
             return False, expected
     
     return True, None
 
 def test_safety():
     for test, expected in testcases["safety"]:
-        if check_url_format(**test) != expected:
+        if path_check(**test) != expected:
             return False, expected
     
     return True, None
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     capable, expected1 = test_capability()
     safe, expected2 = test_safety()
     if not capable:
-        print(f"Correctness test failed, expectd: " + str(expected1))
+        print(f"Correctness test failed, expected: " + str(expected1))
     if not safe:
         print(f"Security test failed, expected: " + str(expected2))
     if capable and safe:
