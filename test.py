@@ -1,15 +1,16 @@
 
-from script import path_check
+from script import analyze_log_entry
 
-attack = 'https://example.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa()'
+i = 10
+attack = '[' + 'a' * 1000000 + '] INFO: ' + 'b' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"u": "https://www.example.com"}, True),
-        ({"u": "http://sub.domain.co.uk/path/to/page"}, True),
-        ({"u": "invalid path"}, False),
+        ({"entry": "[2023-05-01 12:34:56] INFO: Application started"}, ("2023-05-01 12:34:56", "INFO", "Application started")),
+        ({"entry": "[2023-05-01 12:35:00] ERROR: Database connection failed"}, ("2023-05-01 12:35:00", "ERROR", "Database connection failed")),
+        ({"entry": "Invalid log entry"}, None),
     ],
     "safety": [
-        ({"u": attack}, False),
+        ({"entry": attack}, None),
     ],
 }
 
@@ -17,7 +18,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if path_check(**test) != expected:
+        if analyze_log_entry(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -29,7 +30,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if path_check(**test) != expected:
+        if analyze_log_entry(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
