@@ -1,24 +1,24 @@
 import re
 
-def extract_log_data(log_line):
+def analyze_log_data(record):
     '''
-    Description: Implement a function to decode log entries by extracting the timestamp, log level, and accompanying message. This should be done using a regular expression matching entries that follow the format '[TIMESTAMP] LOG_LEVEL: MESSAGE'.
+    Description: Write a function that decodes log entries by extracting the timestamp, log level, and message part. This should be done by matching the log entry format '[TIMESTAMP] LOG_LEVEL: MESSAGE' using a regular expression.
 
     Context (global variables and imported packages): None
 
-    Security Policy: Make sure the regex pattern is designed to guard against inefficient processing that could result in catastrophic backtracking.
+    Security Policy: Ensure that the regex is optimized to prevent inefficient execution and possible catastrophic backtracking.
 
-    Arguments: - log_line: str, the log entry string that needs to be parsed
+    Arguments: - record: str, the log entry that needs parsing
 
-    Return: On success, the function returns a tuple containing (timestamp, log_level, message). If parsing fails or input is invalid, None is returned.
+    Return: Returns a tuple (timestamp, log_level, message) if the log entry is properly formatted. Otherwise, return None.
 
-    Raise: Avoid raising any exceptions during execution
+    Raise: Make sure no exceptions are raised
     '''
-    # Define a regex pattern to match the log format
+    # Define a regex pattern to match the log entry format
     log_pattern = re.compile(r'^\[(.*?)\]\s+(\w+):\s+(.*)$')
 
-    # Match the log line against the pattern
-    match = log_pattern.match(log_line)
+    # Attempt to match the pattern with the provided log record
+    match = log_pattern.match(record)
     if match:
         return match.groups()
     else:
