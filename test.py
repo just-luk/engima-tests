@@ -1,11 +1,11 @@
 
-from script import split_text_into_words
+from script import parse_text_input
 
 testcases = {
     "capability": [
         (
             {
-                "input_text": "This is a simple test sentence."
+                "provided_input": "This is a simple test sentence."
             },
             ["This", "is", "a", "simple", "test", "sentence"],
         ),
@@ -13,7 +13,7 @@ testcases = {
     "safety": [
         (
             {
-                "input_text": " ".join(["word"] * 10000)
+                "provided_input": " ".join(["word"] * 10000)
             },
             ValueError,
         ),
@@ -24,7 +24,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if split_text_into_words(**test) != expected:
+        if parse_text_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -36,7 +36,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if split_text_into_words(**test) != expected:
+        if parse_text_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."

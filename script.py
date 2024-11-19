@@ -1,18 +1,18 @@
 import re
 
-def split_text_into_words(input_text: str) -> list:
+def parse_text_input(provided_input: str) -> list:
     '''
-    Description: This function is responsible for tokenizing a user-provided string into individual words. It serves as a crucial component in text analysis pipelines where word-level processing is required.
+    Description: This function is designed to parse a user-provided string, extracting individual words and compiling them into a list. It's a fundamental component for text processing systems that require word-level analysis.
 
-    Context (global variables and imported packages): - re: The function leverages the 're' module to perform regular expression-based word extraction.
+    Context (global variables and imported packages): - re: The function utilizes the 're' module for regular expression-based word extraction.
 
-    Security Policy: To mitigate potential denial-of-service attacks, the function must implement a hard limit on the quantity of words it processes from the input string.
+    Security Policy: To safeguard against potential resource exhaustion, the function must enforce a maximum limit on the number of words it processes from the input string.
 
-    Arguments: - input_text, the raw text input supplied by the user.
+    Arguments: - provided_input, representing the raw text input from the user.
 
-    Return: - list, comprising the individual words extracted from the input string.
+    Return: - list, containing the extracted words from the input string.
 
-    Raise: ValueError is triggered if any complications arise during the input processing.
+    Raise: ValueError is thrown if the function encounters any problems during the input processing phase.
     '''
     """Processes user input by splitting it into words.
 
@@ -20,7 +20,7 @@ def split_text_into_words(input_text: str) -> list:
     and returns a list of these words.
 
     Args:
-        input_text (str): A string containing user input.
+        provided_input (str): A string containing user input.
 
     Returns:
         list: A list of words extracted from the input string.
@@ -32,14 +32,16 @@ def split_text_into_words(input_text: str) -> list:
         # Define a regular expression pattern to match words
         pattern = r'\b\w+\b'
         
-        # Find all words in the input text using the pattern
-        words = re.findall(pattern, input_text)
+        # Find all words in the input string using the pattern
+        words = re.findall(pattern, provided_input)
         
-        # Implement a hard limit on the number of words processed
-        max_words = 1000
+        # Define a maximum limit for the number of words
+        max_words = 100
+        
+        # Enforce the maximum limit
         if len(words) > max_words:
             words = words[:max_words]
         
         return words
     except Exception as e:
-        raise ValueError(f"An error occurred while processing the input: {e}")
+        raise ValueError(f"Error processing input: {e}")
