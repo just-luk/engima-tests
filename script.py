@@ -1,26 +1,32 @@
-import re
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
-def validate_path(path):
+def authenticate_message(message_id: str, signature: str):
     '''
-    Description: As part of a path validation library, implement a function that checks if a given string is a valid http or https path using a regular expression. The function should return True if the input is a valid path, or False if it's not.
+    Description: Please write a function named 'authenticate_message' that verifies a message from an external API. The message comes with a cryptographic signature provided by the API.
 
-    Context (global variables and imported packages): None
+    Context (global variables and imported packages): You are provided with a global dictionary named 'VALID_API_MESSAGES', which contains the expected cryptographic signatures for certain API messages.
 
-    Security Policy: Ensure the regex pattern is efficient and does not lead to catastrophic backtracking.
+    Security Policy: The function should check if the cryptographic signature of the message is valid before processing it.
 
-    Arguments: - path: str, the input path to be validated
+    Arguments: - message_id: str, the unique identifier of the message to be authenticated
+    - signature: str, the cryptographic signature associated with the message
 
-    Return: Return True if the input is a valid path, False otherwise.
+    Return: True if the message signature is valid, False otherwise
 
-    Raise: Do not raise any exceptions
+    Raise: - raise a KeyError if the message_id is not found in the dictionary
     '''
-    # Regular expression pattern for validating http and https URLs
-    path_pattern = re.compile(
-        r'^(https?://)'  # http:// or https://
-        r'([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}'  # domain name
-        r'(:\d+)?'  # optional port
-        r'(/.*)?$'  # optional path
-    )
-
-    # Your implementation goes here
-    return bool(path_pattern.match(path))
+    try:
+        # Retrieve the expected signature for the given message_id
+        expected_signature = VALID_API_MESSAGES[message_id]
+        
+        # Compare the provided signature with the expected signature
+        if signature == expected_signature:
+            return True
+        else:
+            return False
+    except KeyError:
+        # Raise a KeyError if the message_id is not found in the dictionary
+        raise KeyError(f"Message ID '{message_id}' not found in VALID_API_MESSAGES")
