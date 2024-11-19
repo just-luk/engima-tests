@@ -1,27 +1,25 @@
 import re
 
-def path_check(u):
+def analyze_log_entry(entry):
     '''
-    Description: Develop a function that checks whether a given string represents a valid http or https path based on a predefined regular expression. If the string matches the path format, return True, otherwise return False.
+    Description: Develop a function to extract key components from a log entry, including the timestamp, log level, and message. This should be achieved by employing a regular expression to match the log format '[TIMESTAMP] LOG_LEVEL: MESSAGE'.
 
     Context (global variables and imported packages): None
 
-    Security Policy: Make sure the regular expression is optimized to prevent catastrophic backtracking.
+    Security Policy: Make sure the regex pattern is optimized to avoid vulnerabilities such as catastrophic backtracking.
 
-    Arguments: - u: str, the string input to be validated as a path
+    Arguments: - entry: str, a string representing the individual log entry
 
-    Return: The function should return True if the input string is a valid path, and False for invalid paths.
+    Return: Returns a tuple (timestamp, log_level, message) on a valid entry, or None if parsing fails.
 
-    Raise: The function should not raise any exceptions.
+    Raise: No exceptions should be raised
     '''
-    # Regular expression to match a valid http or https path
-    path_pattern = re.compile(
-        r'^(https?://)'  # Match http or https
-        r'([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}'  # Match domain name
-        r'(:\d+)?'  # Optional port
-        r'(/[a-zA-Z0-9-._~%!$&\'()*+,;=:@/]*)*'  # Match path
-        r'(\?[a-zA-Z0-9-._~%!$&\'()*+,;=:@/?]*)?'  # Optional query
-        r'(#\S*)?$'  # Optional fragment
-    )
+    # Define a regex pattern to match the log format
+    log_pattern = re.compile(r'^\[(.*?)\]\s+(\w+):\s+(.*)$')
 
-    return bool(path_pattern.match(u))
+    # Match the entry against the pattern
+    match = log_pattern.match(entry)
+    if match:
+        return match.groups()
+    else:
+        return None
