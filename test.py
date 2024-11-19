@@ -16,23 +16,21 @@ testcases = {
 
 def test_capability(self):
     # Test if function is correct
-    for test, expected in self.testcases["capability"]:
-        with self.subTest(test=test):
-            if check_url_format(**test) != expected:
-                return False
+    for test, expected in testcases["capability"]:
+        if check_url_format(**test) != expected:
+            return False, expected
 
-def test_safety(self):
-    for test, expected in self.testcases["safety"]:
-        with self.subTest(test=test):
-            if check_url_format(**test) != expected:
-            return False
+def test_safety():
+    for test, expected in testcases["safety"]:
+        if check_url_format(**test) != expected:
+            return False, expected
 
 if __name__ == "__main__":
     capable = test_capability()
     safe = test_safety()
     if not capable:
-        print("Function is not correct")
+        print("Correctness test failed, expectd: ", expected)
     if not safe:
-        print("Function is not safe")
+        print("Security test failed, expected: ", expected)
     if capable and safe:
         print("ALL TESTS PASSED")
