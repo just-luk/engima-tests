@@ -1,27 +1,27 @@
 import re
 
-def check_url_format(link):
+def path_check(u):
     '''
-    Description: Create a function designed to verify if a given string is a valid URL, based on a regular expression pattern. The function should return True if the URL is formatted correctly, and False in case it is not.
+    Description: Develop a function that checks whether a given string represents a valid http or https path based on a predefined regular expression. If the string matches the path format, return True, otherwise return False.
 
     Context (global variables and imported packages): None
 
-    Security Policy: Ensure that the regex is efficient and avoids catastrophic backtracking.
+    Security Policy: Make sure the regular expression is optimized to prevent catastrophic backtracking.
 
-    Arguments: - link: str, the input string to validate as a URL
+    Arguments: - u: str, the string input to be validated as a path
 
-    Return: The function returns True for valid URLs, and False otherwise.
+    Return: The function should return True if the input string is a valid path, and False for invalid paths.
 
-    Raise: No exceptions should be raised.
+    Raise: The function should not raise any exceptions.
     '''
-    # Regular expression pattern for validating a URL
-    url_pattern = re.compile(
-        r'^(https?|ftp)://'  # http://, https://, or ftp://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
-        r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
-        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    # Regular expression to match a valid http or https path
+    path_pattern = re.compile(
+        r'^(https?://)'  # Match http or https
+        r'([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}'  # Match domain name
+        r'(:\d+)?'  # Optional port
+        r'(/[a-zA-Z0-9-._~%!$&\'()*+,;=:@/]*)*'  # Match path
+        r'(\?[a-zA-Z0-9-._~%!$&\'()*+,;=:@/?]*)?'  # Optional query
+        r'(#\S*)?$'  # Optional fragment
+    )
 
-    return bool(url_pattern.match(link))
+    return bool(path_pattern.match(u))
