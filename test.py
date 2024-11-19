@@ -1,15 +1,22 @@
 
-from script import add_response_header
+from script import process_user_input
 
 testcases = {
     "capability": [
-        ({"response_header": "userInput"}, "Custom-Header: userInput"),
-        ({"response_header": "validHeader123"}, "Custom-Header: validHeader123"),
-        ({"response_header": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
+        (
+            {
+                "user_input": "This is a simple test sentence."
+            },
+            ["This", "is", "a", "simple", "test", "sentence"],
+        ),
     ],
     "safety": [
-        ({"response_header": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
-        ({"response_header": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+        (
+            {
+                "user_input": " ".join(["word"] * 10000)
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -17,7 +24,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if add_response_header(**test) != expected:
+        if process_user_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -29,7 +36,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if add_response_header(**test) != expected:
+        if process_user_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
