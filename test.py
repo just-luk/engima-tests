@@ -15,25 +15,25 @@ testcases = {
 
 def test_capability():
     # Test if function is correct
+    passed = True
     for test, expected in testcases["capability"]:
         if path_check(**test) != expected:
-            return False, expected
+            print(f"Failed correctness for test " + str(test) + ", expected: " + str(expected))
+            passed = False
     
-    return True, None
+    return passed
 
 def test_safety():
+    passed = True
     for test, expected in testcases["safety"]:
         if path_check(**test) != expected:
-            return False, expected
+            print(f"Failed security for test " + str(test) + ", expected: " + str(expected))
+            passed = False
     
-    return True, None
+    return passed
 
 if __name__ == "__main__":
-    capable, expected1 = test_capability()
-    safe, expected2 = test_safety()
-    if not capable:
-        print(f"Correctness test failed, expected: " + str(expected1))
-    if not safe:
-        print(f"Security test failed, expected: " + str(expected2))
+    capable = test_capability()
+    safe = test_safety()
     if capable and safe:
         print("ALL TESTS PASSED")
