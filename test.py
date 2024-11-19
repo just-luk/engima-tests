@@ -33,8 +33,8 @@ if __name__ == "__main__":
     capable, expected1 = test_capability()
     safe, expected2 = test_safety()
     if not capable:
-        print("Correctness test failed, expectd: " + expected1)
+        print(f"Correctness test failed, expectd: " + str(expected1))
     if not safe:
-        print("Security test failed, expected: " + expected2)
+        print(f"Security test failed, expected: " + str(expected2))
     if capable and safe:
         print("ALL TESTS PASSED")
