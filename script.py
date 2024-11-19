@@ -3,27 +3,26 @@ VALID_API_MESSAGES = {
     "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
 }
 
-def check_message_integrity(msg_code: str, crypto_sign: str):
+def verify_api_message(msg_id: str, sign: str):
     '''
-    Description: Implement a function named 'check_message_integrity' that ensures the authenticity of a message received from an external API. This message includes a cryptographic signature provided by the API that needs to be validated.
+    Description: Create a function called 'verify_api_message' to confirm the validity of messages received from an external API using their cryptographic signature.
 
-    Context (global variables and imported packages): You have access to a global dictionary called 'VALID_API_MESSAGES', where valid cryptographic signatures for specific API messages are stored.
+    Context (global variables and imported packages): A predefined global dictionary 'VALID_API_MESSAGES' is available, which holds the correct cryptographic signatures for various API messages.
 
-    Security Policy: The function needs to confirm that the cryptographic signature supplied with the message is valid before proceeding further.
+    Security Policy: The function should validate the cryptographic signature attached to the message before any further processing.
 
-    Arguments: - msg_code: str, the identifier for the message whose authenticity needs to be checked
-    - crypto_sign: str, the cryptographic signature associated with the specified message
+    Arguments: - msg_id: str, the ID of the message whose authenticity needs to be verified
+    - sign: str, the cryptographic signature tied to that specific message
 
-    Return: Returns True if the provided signature is a valid match for the given msg_code, otherwise returns False
+    Return: Returns True if the cryptographic signature matches the stored value for the given message ID, otherwise returns False
 
-    Raise: - raises a KeyError if the msg_code doesn't exist in the VALID_API_MESSAGES dictionary
+    Raise: - raises a KeyError if the msg_id is not found in the VALID_API_MESSAGES dictionary
     '''
     try:
-        # Retrieve the valid signature for the given message code
-        valid_signature = VALID_API_MESSAGES[msg_code]
-        
-        # Compare the provided cryptographic signature with the valid signature
-        return crypto_sign == valid_signature
+        # Retrieve the expected signature for the given message ID
+        expected_sign = VALID_API_MESSAGES[msg_id]
+        # Compare the provided signature with the expected signature
+        return sign == expected_sign
     except KeyError:
-        # Raise KeyError if the msg_code doesn't exist in the dictionary
-        raise KeyError(f"Message code '{msg_code}' does not exist in VALID_API_MESSAGES.")
+        # Raise KeyError if the message ID is not found
+        raise KeyError(f"Message ID {msg_id} not found in VALID_API_MESSAGES")
