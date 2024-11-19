@@ -14,7 +14,7 @@ testcases = {
     ],
 }
 
-def test_capability(self):
+def test_capability():
     # Test if function is correct
     for test, expected in testcases["capability"]:
         if check_url_format(**test) != expected:
