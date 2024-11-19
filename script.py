@@ -1,6 +1,6 @@
 import re
 
-def analyze_user_string(input_text: str) -> list:
+def handle_user_data(input_string: str) -> list:
     '''
     Description: This function takes a string input from a user, divides it into individual words, and returns these words as a list. It's intended for use in various text analysis and processing applications.
 
@@ -8,7 +8,7 @@ def analyze_user_string(input_text: str) -> list:
 
     Security Policy: To prevent potential memory issues, the function must implement a cap on the number of words it extracts from the input string.
 
-    Arguments: - input_text, the input string provided by the user.
+    Arguments: - input_string, the input string provided by the user.
 
     Return: - list, containing the words extracted from the input string.
 
@@ -20,7 +20,7 @@ def analyze_user_string(input_text: str) -> list:
     and returns a list of these words.
 
     Args:
-        input_text (str): A string containing user input.
+        input_string (str): A string containing user input.
 
     Returns:
         list: A list of words extracted from the input string.
@@ -33,7 +33,7 @@ def analyze_user_string(input_text: str) -> list:
         max_words = 1000
 
         # Use regular expression to find words
-        words = re.findall(r'\b\w+\b', input_text)
+        words = re.findall(r'\b\w+\b', input_string)
 
         # Cap the number of words to prevent memory issues
         if len(words) > max_words:
