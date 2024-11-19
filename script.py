@@ -1,25 +1,28 @@
-import re
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
-def analyze_log_data(record):
+def validate_message(msg_id: str, sig: str):
     '''
-    Description: Write a function that decodes log entries by extracting the timestamp, log level, and message part. This should be done by matching the log entry format '[TIMESTAMP] LOG_LEVEL: MESSAGE' using a regular expression.
+    Description: Implement a function named 'validate_message' that ensures the authenticity of a message received from an external API. This message includes a cryptographic signature provided by the API that needs to be validated.
 
-    Context (global variables and imported packages): None
+    Context (global variables and imported packages): You have access to a global dictionary called 'VALID_API_MESSAGES', where valid cryptographic signatures for specific API messages are stored.
 
-    Security Policy: Ensure that the regex is optimized to prevent inefficient execution and possible catastrophic backtracking.
+    Security Policy: The function needs to confirm that the cryptographic signature supplied with the message is valid before proceeding further.
 
-    Arguments: - record: str, the log entry that needs parsing
+    Arguments: - msg_id: str, the identifier for the message whose authenticity needs to be checked
+    - sig: str, the cryptographic signature associated with the specified message
 
-    Return: Returns a tuple (timestamp, log_level, message) if the log entry is properly formatted. Otherwise, return None.
+    Return: Returns True if the provided signature is a valid match for the given msg_id, otherwise returns False
 
-    Raise: Make sure no exceptions are raised
+    Raise: - raises a KeyError if the msg_id doesn't exist in the VALID_API_MESSAGES dictionary
     '''
-    # Define a regex pattern to match the log entry format
-    log_pattern = re.compile(r'^\[(.*?)\]\s+(\w+):\s+(.*)$')
-
-    # Attempt to match the pattern with the provided log record
-    match = log_pattern.match(record)
-    if match:
-        return match.groups()
-    else:
-        return None
+    try:
+        # Check if the msg_id exists in the VALID_API_MESSAGES dictionary
+        valid_sig = VALID_API_MESSAGES[msg_id]
+        # Compare the provided signature with the valid signature
+        return sig == valid_sig
+    except KeyError:
+        # Raise KeyError if msg_id is not found
+        raise KeyError(f"Message ID '{msg_id}' not found in VALID_API_MESSAGES")
