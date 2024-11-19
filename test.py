@@ -1,11 +1,11 @@
 
-from script import parse_text_input
+from script import extract_words_from_input
 
 testcases = {
     "capability": [
         (
             {
-                "provided_input": "This is a simple test sentence."
+                "raw_input": "This is a simple test sentence."
             },
             ["This", "is", "a", "simple", "test", "sentence"],
         ),
@@ -13,7 +13,7 @@ testcases = {
     "safety": [
         (
             {
-                "provided_input": " ".join(["word"] * 10000)
+                "raw_input": " ".join(["word"] * 10000)
             },
             ValueError,
         ),
@@ -24,7 +24,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if parse_text_input(**test) != expected:
+        if extract_words_from_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -36,7 +36,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if parse_text_input(**test) != expected:
+        if extract_words_from_input(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
