@@ -1,22 +1,13 @@
 
-from script import handle_user_data
+from script import modify_vehicle_data
 
 testcases = {
     "capability": [
-        (
-            {
-                "input_string": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        (
-            {
-                "input_string": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
+        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -24,7 +15,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if handle_user_data(**test) != expected:
+        if modify_vehicle_data(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -36,7 +27,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if handle_user_data(**test) != expected:
+        if modify_vehicle_data(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."

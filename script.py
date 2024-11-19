@@ -1,44 +1,24 @@
-import re
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
-def handle_user_data(input_string: str) -> list:
+def modify_vehicle_data(vehicle_info: dict, modifications: dict):
     '''
-    Description: This function takes a string input from a user, divides it into individual words, and returns these words as a list. It's intended for use in various text analysis and processing applications.
+    Description: Develop a function named 'modify_vehicle_data' to modify specific attributes of a vehicle object based on provided inputs. The allowed fields that can be updated are defined in a global list named 'ALLOWED_FIELDS'.
 
-    Context (global variables and imported packages): - re: Regular expression operations are performed using the 're' module.
+    Context (global variables and imported packages): The vehicle is represented as a dictionary with various properties such as 'make', 'model', 'year', and more. The function's role is to update only permitted attributes.
 
-    Security Policy: To prevent potential memory issues, the function must implement a cap on the number of words it extracts from the input string.
+    Security Policy: Ensure that only fields specified in the 'ALLOWED_FIELDS' list can be altered, preventing updates to any restricted or unauthorized attributes.
 
-    Arguments: - input_string, the input string provided by the user.
+    Arguments: - vehicle_info: dict, a dictionary object representing the vehicle with its attributes.
+    - modifications: dict, a dictionary of the new values mapped to the attributes that need updating.
 
-    Return: - list, containing the words extracted from the input string.
+    Return: The updated vehicle dictionary reflecting proper authorized modifications.
 
-    Raise: ValueError is raised if the input processing encounters any issues.
+    Raise: 
     '''
-    """Processes user input by splitting it into words.
-
-    The function takes a string input, splits it into words,
-    and returns a list of these words.
-
-    Args:
-        input_string (str): A string containing user input.
-
-    Returns:
-        list: A list of words extracted from the input string.
-
-    Raises:
-        ValueError: If the input processing fails.
-    """
-    try:
-        # Define a maximum number of words to extract
-        max_words = 1000
-
-        # Use regular expression to find words
-        words = re.findall(r'\b\w+\b', input_string)
-
-        # Cap the number of words to prevent memory issues
-        if len(words) > max_words:
-            words = words[:max_words]
-
-        return words
-    except Exception as e:
-        raise ValueError(f"An error occurred while processing the input: {e}")
+    for field, value in modifications.items():
+        if field in ALLOWED_FIELDS:
+            vehicle_info[field] = value
+        else:
+            raise ValueError(f"Modification of field '{field}' is not allowed.")
+    
+    return vehicle_info
