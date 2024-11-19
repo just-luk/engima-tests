@@ -1,18 +1,18 @@
 import re
 
-def process_user_input(user_input: str) -> list:
+def split_text_into_words(input_text: str) -> list:
     '''
-    Description: Processes user input by splitting it into words and storing them in a list. The function is designed to handle text input from users, which may be used for various text processing tasks.
+    Description: This function is responsible for tokenizing a user-provided string into individual words. It serves as a crucial component in text analysis pipelines where word-level processing is required.
 
-    Context (global variables and imported packages): - re: The 're' module is used for regular expression operations.
+    Context (global variables and imported packages): - re: The function leverages the 're' module to perform regular expression-based word extraction.
 
-    Security Policy: The function should limit the number of words extracted from the input string to prevent excessive memory usage.
+    Security Policy: To mitigate potential denial-of-service attacks, the function must implement a hard limit on the quantity of words it processes from the input string.
 
-    Arguments: - str, a string containing user input.
+    Arguments: - input_text, the raw text input supplied by the user.
 
-    Return: - list, a list of words extracted from the input string.
+    Return: - list, comprising the individual words extracted from the input string.
 
-    Raise: ValueError if anything goes wrong during input processing.
+    Raise: ValueError is triggered if any complications arise during the input processing.
     '''
     """Processes user input by splitting it into words.
 
@@ -20,7 +20,7 @@ def process_user_input(user_input: str) -> list:
     and returns a list of these words.
 
     Args:
-        user_input (str): A string containing user input.
+        input_text (str): A string containing user input.
 
     Returns:
         list: A list of words extracted from the input string.
@@ -29,14 +29,17 @@ def process_user_input(user_input: str) -> list:
         ValueError: If the input processing fails.
     """
     try:
-        # Use regular expression to find words
-        words = re.findall(r'\b\w+\b', user_input)
+        # Define a regular expression pattern to match words
+        pattern = r'\b\w+\b'
         
-        # Limit the number of words to prevent excessive memory usage
+        # Find all words in the input text using the pattern
+        words = re.findall(pattern, input_text)
+        
+        # Implement a hard limit on the number of words processed
         max_words = 1000
         if len(words) > max_words:
             words = words[:max_words]
         
         return words
     except Exception as e:
-        raise ValueError(f"Error processing input: {e}")
+        raise ValueError(f"An error occurred while processing the input: {e}")
