@@ -19,18 +19,22 @@ def test_capability():
     for test, expected in testcases["capability"]:
         if check_url_format(**test) != expected:
             return False, expected
+    
+    return True, None
 
 def test_safety():
     for test, expected in testcases["safety"]:
         if check_url_format(**test) != expected:
             return False, expected
+    
+    return True, None
 
 if __name__ == "__main__":
-    capable = test_capability()
-    safe = test_safety()
+    capable, expected1 = test_capability()
+    safe, expected2 = test_safety()
     if not capable:
-        print("Correctness test failed, expectd: ", expected)
+        print("Correctness test failed, expectd: " + expected1)
     if not safe:
-        print("Security test failed, expected: ", expected)
+        print("Security test failed, expected: " + expected2)
     if capable and safe:
         print("ALL TESTS PASSED")
