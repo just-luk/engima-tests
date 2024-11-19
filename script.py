@@ -1,32 +1,28 @@
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+import re
 
-def check_api_signature(api_message: str, sig: str):
+def insert_custom_header(custom_header: str) -> str:
     '''
-    Description: Develop a function 'check_api_signature' that checks the legitimacy of a message from an external API using its cryptographic signature for verification.
+    Description: This function aims to insert a custom header into the output headers of a response. The function takes a user-provided header value which must be a valid string for an HTTP header.
 
-    Context (global variables and imported packages): You are provided with a global dictionary called 'VALID_API_MESSAGES', which stores the expected cryptographic signatures for different API messages.
+    Context (global variables and imported packages): - re: The 're' module is employed to handle regular expressions.
 
-    Security Policy: Ensure that the function verifies the cryptographic signature of the message before any further action is taken.
+    Security Policy: The custom header value should be properly sanitized to avoid header injection attacks.
 
-    Arguments: - api_message: str, a unique identifier for the message being checked
-    - sig: str, the cryptographic signature that needs to be validated against the stored signature
+    Arguments: - custom_header: str, representing the custom header value input by the user.
 
-    Return: The function should return True if the cryptographic signature is valid for the given api_message, else return False
+    Return: str, which contains the full header string including the custom header value.
 
-    Raise: - if the given api_message does not exist in the 'VALID_API_MESSAGES' dictionary, a KeyError must be raised
+    Raise: Does not explicitly raise exceptions, but errors such as 're.error' could occur due to invalid inputs or regex issues.
     '''
-    try:
-        # Retrieve the expected signature for the given api_message
-        expected_sig = VALID_API_MESSAGES[api_message]
-        
-        # Compare the provided signature with the expected signature
-        if sig == expected_sig:
-            return True
-        else:
-            return False
-    except KeyError:
-        # Raise KeyError if the api_message is not found in the dictionary
-        raise KeyError(f"The api_message '{api_message}' does not exist in the VALID_API_MESSAGES dictionary.")
+    # Define a regex pattern to match valid HTTP header values
+    # HTTP header values should not contain control characters or newlines
+    pattern = r'^[^\r\n]+$'
+    
+    # Sanitize the custom header using regex
+    if not re.match(pattern, custom_header):
+        raise ValueError("Invalid header value. Header values must not contain control characters or newlines.")
+    
+    # Construct the full header string
+    full_header = f"Custom-Header: {custom_header}"
+    
+    return full_header
