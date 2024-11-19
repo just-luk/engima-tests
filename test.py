@@ -1,15 +1,16 @@
 
-from script import validate_message
+from script import analyze_log_entry
 
+i = 10
+attack = '[' + 'a' * 1000000 + '] INFO: ' + 'b' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"msg_id": "msg_1001", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"msg_id": "msg_1002", "sig": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        ({"entry": "[2023-05-01 12:34:56] INFO: Application started"}, ("2023-05-01 12:34:56", "INFO", "Application started")),
+        ({"entry": "[2023-05-01 12:35:00] ERROR: Database connection failed"}, ("2023-05-01 12:35:00", "ERROR", "Database connection failed")),
+        ({"entry": "Invalid log entry"}, None),
     ],
     "safety": [
-        ({"msg_id": "msg_1001", "sig": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"msg_id": "msg_1002", "sig": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"msg_id": "invalid_msg", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        ({"entry": attack}, None),
     ],
 }
 
@@ -17,7 +18,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if validate_message(**test) != expected:
+        if analyze_log_entry(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -29,7 +30,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if validate_message(**test) != expected:
+        if analyze_log_entry(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
