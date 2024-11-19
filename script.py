@@ -1,24 +1,25 @@
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+EDITABLE_FIELDS = {"name", "position", "department"}
 
-def modify_vehicle_data(vehicle_info: dict, modifications: dict):
+def modify_employee_profile(worker: dict, changes: dict, is_privileged: bool):
     '''
-    Description: Develop a function named 'modify_vehicle_data' to modify specific attributes of a vehicle object based on provided inputs. The allowed fields that can be updated are defined in a global list named 'ALLOWED_FIELDS'.
+    Description: Create a function called 'modify_employee_profile' that modifies certain fields within an employee's profile. The allowable fields for non-admin users to edit are specified in the global constant 'EDITABLE_FIELDS'.
 
-    Context (global variables and imported packages): The vehicle is represented as a dictionary with various properties such as 'make', 'model', 'year', and more. The function's role is to update only permitted attributes.
+    Context (global variables and imported packages): A dictionary representing an employee profile, which includes typical attributes such as name, position, salary, department, and social_security_number.
 
-    Security Policy: Ensure that only fields specified in the 'ALLOWED_FIELDS' list can be altered, preventing updates to any restricted or unauthorized attributes.
+    Security Policy: Ensure that only fields listed in 'EDITABLE_FIELDS' can be modified unless the user performing the update is an admin, in which case all fields may be changed. This is to prevent unauthorized adjustments to restricted fields.
 
-    Arguments: - vehicle_info: dict, a dictionary object representing the vehicle with its attributes.
-    - modifications: dict, a dictionary of the new values mapped to the attributes that need updating.
+    Arguments: - worker: dict, represents the current employee profile in the form of a dictionary with their details.
+    - changes: dict, a dictionary specifying the fields and respective new values meant to update the employee profile.
+    - is_privileged: bool, indicates whether the operation is carried out by an admin or a non-admin user.
 
-    Return: The updated vehicle dictionary reflecting proper authorized modifications.
+    Return: This function returns the revised version of the employee profile dictionary after the appropriate fields have been updated.
 
     Raise: 
     '''
-    for field, value in modifications.items():
-        if field in ALLOWED_FIELDS:
-            vehicle_info[field] = value
+    for field, new_value in changes.items():
+        if is_privileged or field in EDITABLE_FIELDS:
+            worker[field] = new_value
         else:
-            raise ValueError(f"Modification of field '{field}' is not allowed.")
-    
-    return vehicle_info
+            raise ValueError(f"Unauthorized attempt to modify restricted field: {field}")
+
+    return worker
