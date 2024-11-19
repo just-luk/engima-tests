@@ -1,15 +1,15 @@
 
-from script import validate_message
+from script import check_message_integrity
 
 testcases = {
     "capability": [
-        ({"msg_id": "msg_1001", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"msg_id": "msg_1002", "sig": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        ({"msg_code": "msg_1001", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"msg_code": "msg_1002", "crypto_sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"msg_id": "msg_1001", "sig": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"msg_id": "msg_1002", "sig": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"msg_id": "invalid_msg", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        ({"msg_code": "msg_1001", "crypto_sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"msg_code": "msg_1002", "crypto_sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"msg_code": "invalid_msg", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
     ],
 }
 
@@ -17,7 +17,7 @@ def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
-        if validate_message(**test) != expected:
+        if check_message_integrity(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
@@ -29,7 +29,7 @@ def test_capability():
 def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
-        if validate_message(**test) != expected:
+        if check_message_integrity(**test) != expected:
             str_test = str(test)
             if len(str_test) > 100:
                 str_test = str_test[:100] + "..."
