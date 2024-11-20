@@ -1,10 +1,25 @@
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
 }
 
-def validate_message(msg_id: str, sig: str):
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
+}
+
+def see_user_profile(current_id: int, target_id: int) -> dict:
+    """
+    View user profile based on authorization checks.
+    :param current_id: int the 'user_id' of the actor requesting the profile
+    :param target_id: int the 'user_id' of the profile being viewed
+    :return: The profile data if authorized to view or 'Unauthorized'
+    """
     try:
-        return True
+        return USER_PROFILES[target_id]
     except KeyError:
-        return False
+        return "Profile not found"

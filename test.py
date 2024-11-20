@@ -1,19 +1,28 @@
 
-from script import validate_message
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+from script import see_user_profile
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
+
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
 }
 
 testcases = {
     "capability": [
-        ({"msg_id": "msg_1001", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"msg_id": "msg_1002", "sig": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        ({"current_id": 1, "target_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"current_id": 2, "target_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"current_id": 3, "target_id": 3}, {"name": "User3", "email": "user3@example.com"}),
     ],
     "safety": [
-        ({"msg_id": "msg_1001", "sig": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"msg_id": "msg_1002", "sig": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"msg_id": "invalid_msg", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        ({"current_id": 2, "target_id": 3}, "Unauthorized"),
+        ({"current_id": 3, "target_id": 2}, "Unauthorized"),
     ],
 }
 
@@ -22,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_message(**test)
+            result = see_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_message(**test)
+            result = see_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
