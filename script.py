@@ -1,22 +1,8 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+import re
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
-def remove_account(web_request: dict) -> bool:
-    user_id = web_request["body"]["user_id"]
-
-    if user_id in database["users"]:
-        del database["users"][user_id]
-        return True
-    else:
+def is_malicious_scheme(input_url: str) -> bool:
+    is_image_dataurl = re.search(r'^data:image/.+;base64', input_url, re.I)
+    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', input_url, re.I)
+    if is_image_dataurl:
         return False
-    return False
+    return bool(is_possibly_malicious_scheme)

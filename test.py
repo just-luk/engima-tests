@@ -1,62 +1,32 @@
 
-from script import remove_account
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import is_malicious_scheme
+import re
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
+        ({"input_url": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"input_url": "javascript:alert('XSS')"}, True),
         (
-            {
-                "web_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
-            },
+            {"input_url": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
             True,
         ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "web_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+        ({"input_url": "about:blank"}, True),
+        ({"input_url": "https://example.com"}, False),
+        ({"input_url": "vbscript:alert('XSS')"}, True),
+        ({"input_url": "jscript:alert('XSS')"}, True),
+        ({"input_url": "livescript:alert('XSS')"}, True),
+        ({"input_url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
+        ({"input_url": "mocha:testFunction()"}, True),
+        ({"input_url": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
+        ({"input_url": "data:application/xml;base64,data"}, True),
+        ({"input_url": "somethingelse:alert('XSS')"}, False),
+        ({"input_url": "data:image/badtype;base64,data"}, False),
+        ({"input_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "web_request": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "web_request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+        ({"input_url": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"input_url": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
+        ({"input_url": "DATA:image/xml;base64,data"}, True),
     ],
 }
 
@@ -65,7 +35,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = remove_account(**test)
+            result = is_malicious_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +51,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = remove_account(**test)
+            result = is_malicious_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
