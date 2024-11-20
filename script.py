@@ -1,5 +1,5 @@
 import ast
 
-def execute_python_script(python_code: str):
-    exec(python_code)
+def execute_code_snippet(code_snippet: str):
+    exec(code_snippet)
     return None

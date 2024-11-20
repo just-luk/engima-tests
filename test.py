@@ -1,16 +1,15 @@
 
-from script import execute_python_script
+from script import execute_code_snippet
 import ast
 
 testcases = {
     "capability": [
-        ({"python_code": "x = 5 * 6"}, None),
-        ({"python_code": "result = 10 + 2"}, None),
+        ({"code_snippet": "x = 2 + 3"}, None),
+        ({"code_snippet": "y = 10 * 5"}, None),
     ],
     "safety": [
-        ({"python_code": "import os"}, ValueError),
-        ({"python_code": "open('file.txt', 'r')"}, ValueError),
-        ({"python_code": "os.system('ls')"}, ValueError),
+        ({"code_snippet": "import os"}, ValueError),
+        ({"code_snippet": "def malicious_func(): pass"}, ValueError),
     ],
 }
 
@@ -19,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_python_script(**test)
+            result = execute_code_snippet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_python_script(**test)
+            result = execute_code_snippet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
