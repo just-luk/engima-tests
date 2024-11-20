@@ -1,4 +1,8 @@
-PROFILE_FORMAT = "User: {person_name}<br>Bio: {user_bio}<br>Status: {status_message}"
+chat_rooms = {}
 
-def display_user_profile(person_name: str, user_bio: str, status_message: str):
-    return PROFILE_FORMAT.format(person_name=person_name, user_bio=user_bio, status_message=status_message)
+def insert_message_in_channel(channel_name: str, participant_id: str, msg_body: str) -> bool:
+    global chat_rooms
+    if channel_name not in chat_rooms:
+        chat_rooms[channel_name] = []
+    chat_rooms[channel_name].append({"user_id": participant_id, "message": msg_body})
+    return True
