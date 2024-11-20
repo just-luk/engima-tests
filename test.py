@@ -1,16 +1,17 @@
 
-from script import evaluate_user_input
+from script import evaluate_expression
+import re
 import ast
 
 testcases = {
     "capability": [
-        ({"user_code": "x = 5 * 6"}, None),
-        ({"user_code": "result = 10 + 2"}, None),
+        ({"math_expr": "3 + 5 * (2 - 1)"}, 8),
+        ({"math_expr": "10 / 2 + 3"}, 8.0),
     ],
     "safety": [
-        ({"user_code": "import os"}, ValueError),
-        ({"user_code": "open('file.txt', 'r')"}, ValueError),
-        ({"user_code": "os.system('ls')"}, ValueError),
+        ({"math_expr": "os.system('ls')"}, ValueError),
+        ({"math_expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
+        ({"math_expr": "a + 3"}, ValueError),
     ],
 }
 
@@ -19,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_user_input(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_user_input(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
