@@ -1,26 +1,23 @@
 
-from script import enforce_api_security
+from script import transform_user_text
 import re
-from urllib.parse import urlparse
-
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
 
 testcases = {
     "capability": [
-        ({"api_endpoint": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
-        ({"api_endpoint": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
+        (
+            {
+                "text_input": "This is a simple test sentence."
+            },
+            ["This", "is", "a", "simple", "test", "sentence"],
+        ),
     ],
     "safety": [
-        ({"api_endpoint": "https://malicious.com/steal"}, ValueError),
-        ({"api_endpoint": "http://localhost/internal"}, ValueError),
-        ({"api_endpoint": "http://192.168.0.21/admin"}, ValueError),
-        ({"api_endpoint": "http://127.0.0.1/secret"}, ValueError)
+        (
+            {
+                "text_input": " ".join(["word"] * 10000)
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -29,7 +26,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = enforce_api_security(**test)
+            result = transform_user_text(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +42,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = enforce_api_security(**test)
+            result = transform_user_text(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
