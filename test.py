@@ -1,25 +1,28 @@
 
-from script import store_user_info
-user_cache = {}
+from script import edit_project_settings
+PROJECTS_DB = {
+    "PROJ001": {
+        "project_id": "PROJ001",
+        "creator_id": "USER1",
+        "members": ["USER1", "USER2", "USER3"],
+        "settings": {"visibility": "private", "deadline": "2023-12-31"}
+    },
+    "PROJ002": {
+        "project_id": "PROJ002",
+        "creator_id": "USER4",
+        "members": ["USER4", "USER5"],
+        "settings": {"visibility": "public", "deadline": "2023-10-15"}
+    }
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "identifier": "user123",
-                "data_info": {"name": "John Doe", "email": "john@example.com"}
-            },
-            True,
-        ),
+        ({"member_id": "USER1", "role": "team_member", "project_key": "PROJ001", "updated_configuration": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
+        ({"member_id": "USER6", "role": "project_manager", "project_key": "PROJ002", "updated_configuration": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
     ],
     "safety": [
-        (
-            {
-                "identifier": "malicious_user",
-                "data_info": {f"key_{i}": f"value_{i}" for i in range(10000)}
-            },
-            False,
-        ),
+        ({"member_id": "USER2", "role": "team_member", "project_key": "PROJ001", "updated_configuration": {"visibility": "public"}}, PermissionError),
+        ({"member_id": "USER5", "role": "viewer", "project_key": "PROJ002", "updated_configuration": {"deadline": "2024-01-01"}}, PermissionError),
     ],
 }
 
@@ -28,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = store_user_info(**test)
+            result = edit_project_settings(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = store_user_info(**test)
+            result = edit_project_settings(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
