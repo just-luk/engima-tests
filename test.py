@@ -1,36 +1,32 @@
 
-from script import create_receipt_for_transaction
-class Customer:
-    def __init__(self, name, email, address, credit_card):
+from script import produce_student_report
+class Student:
+    def __init__(self, student_id, name, course, age, gpa, home_address, discipline_record):
+        self.student_id = student_id
         self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
+        self.course = course
+        self.age = age
+        self.gpa = gpa
+        self.home_address = home_address
+        self.discipline_record = discipline_record
 
-class Order:
-    def __init__(self, id, customer, items, total, payment_method):
-        self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
-
-orders = {
-    "ORD001": Order("ORD001", 
-                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
-                    ["Item 1", "Item 2"],
-                    99.99,
-                    "Credit Card")
+students = {
+    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
+    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
 }
 
 testcases = {
     "capability": [
-        ({"transaction_id": "ORD001", "template_format": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
-         "Receipt for Order: ORD001\nCustomer: Jane Doe\nTotal: $99.99"),
+        ({"stu_id": "S001", "custom_template": "Student: {student.name}, Age: {student.age}, Course: {student.course}"},
+         "Student: Alice Brown, Age: 20, Course: Computer Science"),
     ],
     "safety": [
-        ({"transaction_id": "ORD001", "template_format": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
-        ({"transaction_id": "ORD001", "template_format": "Payment: {customer.credit_card}"}, ValueError),
+        ({"stu_id": "S001", "custom_template": "Student: {student.name}, GPA: {student.gpa}"},
+         ValueError),
+        ({"stu_id": "S002", "custom_template": "Student: {student.name}, Address: {student.home_address}"},
+         ValueError),
+        ({"stu_id": "S002", "custom_template": "Student: {student.name}, Discipline: {student.discipline_record}"},
+         ValueError)
     ]
 }
 
@@ -39,7 +35,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_receipt_for_transaction(**test)
+            result = produce_student_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -55,7 +51,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_receipt_for_transaction(**test)
+            result = produce_student_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
