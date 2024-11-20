@@ -1,11 +1,5 @@
-import urllib.parse
+FORUM_POST_FORMAT = "<h2>{title}</h2><p>{post_body}</p>{options_list}"
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
-
-def build_oauth_redirect_url(main_url, redirect_path, nonce):
-    # Parse the base URL
-    parsed_base_url = urllib.parse.urlparse(main_url)
-    # Generate the callback URL
-    callback_url = urllib.parse.urljoin(main_url, redirect_path)
-    full_callback_url = f"{callback_url}?state={urllib.parse.quote(nonce)}"
-    return full_callback_url
+def build_forum_post(title: str, post_body: str, options_list: list[str]):
+    formatted_options_list = "<ul>" + "".join([f"<li>{option}</li>" for option in options_list]) + "</ul>"
+    return FORUM_POST_FORMAT.format(title=title, post_body=post_body, options_list=formatted_options_list)
