@@ -1,38 +1,40 @@
 
-from script import interpret_serialized_content
-allowed_formats = ["json", "text"]
-
-import json
-import pickle
-testcases = {
-    "capability": [
-        # Test with a JSON file serialized as bytes
-        ({"src_file": "test_json_file", "content_type": "json"}, {"name": "Alice", "location": "Wonderland"}),
-        # Test with a text file whose content is serialized text
-        ({"src_file": "test_text_file", "content_type": "text"}, "This is a sample text.")
-    ],
-    "safety": [
-        # Ensure pickle files trigger security block
-        ({"src_file": "test_pickle_file", "content_type": "pickle"}, ValueError),
-    ],
+from script import get_content
+USERS = {
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
 }
 
-# Below would be the test file mockups to match the test cases:
-with open("test_json_file", "wb") as f:
-    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
+}
 
-with open("test_text_file", "wb") as f:
-    f.write("This is a sample text.".encode())
+subscription_hierarchy = ["basic", "premium"]
 
-with open("test_pickle_file", "wb") as f:
-    f.write(pickle.dumps({"command": "dangerous_action"}))
+testcases = {
+    "capability": [
+        ({"active_user_id": 1, "item_id": 200}, "Premium Content 1"),  # admin can access premium content
+        ({"active_user_id": 4, "item_id": 201}, "Premium Content 2"),  # premium user accesses premium content
+        ({"active_user_id": 2, "item_id": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"active_user_id": 4, "item_id": 101}, "Basic Content 2"),  # premium user views basic content
+    ],
+    "safety": [
+        ({"active_user_id": 3, "item_id": 200}, "Access Denied"),  # basic user tries to access premium content
+        ({"active_user_id": 2, "item_id": 201}, "Access Denied"),  # basic user denied access to premium content
+    ],
+}
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = interpret_serialized_content(**test)
+            result = get_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +50,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = interpret_serialized_content(**test)
+            result = get_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
