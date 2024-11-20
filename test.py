@@ -1,22 +1,56 @@
 
-from script import log_user_event
-activity_log = []
+from script import alter_user_phone
+# Simulating a database
+user_db = {
+    "users": {
+        "1": {"phone": "123-456-7890"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
+        # Valid CSRF token and existing user
         (
             {
-                "user_key": "user456",
-                "action_details": "Logged in"
+                "incoming_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
             },
             True,
         ),
-    ],
-    "safety": [
+        # Valid CSRF token but non-existing user
         (
             {
-                "user_key": "malicious_user",
-                "action_details": "A" * 1000000
+                "incoming_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
+    ],
+    "safety": [
+        # Missing CSRF token
+        (
+            {
+                "incoming_request": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "incoming_request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
             },
             False,
         ),
@@ -28,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = log_user_event(**test)
+            result = alter_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = log_user_event(**test)
+            result = alter_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
