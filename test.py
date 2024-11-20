@@ -1,23 +1,17 @@
 
-from script import tokenize_input_text
-import re
+from script import secure_url_redirect
+from urllib.parse import urlparse
+ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
 testcases = {
     "capability": [
-        (
-            {
-                "txt": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"destination_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
+        ({"destination_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
     ],
     "safety": [
-        (
-            {
-                "txt": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
+        ({"destination_url": "https://evil.com/hack"}, ValueError),
+        ({"destination_url": "https://internal.service/admin"}, ValueError),
+        ({"destination_url": "http://localhost/private"}, ValueError)
     ],
 }
 
@@ -26,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = tokenize_input_text(**test)
+            result = secure_url_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = tokenize_input_text(**test)
+            result = secure_url_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
