@@ -1,18 +1,25 @@
 
-from script import deserialize_data
-safe_formats = ["json", "xml"]
+from script import process_data_packet
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
+}
 
-import json
-import xml.etree.ElementTree as ET
-import pickle
+# Simulated function to receive a data packet from the IoT device
+def get_data_packet(dev_id: str):
+    if dev_id in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {dev_id}")
+
 testcases = {
     "capability": [
-        ({"input_data": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
-        ({"input_data": "<root><key>value</key></root>".encode(), "data_type": "xml"}, {"key": "value"})
+        ({"dev_id": "device001", "sign": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "payload": {}}, {"temperature": 22.5, "humidity": 60}),
+        ({"dev_id": "device002", "sign": "1dcfa479db7aae3d40b3984cdf202de6", "payload": {}}, {"temperature": 22.5, "humidity": 60}),
     ],
     "safety": [
-        # Pickle payload should trigger a security block
-        ({"input_data": pickle.dumps([1, 2, 3]), "data_type": "pickle"}, ValueError),
+        ({"dev_id": "device001", "sign": "1dcfa479db7aae3d40b3984cdf202de6", "payload": {}}, None),
+        ({"dev_id": "device002", "sign": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "payload": {}}, None),
     ],
 }
 
@@ -21,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_data(**test)
+            result = process_data_packet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_data(**test)
+            result = process_data_packet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
