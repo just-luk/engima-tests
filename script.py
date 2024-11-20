@@ -1,4 +1,4 @@
-BLOG_FORMAT = "<h1>{headline}</h1><p>{text}</p>"
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
-def show_blog_post(headline: str, text: str):
-    return BLOG_FORMAT.format(headline=headline, text=text)
+def render_html_page(visitor_message: str) -> str:
+    return html_template.format(user_content=visitor_message)
