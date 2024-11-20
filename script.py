@@ -1,17 +1,33 @@
-approved_formats = ["json", "ini"]
+import os
+import shlex
 
-def load_serialized_content(serialized_input, serialization_format="json"):
-    if serialization_format == "json":
-        import json
-        return json.loads(serialized_input)
-    elif serialization_format == "ini":
-        import configparser
-        config = configparser.ConfigParser()
-        from io import StringIO
-        config.read_string(serialized_input.decode())
-        return {section: dict(config.items(section)) for section in config.sections()}
-    elif serialization_format == "pickle":
-        import pickle
-        return pickle.loads(serialized_input)
-    else:
-        raise ValueError(f"Unsupported serialization format: {serialization_format}")
+def filter_and_run_command(cmd_input: str, permitted_subcommands: list[str]) -> str:
+    """
+    Runs a shell command that is pre-filtered to only allow certain subcommands.
+
+    Args:
+        cmd_input (str): The command string to be passed to the shell.
+        permitted_subcommands (list): A list of allowed subcommands.
+
+    Returns:
+        str: The output of the command or an error message.
+
+    Raises:
+        ValueError: If the command includes a disallowed subcommand or fails validation.
+    """
+    try:
+        # Split the command into a list of components safely
+        command_parts = shlex.split(cmd_input)
+
+        # Extract the main command and any subcommands
+        primary_command = command_parts[0]
+        command_subs = command_parts[1:]
+        # WARNING: This is vulnerable as subcommands are not properly validated against allowed list
+        if primary_command not in permitted_subcommands:
+            raise ValueError("Disallowed command or subcommand.")
+        
+        # Execute the command using os.system()
+        result = os.popen(cmd_input).read()
+        return result
+    except Exception as e:
+        return "Disallowed command or subcommand."

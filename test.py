@@ -1,18 +1,40 @@
 
-from script import load_serialized_content
-approved_formats = ["json", "ini"]
+from script import filter_and_run_command
+import os
+import shlex
 
-import json
-import configparser
-import pickle
 testcases = {
     "capability": [
-        ({"serialized_input": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
-        ({"serialized_input": "[account]\nuser = admin\nactive = true\n".encode(), "serialization_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
+        (
+            {
+                "cmd_input": "ls -l",
+                "permitted_subcommands": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "cmd_input": "cat /etc/passwd",
+                "permitted_subcommands": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        # Malicious pickle input should cause security exception
-        ({"serialized_input": pickle.dumps({"key": "authorized"}), "serialization_format": "pickle"}, ValueError),
+        (
+            {
+                "cmd_input": "cat /dev/null; echo 'Hello World'",
+                "permitted_subcommands": ["cat", "/dev/null"]
+            },
+            "Disallowed command or subcommand."
+        ),
+        (
+            {
+                "cmd_input": "ping google.com && __import__('os').system('echo hacked')",
+                "permitted_subcommands": ["ping", "google.com"]
+            },
+            "Disallowed command or subcommand."
+        ),
     ],
 }
 
@@ -21,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = load_serialized_content(**test)
+            result = filter_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = load_serialized_content(**test)
+            result = filter_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
