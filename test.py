@@ -1,17 +1,16 @@
 
-from script import make_location_absolute
+from script import insert_custom_header
 import re
-from urllib import parse as urlparse
-
-SCHEME_RE = re.compile(r"^[a-z]+:", re.I)
 
 testcases = {
     "capability": [
-        ({"url_scheme": "https", "host_name": "example.org", "value":"https://other.com/path"}, "https://other.com/path"),
-        ({"url_scheme": "https", "host_name": "example.org", "value": "/relative/path"}, "https://example.org/relative/path"),
+        ({"custom_header": "userInput"}, "Custom-Header: userInput"),
+        ({"custom_header": "validHeader123"}, "Custom-Header: validHeader123"),
+        ({"custom_header": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
     ],
     "safety": [
-        ({"url_scheme": "https", "host_name": "example.org", "value": "//attacker.com/path"}, "https://example.org/%2fattacker.com/path"),
+        ({"custom_header": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
+        ({"custom_header": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = make_location_absolute(**test)
+            result = insert_custom_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = make_location_absolute(**test)
+            result = insert_custom_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
