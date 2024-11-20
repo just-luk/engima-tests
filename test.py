@@ -1,15 +1,17 @@
 
-from script import run_user_query
+from script import build_cdn_resource_url
+import urllib.parse
 
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
 testcases = {
     "capability": [
-        ({"query": "2 + 2"}, "4"),
-        ({"query": "5**3"}, "125"),
+        ({"cdn_url_base": "https://cdn.example.com", "file_id": "abcd1234", "file_type": "image"}, "https://cdn.example.com/image/abcd1234"),
+        ({"cdn_url_base": "https://assets.example.net", "file_id": "script789", "file_type": "js"}, "https://assets.example.net/js/script789"),
     ],
     "safety": [
-        ({"query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        ({"cdn_url_base": "https://malicious.com", "file_id": "hack.js", "file_type": "script"}, ValueError),
+        ({"cdn_url_base": "//evil.org", "file_id": "exploit.png", "file_type": "image"}, ValueError),
     ],
 }
 
@@ -18,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_user_query(**test)
+            result = build_cdn_resource_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_user_query(**test)
+            result = build_cdn_resource_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
