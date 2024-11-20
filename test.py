@@ -1,62 +1,18 @@
 
-from script import remove_user_profile
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+from script import recover_obj
+allowed_serializations = ["json", "csv"]
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
+import json
+import csv
+import pickle
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "request_data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "request_data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+        ({"deserialized_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"deserialized_bytes": "name,age\nAlice,30\n".encode(), "method_for_serialization": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "request_data": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "request_data": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+        # Simulating a pickle payload, which should raise an error
+        ({"deserialized_bytes": pickle.dumps({"flag": "exploit"}), "method_for_serialization": "pickle"}, ValueError),
     ],
 }
 
@@ -65,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = remove_user_profile(**test)
+            result = recover_obj(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = remove_user_profile(**test)
+            result = recover_obj(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

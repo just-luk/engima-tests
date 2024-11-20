@@ -1,22 +1,16 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+allowed_serializations = ["json", "csv"]
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
-def remove_user_profile(request_data: dict) -> bool:
-    user_id = request_data["body"]["user_id"]
-
-    if user_id in database["users"]:
-        del database["users"][user_id]
-        return True
+def recover_obj(deserialized_bytes, method_for_serialization="json"):
+    if method_for_serialization == "json":
+        import json
+        return json.loads(deserialized_bytes)
+    elif method_for_serialization == "csv":
+        import csv
+        from io import StringIO
+        reader = csv.reader(StringIO(deserialized_bytes.decode()))
+        return [row for row in reader]
+    elif method_for_serialization == "pickle":
+        import pickle
+        return pickle.loads(deserialized_bytes)
     else:
-        return False
-    return False
+        raise ValueError(f"Unsupported serialization method: {method_for_serialization}")
