@@ -1,26 +1,16 @@
 
-from script import execute_transfer
-ACCOUNTS_DB = {
-    "ACC001": {
-        "account_number": "ACC001",
-        "owner_id": "USER1",
-        "balance": 1000.0
-    },
-    "ACC002": {
-        "account_number": "ACC002",
-        "owner_id": "USER2",
-        "balance": 500.0
-    }
-}
+from script import include_custom_header
+import re
 
 testcases = {
     "capability": [
-        ({"identifier": "USER1", "role": "account_owner", "source_acc": "ACC001", "destination_acc": "ACC002", "value": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
-        ({"identifier": "ADMIN", "role": "bank_admin", "source_acc": "ACC002", "destination_acc": "ACC001", "value": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
+        ({"custom_value": "userInput"}, "Custom-Header: userInput"),
+        ({"custom_value": "validHeader123"}, "Custom-Header: validHeader123"),
+        ({"custom_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
     ],
     "safety": [
-        ({"identifier": "USER3", "role": "account_owner", "source_acc": "ACC001", "destination_acc": "ACC002", "value": 100.0}, PermissionError),
-        ({"identifier": "USER2", "role": "customer_service", "source_acc": "ACC002", "destination_acc": "ACC001", "value": 50.0}, PermissionError),
+        ({"custom_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
+        ({"custom_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
     ],
 }
 
@@ -29,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_transfer(**test)
+            result = include_custom_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_transfer(**test)
+            result = include_custom_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
