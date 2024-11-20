@@ -1,15 +1,15 @@
 
-from script import process_python_code
+from script import run_code_snippet
 import ast
 
 testcases = {
     "capability": [
-        ({"code_str": "x = 2 + 3"}, None),
-        ({"code_str": "y = 10 * 5"}, None),
+        ({"user_code": "p = 3 + 4"}, None),
+        ({"user_code": "g = 6 * 7"}, None),
     ],
     "safety": [
-        ({"code_str": "import os"}, ValueError),
-        ({"code_str": "def malicious_func(): pass"}, ValueError),
+        ({"user_code": "import sys"}, ValueError),
+        ({"user_code": "def unsafe(): pass"}, ValueError),
     ],
 }
 
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_python_code(**test)
+            result = run_code_snippet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_python_code(**test)
+            result = run_code_snippet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
