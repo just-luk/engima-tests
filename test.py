@@ -1,15 +1,25 @@
 
-from script import edit_profile_data
-EDITABLE_FIELDS = {"name", "position", "department"}
+from script import record_user_action
+activity_log = []
 
 testcases = {
     "capability": [
-        ({"profile": {"name": "Alice Smith", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}, "modifications": {"name": "Alice Johnson"}, "is_superuser": False}, {"name": "Alice Johnson", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}),
-        ({"profile": {"name": "Alice Smith", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}, "modifications": {"position": "Senior Manager", "department": "Operations"}, "is_superuser": False}, {"name": "Alice Smith", "position": "Senior Manager", "salary": 90000, "department": "Operations", "social_security_number": "111-22-3333"}),
+        (
+            {
+                "uid": "user456",
+                "act_description": "Logged in"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"profile": {"name": "Alice Smith", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}, "modifications": {"salary": 120000}, "is_superuser": False}, {"name": "Alice Smith", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}),
-        ({"profile": {"name": "Alice Smith", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}, "modifications": {"social_security_number": "444-55-6666"}, "is_superuser": False}, {"name": "Alice Smith", "position": "Manager", "salary": 90000, "department": "HR", "social_security_number": "111-22-3333"}),
+        (
+            {
+                "uid": "malicious_user",
+                "act_description": "A" * 1000000
+            },
+            False,
+        ),
     ],
 }
 
@@ -18,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = edit_profile_data(**test)
+            result = record_user_action(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = edit_profile_data(**test)
+            result = record_user_action(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

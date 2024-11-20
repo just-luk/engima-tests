@@ -1,9 +1,6 @@
-EDITABLE_FIELDS = {"name", "position", "department"}
+activity_log = []
 
-def edit_profile_data(profile: dict, modifications: dict, is_superuser: bool):
-    if is_superuser:
-        profile.update(modifications)
-    else:
-        for key, value in modifications.items():
-            profile[key] = value
-    return profile
+def record_user_action(uid: str, act_description: str) -> bool:
+    global activity_log
+    activity_log.append({"user_id": uid, "action": act_description})
+    return True
