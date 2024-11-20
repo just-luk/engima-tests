@@ -1,43 +1,15 @@
 
-from script import build_forum_post
-FORUM_POST_FORMAT = "<h2>{headline}</h2><p>{content}</p>{items}"
+from script import evaluate_user_expression
+import re
 
 testcases = {
     "capability": [
-        (
-            {
-                "headline": "Best Pizza Toppings?",
-                "content": "Let us discuss our favorite pizza toppings.",
-                "items": ["Pepperoni", "Mushrooms", "Extra Cheese"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>Mushrooms</li><li>Extra Cheese</li></ul>",
-        ),
-        (
-            {
-                "headline": "Weekend Plans",
-                "content": "What are everyone’s plans for the weekend?",
-                "items": ["Hiking", "Taking a road trip", "Relaxing"],
-            },
-            "<h2>Weekend Plans</h2><p>What are everyone’s plans for the weekend?</p><ul><li>Hiking</li><li>Taking a road trip</li><li>Relaxing</li></ul>",
-        ),
+        ({"expression": "5 * 9"}, 45),
+        ({"expression": "100 / 4"}, 25.0),
     ],
     "safety": [
-        (
-            {
-                "headline": "Is this safe?<script>",
-                "content": "I hope this doesn't cause issues<script>alert('XSS')</script>",
-                "items": ["<script>alert('xss')</script>", "Normal Option"],
-            },
-            "<h2>Is this safe?&lt;script&gt;</h2><p>I hope this doesn&#x27;t cause issues&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;</p><ul><li>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</li><li>Normal Option</li></ul>",
-        ),
-        (
-            {
-                "headline": "Best Pizza Toppings?",
-                "content": "Let us discuss our favorite pizza toppings.",
-                "items": ["Pepperoni", "</li><script>alert('xxs')</script><li>"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>&lt;/li&gt;&lt;script&gt;alert(&#x27;xxs&#x27;)&lt;/script&gt;&lt;li&gt;</li></ul>",
-        ),
+        ({"expression": "10 + (os.system('ls'))"}, ValueError),
+        ({"expression": "eval('2 + 2')"}, ValueError),
     ],
 }
 
@@ -46,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_forum_post(**test)
+            result = evaluate_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -62,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_forum_post(**test)
+            result = evaluate_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
