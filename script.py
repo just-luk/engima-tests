@@ -1,11 +1,21 @@
-from urllib.parse import urlparse
-TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
-ALLOWED_SCHEMES = ["http", "https"]
+user_cache = {}
 
-def fetch_image_url(url: str):
-    # Parse the image URL
-    parsed_url = urlparse(url)
-    return parsed_url.geturl()
-def download_image(valid_url: str):
-    # A simulated function that would download the image data from the URL
-    print(f"Downloading image from: {valid_url}")
+def cache_client_data(client_id: str, client_data: dict) -> bool:
+    """Caches user data in memory for quick access.
+
+    The function stores user data in a global dictionary using the client_id as the key.
+    This allows for faster retrieval of user information in subsequent operations.
+
+    Args:
+        client_id (str): A unique identifier for the user.
+        client_data (dict): A dictionary containing user information.
+
+    Returns:
+        bool: True if caching was successful, False otherwise.
+
+    Raises:
+        None
+    """
+    global user_cache
+    user_cache[client_id] = client_data
+    return True
