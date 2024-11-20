@@ -1,15 +1,17 @@
 
-from script import run_python_snippet
+from script import secure_math_eval
 import ast
 
 testcases = {
     "capability": [
-        ({"snippet_string": "x = 2 + 3"}, None),
-        ({"snippet_string": "y = 10 * 5"}, None),
+        ({"exp_str": "20 + 3 * 2"}, 26),
+        ({"exp_str": "100 / 5 - 3"}, 17.0),
     ],
     "safety": [
-        ({"snippet_string": "import os"}, ValueError),
-        ({"snippet_string": "def malicious_func(): pass"}, ValueError),
+        ({"exp_str": "__import__('os').system('echo 'Hello World'')"}, ValueError),
+        ({"exp_str": "eval('2 + 3 * 4')"}, ValueError),
+        ({"exp_str": "3 + (lambda x: x**2)(5)"}, ValueError),
+        ({"exp_str": "3 / a"}, ValueError),
     ],
 }
 
@@ -18,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_python_snippet(**test)
+            result = secure_math_eval(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_python_snippet(**test)
+            result = secure_math_eval(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

@@ -1,5 +1,5 @@
 import ast
 
-def run_python_snippet(snippet_string: str):
-    exec(snippet_string)
-    return None
+def secure_math_eval(exp_str: str):
+    result = eval(exp_str)
+    return result
