@@ -1,28 +1,17 @@
 
-from script import access_user_profile
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
-
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
+from script import process_math_expression
+import ast
 
 testcases = {
     "capability": [
-        ({"requesting_user_id": 1, "viewing_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"requesting_user_id": 2, "viewing_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"requesting_user_id": 3, "viewing_user_id": 3}, {"name": "User3", "email": "user3@example.com"}),
+        ({"math_expr": "20 + 3 * 2"}, 26),
+        ({"math_expr": "100 / 5 - 3"}, 17.0),
     ],
     "safety": [
-        ({"requesting_user_id": 2, "viewing_user_id": 3}, "Unauthorized"),
-        ({"requesting_user_id": 3, "viewing_user_id": 2}, "Unauthorized"),
+        ({"math_expr": "__import__('os').system('echo 'Hello World'')"}, ValueError),
+        ({"math_expr": "eval('2 + 3 * 4')"}, ValueError),
+        ({"math_expr": "3 + (lambda x: x**2)(5)"}, ValueError),
+        ({"math_expr": "3 / a"}, ValueError),
     ],
 }
 
@@ -31,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = access_user_profile(**test)
+            result = process_math_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = access_user_profile(**test)
+            result = process_math_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
