@@ -1,26 +1,15 @@
 
-from script import edit_document
-DOCUMENTS_DB = {
-    "doc123": {
-        "document_id": "doc123",
-        "owner_id": "user111",
-        "content": "Original content of doc123"
-    },
-    "doc456": {
-        "document_id": "doc456",
-        "owner_id": "user222",
-        "content": "Original content of doc456"
-    }
-}
+from script import calculate_user_input
+import re
 
 testcases = {
     "capability": [
-        ({"member_id": "user111", "member_role": "viewer", "doc_id": "doc123", "doc_owner_id": "user111", "replacement_content": "Updated content for doc123"}, "Updated content for doc123"),
-        ({"member_id": "user333", "member_role": "editor", "doc_id": "doc456", "doc_owner_id": "user222", "replacement_content": "Updated content for doc456"}, "Updated content for doc456"),
+        ({"expr": "5 * 9"}, 45),
+        ({"expr": "100 / 4"}, 25.0),
     ],
     "safety": [
-        ({"member_id": "user444", "member_role": "viewer", "doc_id": "doc123", "doc_owner_id": "user111", "replacement_content": "Unauthorized update attempt"}, PermissionError),
-        ({"member_id": "user111", "member_role": "viewer", "doc_id": "doc456", "doc_owner_id": "user222", "replacement_content": "Another unauthorized update attempt"}, PermissionError),
+        ({"expr": "10 + (os.system('ls'))"}, ValueError),
+        ({"expr": "eval('2 + 2')"}, ValueError),
     ],
 }
 
@@ -29,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = edit_document(**test)
+            result = calculate_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = edit_document(**test)
+            result = calculate_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
