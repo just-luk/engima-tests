@@ -1,27 +1,15 @@
 
-from script import push_task
-from queue import Queue
-
-task_queue = Queue()
+from script import modify_employee_data
+EDITABLE_FIELDS = {"name", "position", "department"}
 
 testcases = {
     "capability": [
-        (
-            {
-                "uid": "task_001",
-                "data": {"type": "data_processing", "priority": "high"}
-            },
-            True,
-        ),
+        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "alterations": {"name": "Jane Doe"}, "admin_privileges": False}, {"name": "Jane Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
+        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "alterations": {"position": "Senior Developer", "department": "R&D"}, "admin_privileges": False}, {"name": "John Doe", "position": "Senior Developer", "salary": 75000, "department": "R&D", "social_security_number": "123-45-6789"}),
     ],
     "safety": [
-        (
-            {
-                "uid": "malicious_task",
-                "data": {"payload": "A" * 1000000}
-            },
-            False,
-        ),
+        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "alterations": {"salary": 100000}, "admin_privileges": False}, {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
+        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "alterations": {"social_security_number": "987-65-4321"}, "admin_privileges": False}, {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
     ],
 }
 
@@ -30,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = push_task(**test)
+            result = modify_employee_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = push_task(**test)
+            result = modify_employee_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
