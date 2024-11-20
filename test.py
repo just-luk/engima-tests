@@ -1,60 +1,58 @@
 
-from script import process_json_payload
-import json
+from script import alter_user_phone
+# Simulating a database
+database = {
+    "users": {
+        "1": {"phone": "123-456-7890"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
+        # Valid CSRF token and existing user
         (
             {
-                "req_data": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
+                "service_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
                 }
             },
-            {"key": "value"},
+            True,
         ),
-        # Valid content-type ending with "+json"
+        # Valid CSRF token but non-existing user
         (
             {
-                "req_data": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
+                "service_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_phone": "098-765-4321"},
                 }
             },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "req_data": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
+            False,
         ),
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
+        # Missing CSRF token
         (
             {
-                "req_data": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
+                "service_request": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
                 }
             },
-            ValueError,
+            False,
         ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        # Invalid CSRF token
         (
             {
-                "req_data": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
+                "service_request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
                 }
             },
-            ValueError,
+            False,
         ),
     ],
 }
@@ -64,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_json_payload(**test)
+            result = alter_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_json_payload(**test)
+            result = alter_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
