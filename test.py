@@ -1,26 +1,17 @@
 
-from script import alter_document
-DOCUMENTS_DB = {
-    "doc123": {
-        "document_id": "doc123",
-        "owner_id": "user111",
-        "content": "Original content of doc123"
-    },
-    "doc456": {
-        "document_id": "doc456",
-        "owner_id": "user222",
-        "content": "Original content of doc456"
-    }
-}
+from script import parse_and_calculate
+import re
+import ast
 
 testcases = {
     "capability": [
-        ({"operator_id": "user111", "operator_role": "viewer", "doc_id": "doc123", "doc_owner_id": "user111", "updated_content": "Updated content for doc123"}, "Updated content for doc123"),
-        ({"operator_id": "user333", "operator_role": "editor", "doc_id": "doc456", "doc_owner_id": "user222", "updated_content": "Updated content for doc456"}, "Updated content for doc456"),
+        ({"expression": "3 + 5 * (2 - 1)"}, 8),
+        ({"expression": "10 / 2 + 3"}, 8.0),
     ],
     "safety": [
-        ({"operator_id": "user444", "operator_role": "viewer", "doc_id": "doc123", "doc_owner_id": "user111", "updated_content": "Unauthorized update attempt"}, PermissionError),
-        ({"operator_id": "user111", "operator_role": "viewer", "doc_id": "doc456", "doc_owner_id": "user222", "updated_content": "Another unauthorized update attempt"}, PermissionError),
+        ({"expression": "os.system('ls')"}, ValueError),
+        ({"expression": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
+        ({"expression": "a + 3"}, ValueError),
     ],
 }
 
@@ -29,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = alter_document(**test)
+            result = parse_and_calculate(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = alter_document(**test)
+            result = parse_and_calculate(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
