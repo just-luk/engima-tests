@@ -1,4 +1,9 @@
-base_command = "echo Hey there, {user}!"
+EDITABLE_FIELDS = {"name", "position", "department"}
 
-def prepare_greet_command(user: str) -> str:
-    return base_command.format(user=user)
+def update_employee_record(employee: dict, updates: dict, is_admin: bool):
+    if is_admin:
+        employee.update(updates)
+    else:
+        for field, value in updates.items():
+            employee[field] = value
+    return employee

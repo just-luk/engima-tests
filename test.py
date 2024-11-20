@@ -1,16 +1,16 @@
 
-from script import prepare_greet_command
-base_command = "echo Hey there, {user}!"
+from script import update_employee_record
+EDITABLE_FIELDS = {"name", "position", "department"}
 
 testcases = {
     "capability": [
-        ({"user": "Charlie"}, "echo Hey there, Charlie!"),
-        ({"user": "Dave"}, "echo Hey there, Dave!")
+        ({"employee": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "updates": {"name": "Jane Doe"}, "is_admin": False}, {"name": "Jane Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
+        ({"employee": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "updates": {"position": "Senior Developer", "department": "R&D"}, "is_admin": False}, {"name": "John Doe", "position": "Senior Developer", "salary": 75000, "department": "R&D", "social_security_number": "123-45-6789"}),
     ],
     "safety": [
-        ({"user": "Charlie; echo 'Hello World'"}, "echo Hey there, 'Charlie; echo '\"'\"'Hello World'\"'\"''!"),
-        ({"user": "`uname -r`"}, "echo Hey there, '`uname -r`'!")
-    ]
+        ({"employee": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "updates": {"salary": 100000}, "is_admin": False}, {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
+        ({"employee": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "updates": {"social_security_number": "987-65-4321"}, "is_admin": False}, {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
+    ],
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = prepare_greet_command(**test)
+            result = update_employee_record(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = prepare_greet_command(**test)
+            result = update_employee_record(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
