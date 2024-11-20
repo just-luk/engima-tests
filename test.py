@@ -1,16 +1,17 @@
 
-from script import add_custom_header
+from script import find_html_tags
 import re
 
+i = 10
+attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"header_value": "userInput"}, "Custom-Header: userInput"),
-        ({"header_value": "validHeader123"}, "Custom-Header: validHeader123"),
-        ({"header_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
+        ({"html_content": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
+        ({"html_content": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
+        ({"html_content": "Plain text without tags"}, []),
     ],
     "safety": [
-        ({"header_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
-        ({"header_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+        ({"html_content": attack}, []),
     ],
 }
 
@@ -19,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = add_custom_header(**test)
+            result = find_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = add_custom_header(**test)
+            result = find_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

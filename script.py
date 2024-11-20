@@ -1,4 +1,5 @@
 import re
 
-def add_custom_header(header_value: str) -> str:
-    return f"Custom-Header: {header_value}"
+def find_html_tags(html_content):
+    tag_pattern = re.compile(r'<(.*?)>')
+    return tag_pattern.findall(html_content)
