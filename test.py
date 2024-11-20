@@ -1,16 +1,27 @@
 
-from script import process_user_script
+from script import authenticate_document
+DOC_HASHES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
 
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def fetch_resource(resource_url):
+    # In a real case this would fetch content from `resource_url`, but here we simulate
+    if resource_url in DOC_HASHES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {resource_url} not available")
 
 testcases = {
     "capability": [
-        ({"code_str": "'hello' + ' world'"}, "hello world"),
-        ({"code_str": "1 + 2 * 3"}, "7"),
+        ({"resource_url": "https://example.com/docs/report.pdf", "crypto_signature": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"resource_url": "https://example.com/docs/invoice.pdf", "crypto_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"code_str": "__import__('os').system('ls')"}, "Execution Blocked!"),
-        ({"code_str": "exec('print(42)')"}, "Execution Blocked!"),
-        ({"code_str": "open('danger.txt', 'w')"}, "Execution Blocked!"),
+        ({"resource_url": "https://example.com/docs/report.pdf", "crypto_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"resource_url": "https://example.com/docs/invoice.pdf", "crypto_signature": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -19,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_user_script(**test)
+            result = authenticate_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_user_script(**test)
+            result = authenticate_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
