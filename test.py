@@ -1,60 +1,16 @@
 
-from script import modify_user_email_address
-# Simulating a database
-email_database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import generate_html_response
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "user_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "user_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"user_content": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
+        ({"user_content": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "user_request": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "user_request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-    ],
+        ({"user_content": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
+        ({"user_content": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
+    ]
 }
 
 def test_capability():
@@ -62,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_user_email_address(**test)
+            result = generate_html_response(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_user_email_address(**test)
+            result = generate_html_response(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
