@@ -1,16 +1,20 @@
 
-from script import get_email_domain
-import re
+from script import verify_webhook
+from urllib.parse import urlparse
 
-i = 10
-attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+
 testcases = {
     "capability": [
-        ({"addr": "user@example.com"}, "example.com"),
-        ({"addr": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
+        ({"webhook_endpoint": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
+        ({"webhook_endpoint": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
     ],
     "safety": [
-        ({"addr": attack}, None),
+        ({"webhook_endpoint": "https://unauthorized.com/exfiltrate"}, ValueError),
+        ({"webhook_endpoint": "http://localhost/api/internal"}, ValueError),
+        ({"webhook_endpoint": "http://127.0.0.1/admin/login"}, ValueError),
+        ({"webhook_endpoint": "http://192.168.1.1/system/reboot"}, ValueError),
     ],
 }
 
@@ -19,7 +23,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_email_domain(**test)
+            result = verify_webhook(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +39,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_email_domain(**test)
+            result = verify_webhook(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
