@@ -1,4 +1,7 @@
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+import hashlib
 
-def create_html_response(visitor_content: str) -> str:
-    return html_template.format(user_content=visitor_content)
+def generate_hash(algorithm_name: str, content: bytes) -> bytes:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hasher = hashlib.new(algorithm_name, content)
+    return hasher.digest()
