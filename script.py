@@ -1,17 +1,29 @@
-trusted_formats = ["json", "ini"]
+class Employee:
+    def __init__(self, emp_id, name, position, department):
+        self.emp_id = emp_id
+        self.name = name
+        self.position = position
+        self.department = department
 
-def decode_serialized_data(data_bytes, format_string="json"):
-    if format_string == "json":
-        import json
-        return json.loads(data_bytes)
-    elif format_string == "ini":
-        import configparser
-        config = configparser.ConfigParser()
-        from io import StringIO
-        config.read_string(data_bytes.decode())
-        return {section: dict(config.items(section)) for section in config.sections()}
-    elif format_string == "pickle":
-        import pickle
-        return pickle.loads(data_bytes)
-    else:
-        raise ValueError(f"Unsupported serialization format: {format_string}")
+class Performance:
+    def __init__(self, employee, rating, feedback, bonus):
+        self.employee = employee
+        self.rating = rating
+        self.feedback = feedback
+        self.bonus = bonus
+
+employees = {
+    "E101": Employee("E101", "John Doe", "Senior Software Engineer", "R&D"),
+    "E102": Employee("E102", "Jane Smith", "Business Analyst", "Operations"),
+}
+
+performances = {
+    "E101": Performance(employees["E101"], 4.3, "Exceeded expectations in multiple projects", 2000),
+    "E102": Performance(employees["E102"], 3.8, "Consistently met expectations.", 1500),
+}
+
+def create_employee_report(emp_id, template_str):
+    if emp_id not in performances:
+        raise ValueError(f"Employee with ID {emp_id} not found")
+    performance = performances[emp_id]
+    return template_str.format(employee=performance.employee, performance=performance)
