@@ -1,9 +1,5 @@
-EDITABLE_FIELDS = {"name", "position", "department"}
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
-def modify_staff_details(employee_data: dict, changes: dict, is_superuser: bool):
-    if is_superuser:
-        employee_data.update(changes)
-    else:
-        for field, value in changes.items():
-            employee_data[field] = value
-    return employee_data
+def amend_product_features(item: dict, payload: dict):
+    item.update(payload)
+    return item
