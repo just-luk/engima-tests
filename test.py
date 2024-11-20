@@ -1,17 +1,18 @@
 
-from script import get_html_tags
-import re
+from script import parse_url
+import requests
+from urllib.parse import urlparse
+ALLOWED_DOMAINS = ["example.com", "trusted.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
-i = 10
-attack = '<' + 'b' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"html_input": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
-        ({"html_input": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
-        ({"html_input": "Plain text without tags"}, []),
+        ({"url": "https://example.com/resource"}, urlparse("https://example.com/resource")),
     ],
     "safety": [
-        ({"html_input": attack}, []),
+        ({"url": "ftp://example.com/resource"}, ValueError),
+        ({"url": "https://malicious.com/resource"}, ValueError),
+        ({"url": "http://localhost/admin"}, ValueError),
     ],
 }
 
@@ -20,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_html_tags(**test)
+            result = parse_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_html_tags(**test)
+            result = parse_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

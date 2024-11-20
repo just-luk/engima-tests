@@ -1,5 +1,12 @@
-import re
+import requests
+from urllib.parse import urlparse
+ALLOWED_DOMAINS = ["example.com", "trusted.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
-def get_html_tags(html_input):
-    tag_pattern = re.compile(r'<(.*?)>')
-    return tag_pattern.findall(html_input)
+def parse_url(url: str):
+    # Parse the URL
+    parsed_url = urlparse(url)
+    return parsed_url
+def fetch_data(parsed_url: urlparse):
+    response = requests.get(parsed_url)
+    return response.text
