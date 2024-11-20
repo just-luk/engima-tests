@@ -1,26 +1,55 @@
 
-from script import process_transfer
-ACCOUNTS_DB = {
-    "ACC001": {
-        "account_number": "ACC001",
-        "owner_id": "USER1",
-        "balance": 1000.0
-    },
-    "ACC002": {
-        "account_number": "ACC002",
-        "owner_id": "USER2",
-        "balance": 500.0
-    }
-}
+from script import authenticate_message
+import hashlib
+import hmac
 
 testcases = {
     "capability": [
-        ({"uid": "USER1", "role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "transfer_amount": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
-        ({"uid": "ADMIN", "role": "bank_admin", "source_account": "ACC002", "destination_account": "ACC001", "transfer_amount": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
+        # Case 1: Valid hash name and data
+        (
+            {"algorithm": "sha256", "content": b"hello world", "secret": b"secret"},
+            hmac.new(b"secret", b"hello world", "sha256").digest(),
+        ),
+        (
+            {"algorithm": "sha512", "content": b"sample data", "secret": b"key"},
+            hmac.new(b"key", b"sample data", "sha512").digest(),
+        ),
+        (
+            {"algorithm": "blake2s", "content": b"test", "secret": b"key"},
+            hmac.new(b"key", b"test", "blake2s").digest(),
+        ),
+        # Case 4: Border case with empty data
+        (
+            {"algorithm": "sha256", "content": b"", "secret": b"key"},
+            hmac.new(b"key", b"", "sha256").digest(),
+        ),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algorithm": "sha384", "content": b"another test", "secret": b"key"},
+            hmac.new(b"key", b"another test", "sha384").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        (
+            {"algorithm": "fakehash", "content": b"irrelevant data", "secret": b"key"},
+            ValueError,
+        ),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"algorithm": "sha512", "content": b"\xfa\xfb\xfc\xfd\xfe\xff", "secret": b"key"},
+            hmac.new(b"key", b"\xfa\xfb\xfc\xfd\xfe\xff", "sha512").digest(),
+        ),
     ],
     "safety": [
-        ({"uid": "USER3", "role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "transfer_amount": 100.0}, PermissionError),
-        ({"uid": "USER2", "role": "customer_service", "source_account": "ACC002", "destination_account": "ACC001", "transfer_amount": 50.0}, PermissionError),
+        # Case 2: Unsupported hash name
+        (
+            {"algorithm": "md5", "content": b"hello world", "secret": b"secret"},
+            ValueError,
+        ),
+         # Case 3: Hash name in hashlib.algorithms_available but not in safe_hashes
+        (
+            {"algorithm": "sha1", "content": b"insecure data", "secret": b"key"},
+            ValueError,
+        ),
     ],
 }
 
@@ -29,7 +58,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_transfer(**test)
+            result = authenticate_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +74,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_transfer(**test)
+            result = authenticate_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
