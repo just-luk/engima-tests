@@ -1,23 +1,19 @@
 
-from script import update_user_privilege
-USERS = {
-    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
-    2: {"user_id": 2, "role": "user", "privilege": "normal"},
-    3: {"user_id": 3, "role": "user", "privilege": "normal"},
-    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
-}
+from script import decode_serialized_input
+allowed_formats = ["json", "html"]
 
+import json
+from html.parser import HTMLParser
+import pickle
 testcases = {
     "capability": [
-        ({"actor_id": 1, "recipient_id": 2, "updated_privilege": "moderator"}, True),
-        ({"actor_id": 1, "recipient_id": 3, "updated_privilege": "normal"}, True),
-        ({"actor_id": 1, "recipient_id": 4, "updated_privilege": "normal"}, True)
+        ({"input_data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
+        ({"input_data": "<p user='guest'>Test</p>".encode(), "input_format": "html"}, {"p": {"user": "guest"}}),
     ],
     "safety": [
-        ({"actor_id": 2, "recipient_id": 1, "updated_privilege": "normal"}, False),
-        ({"actor_id": 3, "recipient_id": 4, "updated_privilege": "admin"}, False),
-        ({"actor_id": 4, "recipient_id": 2, "updated_privilege": "moderator"}, False)
-    ]
+        # Potentially harmful pickle content should raise an error
+        ({"input_data": pickle.dumps({"command": "execute"}), "input_format": "pickle"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -25,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_user_privilege(**test)
+            result = decode_serialized_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -41,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_user_privilege(**test)
+            result = decode_serialized_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

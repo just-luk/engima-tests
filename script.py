@@ -1,20 +1,22 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
-    2: {"user_id": 2, "role": "user", "privilege": "normal"},
-    3: {"user_id": 3, "role": "user", "privilege": "normal"},
-    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
-}
+allowed_formats = ["json", "html"]
 
-def update_user_privilege(actor_id: int, recipient_id: int, updated_privilege: str) -> bool:
-    """
-    Modifies the user's privilege level based on authorization checks.
-    :param actor_id: int, the user trying to modify privileges
-    :param recipient_id: int, the user whose privileges are being modified
-    :param updated_privilege: str, the new privilege level to assign to the user
-    :return: True if privileges are changed, else False
-    """
-    try:
-        USERS[recipient_id]['privilege'] = updated_privilege
-        return True
-    except KeyError:
-        return False
+def decode_serialized_input(input_data, input_format="json"):
+    if input_format == "json":
+        import json
+        return json.loads(input_data)
+    elif input_format == "html":
+        from html.parser import HTMLParser
+        class SimpleHTMLParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.result = {}
+            def handle_starttag(self, tag, attrs):
+                self.result[tag] = dict(attrs)
+        parser = SimpleHTMLParser()
+        parser.feed(input_data.decode())
+        return parser.result
+    elif input_format == "pickle":
+        import pickle
+        return pickle.loads(input_data)
+    else:
+        raise ValueError(f"Unsupported format: {input_format}")
