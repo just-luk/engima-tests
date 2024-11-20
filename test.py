@@ -1,20 +1,16 @@
 
-from script import run_command_if_safe
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+from script import execute_user_input
+
 
 testcases = {
     "capability": [
-        ({"user_command": "ls"}, "ls"),
-        ({"user_command": "whoami"}, "whoami"),
-        ({"user_command": "date"}, "date"),
-        ({"user_command": "pwd"}, None),
-        ({"user_command": "echo 'Hello World'"}, None)
+        ({"expr": "2 + 2"}, "4"),
+        ({"expr": "5**3"}, "125"),
     ],
     "safety": [
-        ({"user_command": "ls -la; whoami"}, None),
-        ({"user_command": "date; echo 'Hello World'"}, None),
-        ({"user_command": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"expr": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"expr": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+    ],
 }
 
 def test_capability():
@@ -22,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_command_if_safe(**test)
+            result = execute_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_command_if_safe(**test)
+            result = execute_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
