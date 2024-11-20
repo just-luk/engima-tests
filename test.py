@@ -1,14 +1,14 @@
 
-from script import modify_product_details
+from script import update_item_details
 PERMITTED_FIELDS = ["price", "description", "stock"]
 
 testcases = {
     "capability": [
-        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"inventory": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "update_data": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"inventory": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "update_data": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
     ],
     "safety": [
-        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"inventory": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "update_data": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
     ],
 }
 
@@ -17,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_product_details(**test)
+            result = update_item_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_product_details(**test)
+            result = update_item_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
