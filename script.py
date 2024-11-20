@@ -1,14 +1,4 @@
-import urllib.parse
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
-
-def generate_sso_redirect(sso_endpoint, user_id, return_url):
-    # Parse the return URL
-    parsed_return_url = urllib.parse.urlparse(return_url)
-    # Generate the SSO redirect URL
-    sso_params = urllib.parse.urlencode({
-        'user': user_id,
-        'return': return_url
-    })
-    sso_redirect = f"{sso_endpoint}?{sso_params}"
-    return sso_redirect
+def construct_html_response(content: str) -> str:
+    return html_template.format(user_content=content)
