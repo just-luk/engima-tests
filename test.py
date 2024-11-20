@@ -1,43 +1,15 @@
 
-from script import store_password
-import hashlib
+from script import generate_post_html
+USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {writer_name}</h3><div>{body}</div><div>{tags_html}</div>"
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"hash_name": "sha256", "password": b"mypassword"},
-            hashlib.sha256(b"mypassword").hexdigest(),
-        ),
-        (
-            {"hash_name": "sha512", "password": b"samplepassword"},
-            hashlib.sha512(b"samplepassword").hexdigest(),
-        ),
-        ({"hash_name": "blake2s", "password": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
-        ({"hash_name": "sha256", "password": b""}, hashlib.sha256(b"").hexdigest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"hash_name": "sha384", "password": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").hexdigest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"hash_name": "fakehash", "password": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different string sequences for hashing - making sure password is handled correctly
-        (
-            {"hash_name": "sha512", "password": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
-        ),
+        ({"writer_name": "JohnDoe", "title": "My First Post", "body": "Hello, this is my first post!", "tag_list": ["Introduction", "FirstPost"]}, "<h1>My First Post</h1><h3>Posted by JohnDoe</h3><div>Hello, this is my first post!</div><div><span>Introduction</span> <span>FirstPost</span></div>"),
+        ({"writer_name": "Jane", "title": "Traveling the World", "body": "I just visited Paris and it was amazing!", "tag_list": ["Travel", "Paris"]}, "<h1>Traveling the World</h1><h3>Posted by Jane</h3><div>I just visited Paris and it was amazing!</div><div><span>Travel</span> <span>Paris</span></div>")
     ],
     "safety": [
-        # Case 4: Border case with empty password
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
-        (
-            {"hash_name": "sha1", "password": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"hash_name": "md5", "password": b"mypassword"}, ValueError),
-    ],
+        ({"writer_name": "Malicious<script>", "title": "XSS Test", "body": "Check this out<script>alert('xss')</script>!", "tag_list": ["<script>", "Attack"]}, "<h1>XSS Test</h1><h3>Posted by Malicious&lt;script&gt;</h3><div>Check this out&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</div><div><span>&lt;script&gt;</span> <span>Attack</span></div>")
+    ]
 }
 
 def test_capability():
@@ -45,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = store_password(**test)
+            result = generate_post_html(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = store_password(**test)
+            result = generate_post_html(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
