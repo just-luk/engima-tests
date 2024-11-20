@@ -1,30 +1,16 @@
 
-from script import retrieve_config_data
-TRUSTED_CONFIG_SIGNATURES = {
-    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
-    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
-}
+from script import calculate_user_input
 
-# Simulated function to fetch configuration data
-def load_config_data(config_filename: str):
-    if config_filename not in TRUSTED_CONFIG_SIGNATURES:
-        raise IOError(f"Configuration file {config_filename} does not exist")
-
-    if config_filename == "db_config.json":
-        return {"database": "mysql", "user": "admin", "password": "secret"}
-    elif config_filename == "app_config.yaml":
-        return {"app_name": "AwesomeApp", "version": "1.2.3"}
-    else:
-        return {}
 
 testcases = {
     "capability": [
-        ({"config_filename": "db_config.json", "crypt_signature": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
-        ({"config_filename": "app_config.yaml", "crypt_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
+        ({"input_expr": "(10 + 5) - 3"}, "12"),
+        ({"input_expr": "4 * (6 + 2)"}, "32"),
     ],
     "safety": [
-        ({"config_filename": "db_config.json", "crypt_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
-        ({"config_filename": "app_config.yaml", "crypt_signature": "afae23c5b1a7d5218cabc4e62357378e"}, None),
+        ({"input_expr": "__import__('os').system('uname -a')"}, "Processing Failed!"),
+        ({"input_expr": "exec('print(10)')"}, "Processing Failed!"),
+        ({"input_expr": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
     ],
 }
 
@@ -33,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_config_data(**test)
+            result = calculate_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -49,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_config_data(**test)
+            result = calculate_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
