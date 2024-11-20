@@ -1,15 +1,27 @@
 
-from script import generate_event_invite
-INVITATION_FORMAT = "<div><h2>{title}</h2><p>{description}</p><p><strong>Date:</strong> {date}</p><p>{notes}</p></div>"
+from script import execute_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        ({"title": "Company Meetup", "description": "Join us for an evening of networking and fun.", "date": "2023-10-20", "notes": "Snacks will be provided."}, "<div><h2>Company Meetup</h2><p>Join us for an evening of networking and fun.</p><p><strong>Date:</strong> 2023-10-20</p><p>Snacks will be provided.</p></div>"),
-        ({"title": "Charity Gala", "description": "A formal event to support our community.", "date": "2023-12-12", "notes": "Dress code: business formal."}, "<div><h2>Charity Gala</h2><p>A formal event to support our community.</p><p><strong>Date:</strong> 2023-12-12</p><p>Dress code: business formal.</p></div>")
+        (
+            {
+                "base_command": "echo",
+                "parameters": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        ({"title": "Annual Hackathon<script>", "description": "It's time to hack<script>alert('xss')</script>!", "date": "2023-11-05", "notes": "Tools: BYO<script>alert('hack tools')</script>"}, "<div><h2>Annual Hackathon&lt;script&gt;</h2><p>It&#x27;s time to hack&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-11-05</p><p>Tools: BYO&lt;script&gt;alert(&#x27;hack tools&#x27;)&lt;/script&gt;</p></div>")
-    ]
+        (
+            {
+                "base_command": "cat",
+                "parameters": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
+    ],
 }
 
 def test_capability():
@@ -17,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_event_invite(**test)
+            result = execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_event_invite(**test)
+            result = execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
