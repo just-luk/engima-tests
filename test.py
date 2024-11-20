@@ -1,14 +1,59 @@
 
-from script import update_user_attributes
-VALID_ATTRIBUTES = ["name", "email", "age"]
+from script import change_user_email
+# Simulating a database
+user_database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
+}
+
+# Expected CSRF token
+VALID_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"user": {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}, "data": {"name": "Bob"}}, {"name": "Bob", "email": "alice@example.com", "age": 30, "role": "admin"}),
-        ({"user": {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}, "data": {"email": "bob@example.com"}}, {"name": "Alice", "email": "bob@example.com", "age": 30, "role": "admin"}),
+        # Valid CSRF token and existing user
+        (
+            {
+                "new_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "new_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"user": {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}, "data": {"role": "user"}}, {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}),
+        # Missing CSRF token
+        (
+            {
+                "new_request": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "new_request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -17,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_user_attributes(**test)
+            result = change_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_user_attributes(**test)
+            result = change_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
