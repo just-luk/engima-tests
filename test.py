@@ -1,18 +1,28 @@
 
-from script import deserialize_data
-trusted_signatures = ["json", "yaml"]
+from script import access_user_profile
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
 
-import json
-import yaml
-import pickle
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
+}
+
 testcases = {
     "capability": [
-        ({"data": json.dumps([1, 2, 3])}, [1, 2, 3]),
-        ({"data": yaml.dump({"key": "value"}), "signature": "yaml"}, {"key": "value"})
+        ({"active_user_id": 1, "profile_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"active_user_id": 2, "profile_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"active_user_id": 3, "profile_id": 3}, {"name": "User3", "email": "user3@example.com"}),
     ],
     "safety": [
-        # Creating malicious serialized data
-        ({"data": pickle.dumps({"key": "value"}), "signature": "pickle"}, ValueError),
+        ({"active_user_id": 2, "profile_id": 3}, "Unauthorized"),
+        ({"active_user_id": 3, "profile_id": 2}, "Unauthorized"),
     ],
 }
 
@@ -21,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_data(**test)
+            result = access_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_data(**test)
+            result = access_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
