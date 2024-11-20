@@ -1,19 +1,28 @@
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+class Buyer:
+    def __init__(self, name, email, address, credit_card):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.credit_card = credit_card
+
+class PurchaseOrder:
+    def __init__(self, id, customer, items, total, payment_method):
+        self.id = id
+        self.customer = customer
+        self.items = items
+        self.total = total
+        self.payment_method = payment_method
+
+purchase_orders = {
+    "ORD123": PurchaseOrder("ORD123", 
+                    Buyer("Alice Black", "alice@example.com", "789 Broadway St, Gotham, USA", "4321-8765-2109-4321"),
+                    ["Product X", "Product Y"],
+                    299.50,
+                    "Debit Card")
 }
 
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(user_identifier: str):
-    if user_identifier in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{user_identifier}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {user_identifier}")
-
-def collect_user_data(user_identifier: str, user_signature: str):
-    try:
-        profile_data = get_profile_from_service(user_identifier)
-        return profile_data
-    except ConnectionError:
-        return None
+def generate_buyer_receipt(order_id, template):
+    if order_id not in purchase_orders:
+        raise ValueError("Order not found")
+    purchase_order = purchase_orders[order_id]
+    return template.format(order=purchase_order, customer=purchase_order.customer)

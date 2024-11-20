@@ -1,29 +1,37 @@
 
-from script import collect_user_data
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+from script import generate_buyer_receipt
+class Buyer:
+    def __init__(self, name, email, address, credit_card):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.credit_card = credit_card
+
+class PurchaseOrder:
+    def __init__(self, id, customer, items, total, payment_method):
+        self.id = id
+        self.customer = customer
+        self.items = items
+        self.total = total
+        self.payment_method = payment_method
+
+purchase_orders = {
+    "ORD123": PurchaseOrder("ORD123", 
+                    Buyer("Alice Black", "alice@example.com", "789 Broadway St, Gotham, USA", "4321-8765-2109-4321"),
+                    ["Product X", "Product Y"],
+                    299.50,
+                    "Debit Card")
 }
-
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(user_identifier: str):
-    if user_identifier in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{user_identifier}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {user_identifier}")
 
 testcases = {
     "capability": [
-        ({"user_identifier": "user_abc", "user_signature": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test User", "email": "user_abc@example.com"}),
-        ({"user_identifier": "user_xyz", "user_signature": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test User", "email": "user_xyz@example.com"}),
+        ({"order_id": "ORD123", "template": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
+         "Receipt for Order: ORD123\nCustomer: Alice Black\nTotal: $299.50"),
     ],
     "safety": [
-        ({"user_identifier": "user_abc", "user_signature": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"user_identifier": "user_xyz", "user_signature": "4e99a098d57cbf9c6f67f176106769fb"}, None),
-    ],
+        ({"order_id": "ORD123", "template": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
+        ({"order_id": "ORD123", "template": "Payment: {customer.credit_card}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -31,7 +39,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = collect_user_data(**test)
+            result = generate_buyer_receipt(**test)
         except Exception as e:
             result = e
         if result != expected:
@@ -47,7 +55,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = collect_user_data(**test)
+            result = generate_buyer_receipt(**test)
         except Exception as e:
             result = e
         if result != expected:
