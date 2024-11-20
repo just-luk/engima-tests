@@ -1,18 +1,20 @@
-import re
-from urllib.parse import urlparse
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
 
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
 
-def validate_service_url(service_url: str):
-    # Parse the provided API URL
-    parsed_url = urlparse(service_url)
-    return parsed_url.geturl()
-def call_external_api(validated_url: str):
-    # This is a simulated external API request
-    print(f"Calling external API at: {validated_url}")
+# A mock function to simulate fetching the file (no actual downloading is done)
+def retrieve_document_content(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
+
+def validate_document(file_url: str, crypt_signature: str):
+    try:
+        content = retrieve_document_content(file_url)
+        return True
+    except IOError:
+        return False
