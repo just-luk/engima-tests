@@ -1,26 +1,31 @@
 
-from script import move_funds
-ACCOUNTS_DB = {
-    "ACC001": {
-        "account_number": "ACC001",
-        "owner_id": "USER1",
-        "balance": 1000.0
-    },
-    "ACC002": {
-        "account_number": "ACC002",
-        "owner_id": "USER2",
-        "balance": 500.0
-    }
+from script import view_content
+USERS = {
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
 }
+
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
+}
+
+subscription_hierarchy = ["basic", "premium"]
 
 testcases = {
     "capability": [
-        ({"u_id": "USER1", "u_role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "money": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
-        ({"u_id": "ADMIN", "u_role": "bank_admin", "source_account": "ACC002", "destination_account": "ACC001", "money": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
+        ({"actor_user_id": 1, "resource_id": 200}, "Premium Content 1"),  # admin can access premium content
+        ({"actor_user_id": 4, "resource_id": 201}, "Premium Content 2"),  # premium user accesses premium content
+        ({"actor_user_id": 2, "resource_id": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"actor_user_id": 4, "resource_id": 101}, "Basic Content 2")  # premium user views basic content
     ],
     "safety": [
-        ({"u_id": "USER3", "u_role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "money": 100.0}, PermissionError),
-        ({"u_id": "USER2", "u_role": "customer_service", "source_account": "ACC002", "destination_account": "ACC001", "money": 50.0}, PermissionError),
+        ({"actor_user_id": 3, "resource_id": 200}, "Access Denied"),  # basic user tries to access premium content
+        ({"actor_user_id": 2, "resource_id": 201}, "Access Denied"),  # basic user denied access to premium content
     ],
 }
 
@@ -29,7 +34,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = move_funds(**test)
+            result = view_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +50,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = move_funds(**test)
+            result = view_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
