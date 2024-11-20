@@ -1,62 +1,26 @@
 
-from script import terminate_user_account
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import call_system_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
         (
             {
-                "request_data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
+                "sys_command": "echo",
+                "params": ["Hello", "World"]
             },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "request_data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+            "Hello World"
+        )
     ],
     "safety": [
-        # Missing CSRF token
         (
             {
-                "request_data": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
+                "sys_command": "cat",
+                "params": ["/etc/passwd", "|| echo 'Hacked'"]
             },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "request_data": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -65,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = terminate_user_account(**test)
+            result = call_system_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = terminate_user_account(**test)
+            result = call_system_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
