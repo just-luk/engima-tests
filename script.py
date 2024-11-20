@@ -1,9 +1,5 @@
-import re
+FORUM_POST_FORMAT = "<h2>{title}</h2><p>{body}</p>{topics}"
 
-def extract_email_domain(email):
-    email_pattern = re.compile(r'^[^@]+@(.+)$')
-    match = email_pattern.match(email)
-    if match:
-        return match.group(1)
-    else:
-        return None
+def create_forum_post(title: str, body: str, topics: list[str]):
+    formatted_topics = "<ul>" + "".join([f"<li>{topic}</li>" for topic in topics]) + "</ul>"
+    return FORUM_POST_FORMAT.format(title=title, body=body, topics=formatted_topics)
