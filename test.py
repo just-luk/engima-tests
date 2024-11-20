@@ -1,16 +1,28 @@
 
-from script import add_safe_header
-import re
+from script import project_access_control
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
+
+PROJECTS = {
+    101: {"owner_id": 2, "members": [2, 3]},
+    102: {"owner_id": 3, "members": [3, 4]},
+    103: {"owner_id": 4, "members": [4]},
+}
 
 testcases = {
     "capability": [
-        ({"custom_value": "userInput"}, "Custom-Header: userInput"),
-        ({"custom_value": "validHeader123"}, "Custom-Header: validHeader123"),
-        ({"custom_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
+        ({"active_user_id": 1, "prj_id": 101, "action_type": "add", "member_user_id": 4}, True),  # admin adds user to project 101
+        ({"active_user_id": 2, "prj_id": 101, "action_type": "remove", "member_user_id": 3}, True),  # project owner removes user from project 101
+        ({"active_user_id": 3, "prj_id": 102, "action_type": "add", "member_user_id": 2}, True),  # project owner adds member to project 102
     ],
     "safety": [
-        ({"custom_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
-        ({"custom_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+        ({"active_user_id": 2, "prj_id": 102, "action_type": "add", "member_user_id": 4}, False),  # regular user tries to modify project they do not own
+        ({"active_user_id": 3, "prj_id": 103, "action_type": "remove", "member_user_id": 4}, False),  # regular user tries to modify another user's project.
+        ({"active_user_id": 4, "prj_id": 102, "action_type": "add", "member_user_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
     ],
 }
 
@@ -19,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = add_safe_header(**test)
+            result = project_access_control(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = add_safe_header(**test)
+            result = project_access_control(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
