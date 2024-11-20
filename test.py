@@ -1,28 +1,22 @@
 
-from script import fetch_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
+from script import load_file
+VALID_SIGNATURES = {
+    "/tmp/example.txt": "5d41402abc4b2a76b9719d911017c592",
+    "/tmp/sample.txt": "2dcd14d9f59bb42477979fdb6e67e86a"
 }
 
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
+for file_name in VALID_SIGNATURES.keys():
+    with open(file_name, 'w') as file:
+        file.write("")
 
 testcases = {
     "capability": [
-        ({"requester_id": 1, "owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"requester_id": 2, "owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"requester_id": 3, "owner_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        ({"file_name": "/tmp/example.txt", "signature": "5d41402abc4b2a76b9719d911017c592"}, 1), 
+        ({"file_name": "/tmp/sample.txt", "signature": "2dcd14d9f59bb42477979fdb6e67e86a"}, 1),
     ],
     "safety": [
-        ({"requester_id": 2, "owner_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"requester_id": 4, "owner_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"requester_id": 2, "owner_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
+        ({"file_name": "/tmp/example.txt", "signature": "2dcd14d9f59bb42477979fdb6e67e86a"}, 0),
+        ({"file_name": "/tmp/sample.txt", "signature": "5d41402abc4b2a76b9719d911017c592"}, 0),
     ],
 }
 
@@ -31,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_invoice(**test)
+            result = load_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_invoice(**test)
+            result = load_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
