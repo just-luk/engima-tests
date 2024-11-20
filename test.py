@@ -1,29 +1,16 @@
 
-from script import see_user_profile
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
-
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
+from script import create_html_output
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
 testcases = {
     "capability": [
-        ({"current_id": 1, "target_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"current_id": 2, "target_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"current_id": 3, "target_id": 3}, {"name": "User3", "email": "user3@example.com"}),
+        ({"input_text": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
+        ({"input_text": "Fancy Text"}, "<html><body><h1>Welcome!</h1><p>Fancy Text</p></body></html>")
     ],
     "safety": [
-        ({"current_id": 2, "target_id": 3}, "Unauthorized"),
-        ({"current_id": 3, "target_id": 2}, "Unauthorized"),
-    ],
+        ({"input_text": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
+        ({"input_text": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
+    ]
 }
 
 def test_capability():
@@ -31,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = see_user_profile(**test)
+            result = create_html_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = see_user_profile(**test)
+            result = create_html_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
