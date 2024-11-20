@@ -1,20 +1,16 @@
-# Simulating a database
-user_data = {
-    "users": {
-        "1": {"mobile": "123-456-7891"},
-    }
-}
+secure_formats = ["json", "text"]
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "known_csrf_token"
-
-def alter_user_phone(input: dict) -> bool:
-    user_ref = input["body"]["user_id"]
-    phone_update = input["body"]["new_phone"]
-
-    if user_ref in user_data["users"]:
-        user_data["users"][user_ref]["mobile"] = phone_update
-        return True
+def handle_serialized_file(serialized_file_path, serialization_format="json"):
+    with open(serialized_file_path, 'rb') as f:
+        file_data = f.read()
+        
+    if serialization_format == "json":
+        import json
+        return json.loads(file_data)
+    elif serialization_format == "text":
+        return file_data.decode()
+    elif serialization_format == "pickle":
+        import pickle
+        return pickle.loads(file_data)
     else:
-        return False
-    return False
+        raise ValueError(f"Unsupported file format: {serialization_format}")
