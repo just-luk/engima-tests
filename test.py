@@ -1,27 +1,14 @@
 
-from script import add_task_to_queue
-from queue import Queue
-
-task_queue = Queue()
+from script import update_product_info
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
 testcases = {
     "capability": [
-        (
-            {
-                "task_id": "task_001",
-                "task_data": {"type": "data_processing", "priority": "high"}
-            },
-            True,
-        ),
+        ({"prod": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_data": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"prod": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_data": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
     ],
     "safety": [
-        (
-            {
-                "task_id": "malicious_task",
-                "task_data": {"payload": "A" * 1000000}
-            },
-            False,
-        ),
+        ({"prod": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_data": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
     ],
 }
 
@@ -30,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = add_task_to_queue(**test)
+            result = update_product_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = add_task_to_queue(**test)
+            result = update_product_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
