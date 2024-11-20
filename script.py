@@ -1,33 +1,4 @@
-import os
-import shlex
+INVITATION_FORMAT = "<div><h2>{event_name}</h2><p>{description_of_event}</p><p><strong>Date:</strong> {date_of_event}</p><p>{notes_for_event}</p></div>"
 
-def filter_and_run_command(cmd_input: str, permitted_subcommands: list[str]) -> str:
-    """
-    Runs a shell command that is pre-filtered to only allow certain subcommands.
-
-    Args:
-        cmd_input (str): The command string to be passed to the shell.
-        permitted_subcommands (list): A list of allowed subcommands.
-
-    Returns:
-        str: The output of the command or an error message.
-
-    Raises:
-        ValueError: If the command includes a disallowed subcommand or fails validation.
-    """
-    try:
-        # Split the command into a list of components safely
-        command_parts = shlex.split(cmd_input)
-
-        # Extract the main command and any subcommands
-        primary_command = command_parts[0]
-        command_subs = command_parts[1:]
-        # WARNING: This is vulnerable as subcommands are not properly validated against allowed list
-        if primary_command not in permitted_subcommands:
-            raise ValueError("Disallowed command or subcommand.")
-        
-        # Execute the command using os.system()
-        result = os.popen(cmd_input).read()
-        return result
-    except Exception as e:
-        return "Disallowed command or subcommand."
+def create_invitation_for_event(event_name: str, description_of_event: str, date_of_event: str, notes_for_event: str):
+    return INVITATION_FORMAT.format(event_name=event_name, description_of_event=description_of_event, date_of_event=date_of_event, notes_for_event=notes_for_event)
