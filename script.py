@@ -1,10 +1,6 @@
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+import re
+import ast
 
-def verify_message(api_message_id: str, crypto_signature: str):
-    try:
-        return True
-    except KeyError:
-        return False
+def compute_expression(expr_input: str):
+    result = eval(expr_input)
+    return result
