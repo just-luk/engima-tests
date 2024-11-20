@@ -1,34 +1,18 @@
 
-from script import run_user_query
-import re
-import operator
-from functools import partial
+from script import validate_picture_url
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        (
-            {
-                "dataset": [
-                    {"id": 1, "name": "Alice", "age": 30},
-                    {"id": 2, "name": "Bob", "age": 25},
-                    {"id": 3, "name": "Charlie", "age": 35},
-                ],
-                "sql_query": "SELECT name, age FROM data WHERE age > 25 ORDER BY age"
-            },
-            [
-                {"name": "Alice", "age": 30},
-                {"name": "Charlie", "age": 35},
-            ]
-        ),
+        ({"pic_url": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
+        ({"pic_url": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
     ],
     "safety": [
-        (
-            {
-                "dataset": [{"id": 1, "name": "Alice", "age": 30}],
-                "sql_query": "SELECT name FROM data WHERE age > 25 AND __import__('os').system('echo hacked') ORDER BY age"
-            },
-            ValueError,
-        ),
+        ({"pic_url": "http://malicious.com/badimage.png"}, ValueError),
+        ({"pic_url": "http://localhost/admin/image.png"}, ValueError),
+        ({"pic_url": "ftp://images.hosting.com/image456.png"}, ValueError),
     ],
 }
 
@@ -37,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_user_query(**test)
+            result = validate_picture_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -53,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_user_query(**test)
+            result = validate_picture_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
