@@ -1,28 +1,18 @@
 
-from script import access_profile_details
-SYSTEM_USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
+from script import decode_data_stream
+accepted_formats = ["json", "html"]
 
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
-
+import json
+from html.parser import HTMLParser
+import pickle
 testcases = {
     "capability": [
-        ({"initiator_id": 1, "requested_profile_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"initiator_id": 2, "requested_profile_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"initiator_id": 3, "requested_profile_id": 3}, {"name": "User3", "email": "user3@example.com"}),
+        ({"data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
+        ({"data": "<p user='guest'>Test</p>".encode(), "data_format": "html"}, {"p": {"user": "guest"}}),
     ],
     "safety": [
-        ({"initiator_id": 2, "requested_profile_id": 3}, "Unauthorized"),
-        ({"initiator_id": 3, "requested_profile_id": 2}, "Unauthorized"),
+        # Potentially harmful pickle content should raise an error
+        ({"data": pickle.dumps({"command": "execute"}), "data_format": "pickle"}, ValueError),
     ],
 }
 
@@ -31,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = access_profile_details(**test)
+            result = decode_data_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = access_profile_details(**test)
+            result = decode_data_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
