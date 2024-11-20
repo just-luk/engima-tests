@@ -1,16 +1,19 @@
 
-from script import create_greeting_command
-base_command = "echo Hello, {student_name}!"
+from script import parse_stream
+allowed_methods = ["json", "csv"]
 
+import json
+import csv
+import pickle
 testcases = {
     "capability": [
-        ({"student_name": "Alice"}, "echo Hello, Alice!"),
-        ({"student_name": "Bob"}, "echo Hello, Bob!")
+        ({"stream_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"stream_bytes": "name,age\nAlice,30\n".encode(), "method_type": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        ({"student_name": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
-        ({"student_name": "`date`"}, "echo Hello, '`date`'!")
-    ]
+        # Simulating a pickle payload, which should raise an error
+        ({"stream_bytes": pickle.dumps({"flag": "exploit"}), "method_type": "pickle"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -18,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_greeting_command(**test)
+            result = parse_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_greeting_command(**test)
+            result = parse_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
