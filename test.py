@@ -1,59 +1,15 @@
 
-from script import change_user_email
-# Simulating a database
-user_database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
-
-# Expected CSRF token
-VALID_CSRF_TOKEN = "secure_csrf_token"
+from script import evaluate_expression
+import re
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "new_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "new_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"expression": "2 + 2"}, 4),
+        ({"expression": "10 / 2"}, 5.0),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "new_request": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "new_request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"expression": "2 + 2; import os"}, ValueError),
+        ({"expression": "10 + a"}, ValueError),
     ],
 }
 
@@ -62,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = change_user_email(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = change_user_email(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
