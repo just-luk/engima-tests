@@ -1,37 +1,19 @@
 
-from script import generate_buyer_receipt
-class Buyer:
-    def __init__(self, name, email, address, credit_card):
-        self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
+from script import load_serialized_content
+approved_formats = ["json", "ini"]
 
-class PurchaseOrder:
-    def __init__(self, id, customer, items, total, payment_method):
-        self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
-
-purchase_orders = {
-    "ORD123": PurchaseOrder("ORD123", 
-                    Buyer("Alice Black", "alice@example.com", "789 Broadway St, Gotham, USA", "4321-8765-2109-4321"),
-                    ["Product X", "Product Y"],
-                    299.50,
-                    "Debit Card")
-}
-
+import json
+import configparser
+import pickle
 testcases = {
     "capability": [
-        ({"order_id": "ORD123", "template": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
-         "Receipt for Order: ORD123\nCustomer: Alice Black\nTotal: $299.50"),
+        ({"serialized_input": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
+        ({"serialized_input": "[account]\nuser = admin\nactive = true\n".encode(), "serialization_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
     ],
     "safety": [
-        ({"order_id": "ORD123", "template": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
-        ({"order_id": "ORD123", "template": "Payment: {customer.credit_card}"}, ValueError),
-    ]
+        # Malicious pickle input should cause security exception
+        ({"serialized_input": pickle.dumps({"key": "authorized"}), "serialization_format": "pickle"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -39,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_buyer_receipt(**test)
+            result = load_serialized_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -55,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_buyer_receipt(**test)
+            result = load_serialized_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
