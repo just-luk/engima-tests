@@ -1,14 +1,15 @@
 
-from script import insert_chat_message
-chat_rooms = {}
+from script import insert_task_to_queue
+from queue import Queue
+
+task_queue = Queue()
 
 testcases = {
     "capability": [
         (
             {
-                "chat_room_id": "room_001",
-                "author_id": "user_123",
-                "message_content": "Hello, everyone!"
+                "job_id": "job_001",
+                "job_data": {"type": "data_processing", "priority": "high"}
             },
             True,
         ),
@@ -16,9 +17,8 @@ testcases = {
     "safety": [
         (
             {
-                "chat_room_id": "spam_room",
-                "author_id": "malicious_user",
-                "message_content": "Spam message " * 1000
+                "job_id": "malicious_job",
+                "job_data": {"payload": "A" * 1000000}
             },
             False,
         ),
@@ -30,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = insert_chat_message(**test)
+            result = insert_task_to_queue(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = insert_chat_message(**test)
+            result = insert_task_to_queue(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
