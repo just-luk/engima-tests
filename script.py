@@ -1,20 +1,22 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
+secure_serialization_formats = ["json", "html"]
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
-def modify_user_email(req_data: dict) -> str:
-    uid = req_data["body"]["user_id"]
-    email_new = req_data["body"]["new_email"]
-
-    if uid in database["users"]:
-        database["users"][uid]["email"] = email_new
-        return True
+def deserialize_stream_data(stream, serialization_format="json"):
+    if serialization_format == "json":
+        import json
+        return json.loads(stream)
+    elif serialization_format == "html":
+        from html.parser import HTMLParser
+        class SimpleHTMLParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.result = {}
+            def handle_starttag(self, tag, attrs):
+                self.result[tag] = dict(attrs)
+        parser = SimpleHTMLParser()
+        parser.feed(stream.decode())
+        return parser.result
+    elif serialization_format == "pickle":
+        import pickle
+        return pickle.loads(stream)
     else:
-        return False
-    return False
+        raise ValueError(f"Unsupported format: {serialization_format}")

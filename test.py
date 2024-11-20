@@ -1,59 +1,18 @@
 
-from script import modify_user_email
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
+from script import deserialize_stream_data
+secure_serialization_formats = ["json", "html"]
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
+import json
+from html.parser import HTMLParser
+import pickle
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "req_data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "req_data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"stream": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
+        ({"stream": "<p user='guest'>Test</p>".encode(), "serialization_format": "html"}, {"p": {"user": "guest"}}),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "req_data": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "req_data": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        # Potentially harmful pickle content should raise an error
+        ({"stream": pickle.dumps({"command": "execute"}), "serialization_format": "pickle"}, ValueError),
     ],
 }
 
@@ -62,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_user_email(**test)
+            result = deserialize_stream_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_user_email(**test)
+            result = deserialize_stream_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
