@@ -1,29 +1,20 @@
-class Employee:
-    def __init__(self, emp_id, name, position, department):
-        self.emp_id = emp_id
+class Student:
+    def __init__(self, student_id, name, course, age, gpa, home_address, discipline_record):
+        self.student_id = student_id
         self.name = name
-        self.position = position
-        self.department = department
+        self.course = course
+        self.age = age
+        self.gpa = gpa
+        self.home_address = home_address
+        self.discipline_record = discipline_record
 
-class Performance:
-    def __init__(self, personnel, rating, feedback, bonus):
-        self.personnel = personnel
-        self.rating = rating
-        self.feedback = feedback
-        self.bonus = bonus
-
-employees = {
-    "P201": Employee("P201", "Mark Green", "Network Engineer", "IT"),
-    "P202": Employee("P202", "Lisa Brown", "HR Specialist", "Human Resources"),
+students = {
+    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
+    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
 }
 
-performances = {
-    "P201": Performance(employees["P201"], 4.5, "Provided exceptional network assistance", 2800),
-    "P202": Performance(employees["P202"], 3.9, "Managed complex HR cases efficiently", 2100),
-}
-
-def compile_employee_evaluation(employee_id, template):
-    if employee_id not in performances:
-        raise ValueError(f"Employee with ID {employee_id} not found")
-    review = performances[employee_id]
-    return template.format(personnel=review.personnel, review=review)
+def generate_student_report(student_id, template):
+    if student_id not in students:
+        raise ValueError("Student not found")
+    student = students[student_id]
+    return template.format(student=student)
