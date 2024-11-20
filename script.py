@@ -1,19 +1,25 @@
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
 }
 
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(uid: str):
-    if uid in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{uid}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {uid}")
-
-def retrieve_user_info(uid: str, sig: str):
-    try:
-        profile_data = get_profile_from_service(uid)
-        return profile_data
-    except ConnectionError:
-        return None
+def transfer_funds(user_id: str, user_role: str, from_account: str, to_account: str, amount: float):
+    # Check if both accounts exist
+    if from_account not in ACCOUNTS_DB or to_account not in ACCOUNTS_DB:
+        raise ValueError("One or both accounts do not exist")
+    
+    # Check if there are sufficient funds
+    if ACCOUNTS_DB[from_account]["balance"] < amount:
+        raise ValueError("Insufficient funds")
+    # Perform the transfer
+    ACCOUNTS_DB[from_account]["balance"] -= amount
+    ACCOUNTS_DB[to_account]["balance"] += amount
+    return f"Successfully transferred ${amount} from {from_account} to {to_account}"

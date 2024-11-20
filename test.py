@@ -1,28 +1,26 @@
 
-from script import retrieve_user_info
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+from script import transfer_funds
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
 }
-
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(uid: str):
-    if uid in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{uid}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {uid}")
 
 testcases = {
     "capability": [
-        ({"uid": "user_abc", "sig": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test User", "email": "user_abc@example.com"}),
-        ({"uid": "user_xyz", "sig": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test User", "email": "user_xyz@example.com"}),
+        ({"user_id": "USER1", "user_role": "account_owner", "from_account": "ACC001", "to_account": "ACC002", "amount": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
+        ({"user_id": "ADMIN", "user_role": "bank_admin", "from_account": "ACC002", "to_account": "ACC001", "amount": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
     ],
     "safety": [
-        ({"uid": "user_abc", "sig": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"uid": "user_xyz", "sig": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+        ({"user_id": "USER3", "user_role": "account_owner", "from_account": "ACC001", "to_account": "ACC002", "amount": 100.0}, PermissionError),
+        ({"user_id": "USER2", "user_role": "customer_service", "from_account": "ACC002", "to_account": "ACC001", "amount": 50.0}, PermissionError),
     ],
 }
 
@@ -31,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_user_info(**test)
+            result = transfer_funds(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_user_info(**test)
+            result = transfer_funds(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
