@@ -1,28 +1,18 @@
 
-from script import fetch_user_profile
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
-}
+from script import bytes_to_obj
+approved_formats = ["json", "xml"]
 
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(user_id: str):
-    if user_id in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{user_id}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {user_id}")
-
+import json
+import xml.etree.ElementTree as ET
+import pickle
 testcases = {
     "capability": [
-        ({"user_id": "user_abc", "signature": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test User", "email": "user_abc@example.com"}),
-        ({"user_id": "user_xyz", "signature": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test User", "email": "user_xyz@example.com"}),
+        ({"data_bytes": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
+        ({"data_bytes": "<root><key>value</key></root>".encode(), "format_name": "xml"}, {"key": "value"})
     ],
     "safety": [
-        ({"user_id": "user_abc", "signature": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"user_id": "user_xyz", "signature": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+        # Pickle payload should trigger a security block
+        ({"data_bytes": pickle.dumps([1, 2, 3]), "format_name": "pickle"}, ValueError),
     ],
 }
 
@@ -31,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_user_profile(**test)
+            result = bytes_to_obj(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_user_profile(**test)
+            result = bytes_to_obj(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

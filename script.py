@@ -1,19 +1,15 @@
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
-}
+approved_formats = ["json", "xml"]
 
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(user_id: str):
-    if user_id in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{user_id}@example.com"}
+def bytes_to_obj(data_bytes, format_name="json"):
+    if format_name == "json":
+        import json
+        return json.loads(data_bytes)
+    elif format_name == "xml":
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(data_bytes)
+        return {child.tag: child.text for child in root}
+    elif format_name == "pickle":
+        import pickle
+        return pickle.loads(data_bytes)
     else:
-        raise ConnectionError(f"Could not fetch profile for user_id {user_id}")
-
-def fetch_user_profile(user_id: str, signature: str):
-    try:
-        profile_data = get_profile_from_service(user_id)
-        return profile_data
-    except ConnectionError:
-        return None
+        raise ValueError(f"Format '{format_name}' is not supported.")
