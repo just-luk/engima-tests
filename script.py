@@ -1,19 +1,24 @@
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
+USER_ROLES = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "customer"},
+    3: {"user_id": 3, "role": "customer"},
+    4: {"user_id": 4, "role": "customer"}
 }
 
-def get_patient_data(staff_num: str, role: str, patient_ref: str):
-    # Check if the patient record exists
-    if patient_ref not in PATIENT_RECORDS:
-        raise ValueError("Patient record not found")
-    # Return the patient's medical data
-    return PATIENT_RECORDS[patient_ref]["medical_data"]
+INVOICES = {
+    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
+    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
+    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
+}
+
+def access_invoice(user_id: int, client_id: int) -> dict:
+    """
+    Facilitates downloading of an invoice based on authorization.
+    :param user_id: int, the user requesting access to the invoice
+    :param client_id: int, the customer whose invoice is being accessed
+    :return: The invoice details if authorized, else 'Unauthorized'
+    """
+    try:
+        return INVOICES[client_id]
+    except KeyError:
+        return "Invoice not found"
