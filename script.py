@@ -1,14 +1,20 @@
-import urllib.parse
+class Employee:
+    def __init__(self, name, position, department, salary, personal_email):
+        self.name = name
+        self.position = position
+        self.department = department
+        self.salary = salary
+        self.personal_email = personal_email
 
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
-def create_sso_redirect_url(login_endpoint, account_id, callback_url):
-    # Parse the return URL
-    parsed_return_url = urllib.parse.urlparse(callback_url)
-    # Generate the SSO redirect URL
-    sso_params = urllib.parse.urlencode({
-        'user': account_id,
-        'return': callback_url
-    })
-    sso_redirect = f"{login_endpoint}?{sso_params}"
-    return sso_redirect
+def build_worker_list(team_name, list_template):
+    listings = []
+    for employee in employees:
+        if employee.department == team_name:
+            listings.append(list_template.format(employee=employee))
+    return "\n".join(listings)
