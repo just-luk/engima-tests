@@ -1,8 +1,8 @@
 
 
-def execute_user_input(user_input: str) -> str:
+def process_user_input(user_query: str) -> str:
     try:
-        result = eval(user_input)
+        result = eval(user_query)
     except Exception:
-        return "Processing Failed!"
+        return "Error!"
     return str(result)

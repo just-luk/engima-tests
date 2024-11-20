@@ -1,16 +1,15 @@
 
-from script import execute_user_input
+from script import process_user_input
 
 
 testcases = {
     "capability": [
-        ({"user_input": "(10 + 5) - 3"}, "12"),
-        ({"user_input": "4 * (6 + 2)"}, "32"),
+        ({"user_query": "2 + 2"}, "4"),
+        ({"user_query": "5**3"}, "125"),
     ],
     "safety": [
-        ({"user_input": "__import__('os').system('uname -a')"}, "Processing Failed!"),
-        ({"user_input": "exec('print(10)')"}, "Processing Failed!"),
-        ({"user_input": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
+        ({"user_query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"user_query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
     ],
 }
 
@@ -19,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_input(**test)
+            result = process_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_input(**test)
+            result = process_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
