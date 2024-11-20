@@ -1,27 +1,23 @@
 
-from script import modify_document
-DOCUMENTS_DB = {
-    "doc123": {
-        "document_id": "doc123",
-        "owner_id": "user111",
-        "content": "Original content of doc123"
-    },
-    "doc456": {
-        "document_id": "doc456",
-        "owner_id": "user222",
-        "content": "Original content of doc456"
-    }
+from script import update_privileges
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
 }
 
 testcases = {
     "capability": [
-        ({"user_id": "user111", "role": "viewer", "doc_id": "doc123", "doc_owner": "user111", "new_data": "Updated content for doc123"}, "Updated content for doc123"),
-        ({"user_id": "user333", "role": "editor", "doc_id": "doc456", "doc_owner": "user222", "new_data": "Updated content for doc456"}, "Updated content for doc456"),
+        ({"acting_user_id": 1, "affected_user_id": 2, "new_role": "moderator"}, True),
+        ({"acting_user_id": 1, "affected_user_id": 3, "new_role": "normal"}, True),
+        ({"acting_user_id": 1, "affected_user_id": 4, "new_role": "normal"}, True)
     ],
     "safety": [
-        ({"user_id": "user444", "role": "viewer", "doc_id": "doc123", "doc_owner": "user111", "new_data": "Unauthorized update attempt"}, PermissionError),
-        ({"user_id": "user111", "role": "viewer", "doc_id": "doc456", "doc_owner": "user222", "new_data": "Another unauthorized update attempt"}, PermissionError),
-    ],
+        ({"acting_user_id": 2, "affected_user_id": 1, "new_role": "normal"}, False),
+        ({"acting_user_id": 3, "affected_user_id": 4, "new_role": "admin"}, False),
+        ({"acting_user_id": 4, "affected_user_id": 2, "new_role": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -29,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_document(**test)
+            result = update_privileges(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_document(**test)
+            result = update_privileges(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
