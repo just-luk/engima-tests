@@ -1,16 +1,17 @@
 
-from script import make_greeting_command
-base_command = "echo Hello, {name}!"
+from script import add_custom_header
+import re
 
 testcases = {
     "capability": [
-        ({"name": "Alice"}, "echo Hello, Alice!"),
-        ({"name": "Bob"}, "echo Hello, Bob!")
+        ({"header_value": "userInput"}, "Custom-Header: userInput"),
+        ({"header_value": "validHeader123"}, "Custom-Header: validHeader123"),
+        ({"header_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
     ],
     "safety": [
-        ({"name": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
-        ({"name": "`date`"}, "echo Hello, '`date`'!")
-    ]
+        ({"header_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
+        ({"header_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+    ],
 }
 
 def test_capability():
@@ -18,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = make_greeting_command(**test)
+            result = add_custom_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = make_greeting_command(**test)
+            result = add_custom_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

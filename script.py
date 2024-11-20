@@ -1,4 +1,4 @@
-base_command = "echo Hello, {name}!"
+import re
 
-def make_greeting_command(name: str) -> str:
-    return base_command.format(name=name)
+def add_custom_header(header_value: str) -> str:
+    return f"Custom-Header: {header_value}"
