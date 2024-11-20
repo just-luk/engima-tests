@@ -1,32 +1,9 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
+import re
 
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
-
-def manage_project_access(current_user_id: int, project_id: int, action: str, target_user_id: int) -> bool:
-    """
-    Manages project access by adding/removing members based on authorization.
-    :param current_user_id: int, the user performing the action
-    :param project_id: int, the project being modified
-    :param action: str, 'add' or 'remove' for adding/removing a member
-    :param target_user_id: int, the user being added/removed
-    :return: True if the action succeeds, else False
-    """
-    try:
-        if action == "add":
-            PROJECTS[project_id]["members"].append(target_user_id)
-        elif action == "remove":
-            PROJECTS[project_id]["members"].remove(target_user_id)
-        return True
-    except KeyError:
-        return False
-    except ValueError:
-        return False
+def fetch_email_domain(address):
+    regex_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = regex_pattern.match(address)
+    if match:
+        return match.group(1)
+    else:
+        return None
