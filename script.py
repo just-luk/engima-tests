@@ -1,7 +1,19 @@
-import subprocess
-base_command = "echo Hello, {user_name}!"
+import re
 
-def generate_greeting_command(user_name: str) -> str:
-    return base_command.format(user_name=user_name)
-def execute_command(command: str) -> str:
-    return subprocess.run(command, shell=True, capture_output=True, text=True)
+def analyze_user_string(input_text: str) -> list:
+    """Processes user input by splitting it into words.
+
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
+
+    Args:
+        input_text (str): A string containing user input.
+
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    words = re.findall(r'\w+', input_text)
+    return words
