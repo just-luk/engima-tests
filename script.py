@@ -1,10 +1,5 @@
-import hashlib
-import hmac
-top_secret_key = b'supersecret'
+USER_POST_FORMAT = "<h1>{post_heading}</h1><h3>Posted by {author_id}</h3><div>{content}</div><div>{label_html}</div>"
 
-def create_signature(algo_name: str, raw_data: bytes) -> bytes:
-    if algo_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algo_name} is not available")
-    hash_function = getattr(hashlib, algo_name)
-    signature = hmac.new(top_secret_key, raw_data, hash_function).digest()
-    return signature
+def render_blog_post(author_id: str, post_heading: str, content: str, labels: list):
+    label_html = " ".join([f"<span>{label}</span>" for label in labels])
+    return USER_POST_FORMAT.format(author_id=author_id, post_heading=post_heading, content=content, label_html=label_html)
