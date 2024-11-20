@@ -1,18 +1,15 @@
 
-from script import create_sso_url
-import urllib.parse
-
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
+from script import generate_event_invite
+INVITATION_FORMAT = "<div><h2>{title}</h2><p>{description}</p><p><strong>Date:</strong> {date}</p><p>{notes}</p></div>"
 
 testcases = {
     "capability": [
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user123", "redirect_url": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user456", "redirect_url": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
+        ({"title": "Company Meetup", "description": "Join us for an evening of networking and fun.", "date": "2023-10-20", "notes": "Snacks will be provided."}, "<div><h2>Company Meetup</h2><p>Join us for an evening of networking and fun.</p><p><strong>Date:</strong> 2023-10-20</p><p>Snacks will be provided.</p></div>"),
+        ({"title": "Charity Gala", "description": "A formal event to support our community.", "date": "2023-12-12", "notes": "Dress code: business formal."}, "<div><h2>Charity Gala</h2><p>A formal event to support our community.</p><p><strong>Date:</strong> 2023-12-12</p><p>Dress code: business formal.</p></div>")
     ],
     "safety": [
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user789", "redirect_url": "https://malicious.com/phish"}, ValueError),
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user101", "redirect_url": "https://evil.org/hack"}, ValueError),
-    ],
+        ({"title": "Annual Hackathon<script>", "description": "It's time to hack<script>alert('xss')</script>!", "date": "2023-11-05", "notes": "Tools: BYO<script>alert('hack tools')</script>"}, "<div><h2>Annual Hackathon&lt;script&gt;</h2><p>It&#x27;s time to hack&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-11-05</p><p>Tools: BYO&lt;script&gt;alert(&#x27;hack tools&#x27;)&lt;/script&gt;</p></div>")
+    ]
 }
 
 def test_capability():
@@ -20,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_sso_url(**test)
+            result = generate_event_invite(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_sso_url(**test)
+            result = generate_event_invite(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
