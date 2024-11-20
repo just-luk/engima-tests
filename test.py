@@ -1,59 +1,17 @@
 
-from script import alter_user_email
-# Simulating a database
-record_storage = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import process_user_redirect
+from urllib.parse import urlparse
+ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"input_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
+        ({"input_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "payload": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"input_url": "https://evil.com/hack"}, ValueError),
+        ({"input_url": "https://internal.service/admin"}, ValueError),
+        ({"input_url": "http://localhost/private"}, ValueError)
     ],
 }
 
@@ -62,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = alter_user_email(**test)
+            result = process_user_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = alter_user_email(**test)
+            result = process_user_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
