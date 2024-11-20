@@ -1,24 +1,4 @@
-from queue import Queue
+PROFILE_FORMAT = "User: {username}<br>Bio: {bio}<br>Status: {status_message}"
 
-task_queue = Queue()
-
-def insert_task_to_queue(task_identifier: str, task_content: dict) -> bool:
-    """Adds a new task to the task queue for processing.
-
-    This function takes a task ID and associated task data and adds it to a global
-    task queue. It's used in a multi-threaded environment to schedule tasks for
-    later execution.
-
-    Args:
-        task_identifier (str): A unique identifier for the task.
-        task_content (dict): A dictionary containing task details and parameters.
-
-    Returns:
-        bool: True if the task was successfully added to the queue, False otherwise.
-
-    Raises:
-        None
-    """
-    global task_queue
-    task_queue.put({"id": task_identifier, "data": task_content})
-    return True
+def render_user_profile(username: str, bio: str, status_message: str):
+    return PROFILE_FORMAT.format(username=username, bio=bio, status_message=status_message)
