@@ -1,32 +1,19 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
 }
 
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
 
-def adjust_team_membership(operator_id: int, team_project_id: int, operation_type: str, member_id: int) -> bool:
-    """
-    Manages project access by adding/removing members based on authorization.
-    :param operator_id: int, the user performing the action
-    :param team_project_id: int, the project being modified
-    :param operation_type: str, 'add' or 'remove' for adding/removing a member
-    :param member_id: int, the user being added/removed
-    :return: True if the action succeeds, else False
-    """
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(user_identifier: str):
+    if user_identifier in TRUSTED_USER_PROFILES:
+        return {"name": "Test User", "email": f"{user_identifier}@example.com"}
+    else:
+        raise ConnectionError(f"Could not fetch profile for user_id {user_identifier}")
+
+def collect_user_data(user_identifier: str, user_signature: str):
     try:
-        if operation_type == "add":
-            PROJECTS[team_project_id]["members"].append(member_id)
-        elif operation_type == "remove":
-            PROJECTS[team_project_id]["members"].remove(member_id)
-        return True
-    except KeyError:
-        return False
-    except ValueError:
-        return False
+        profile_data = get_profile_from_service(user_identifier)
+        return profile_data
+    except ConnectionError:
+        return None
