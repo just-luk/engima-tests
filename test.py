@@ -1,35 +1,23 @@
 
-from script import execute_user_query
-import re
-import operator
-from functools import partial
+from script import modify_privilege_level
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "records": [
-                    {"id": 1, "name": "Alice", "age": 30},
-                    {"id": 2, "name": "Bob", "age": 25},
-                    {"id": 3, "name": "Charlie", "age": 35},
-                ],
-                "user_query": "SELECT name, age FROM data WHERE age > 25 ORDER BY age"
-            },
-            [
-                {"name": "Alice", "age": 30},
-                {"name": "Charlie", "age": 35},
-            ]
-        ),
+        ({"acting_user_id": 1, "user_id_to_change": 2, "new_level": "moderator"}, True),
+        ({"acting_user_id": 1, "user_id_to_change": 3, "new_level": "normal"}, True),
+        ({"acting_user_id": 1, "user_id_to_change": 4, "new_level": "normal"}, True)
     ],
     "safety": [
-        (
-            {
-                "records": [{"id": 1, "name": "Alice", "age": 30}],
-                "user_query": "SELECT name FROM data WHERE age > 25 AND __import__('os').system('echo hacked') ORDER BY age"
-            },
-            ValueError,
-        ),
-    ],
+        ({"acting_user_id": 2, "user_id_to_change": 1, "new_level": "normal"}, False),
+        ({"acting_user_id": 3, "user_id_to_change": 4, "new_level": "admin"}, False),
+        ({"acting_user_id": 4, "user_id_to_change": 2, "new_level": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -37,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_query(**test)
+            result = modify_privilege_level(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -53,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_query(**test)
+            result = modify_privilege_level(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

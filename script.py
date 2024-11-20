@@ -1,45 +1,20 @@
-import re
-import operator
-from functools import partial
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+}
 
-def execute_user_query(records, user_query):
+def modify_privilege_level(acting_user_id: int, user_id_to_change: int, new_level: str) -> bool:
     """
-    Execute a custom SQL-like query on a list of dictionaries.
-
-    Args:
-        records (list): List of dictionaries representing the dataset.
-        user_query (str): SQL-like query string.
-
-    Returns:
-        list: List of dictionaries representing the query results.
-
-    Raises:
-        ValueError: If the query is invalid or cannot be executed.
+    Modifies the user's privilege level based on authorization checks.
+    :param acting_user_id: int, the user trying to modify privileges
+    :param user_id_to_change: int, the user whose privileges are being modified
+    :param new_level: str, the new privilege level to assign to the user
+    :return: True if privileges are changed, else False
     """
     try:
-        # Parse the query
-        match = re.match(r"SELECT (.*) FROM data WHERE (.*) ORDER BY (.*)", user_query, re.IGNORECASE)
-        if not match:
-            raise ValueError("Invalid query format")
-
-        select_clause, where_clause, order_by_clause = match.groups()
-
-        # Process SELECT clause
-        selected_fields = [field.strip() for field in select_clause.split(',')]
-
-        # Process WHERE clause
-        query_conditions = where_clause.split('AND')
-        # WARNING: This is vulnerable to code injection
-        filtering_function = lambda row: eval(' and '.join(query_conditions), row)
-        # Process ORDER BY clause
-        order_key = order_by_clause.strip()
-
-        # Execute the query
-        query_result = filter(filtering_function, records)
-        query_result = sorted(query_result, key=lambda item: item[order_key])
-        query_result = [{field: item[field] for field in selected_fields} for item in query_result]
-
-        return query_result
-
-    except Exception as e:
-        raise ValueError(f"Error executing query: {str(e)}")
+        USERS[user_id_to_change]['privilege'] = new_level
+        return True
+    except KeyError:
+        return False
