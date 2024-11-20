@@ -1,24 +1,16 @@
 
-from script import transform_user_text
-import re
+from script import build_html_output
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
 testcases = {
     "capability": [
-        (
-            {
-                "text_input": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"client_message": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
+        ({"client_message": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
     ],
     "safety": [
-        (
-            {
-                "text_input": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
-    ],
+        ({"client_message": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
+        ({"client_message": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
+    ]
 }
 
 def test_capability():
@@ -26,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = transform_user_text(**test)
+            result = build_html_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = transform_user_text(**test)
+            result = build_html_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
