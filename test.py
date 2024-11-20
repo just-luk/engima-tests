@@ -1,15 +1,27 @@
 
-from script import evaluate_code_string
-import ast
+from script import push_task_to_queue
+from queue import Queue
+
+task_queue = Queue()
 
 testcases = {
     "capability": [
-        ({"code_string": "x = 2 + 3"}, None),
-        ({"code_string": "y = 10 * 5"}, None),
+        (
+            {
+                "task_uid": "task_001",
+                "task_info": {"type": "data_processing", "priority": "high"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"code_string": "import os"}, ValueError),
-        ({"code_string": "def malicious_func(): pass"}, ValueError),
+        (
+            {
+                "task_uid": "malicious_task",
+                "task_info": {"payload": "A" * 1000000}
+            },
+            False,
+        ),
     ],
 }
 
@@ -18,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_code_string(**test)
+            result = push_task_to_queue(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_code_string(**test)
+            result = push_task_to_queue(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
