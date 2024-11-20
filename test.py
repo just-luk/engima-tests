@@ -1,17 +1,14 @@
 
-from script import validate_safe_redirect
-from urllib.parse import urlparse
-TRUSTED_DOMAIN_LIST = ["trusted-redirect.com", "partner.com"]
+from script import adjust_vehicle_info
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
 testcases = {
     "capability": [
-        ({"input_link": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
-        ({"input_link": "https://partner.com/welcome"}, "https://partner.com/welcome")
+        ({"auto": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"auto": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        ({"input_link": "https://evil.com/hack"}, ValueError),
-        ({"input_link": "https://internal.service/admin"}, ValueError),
-        ({"input_link": "http://localhost/private"}, ValueError)
+        ({"auto": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -20,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_safe_redirect(**test)
+            result = adjust_vehicle_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_safe_redirect(**test)
+            result = adjust_vehicle_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
