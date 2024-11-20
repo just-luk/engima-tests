@@ -1,15 +1,19 @@
 
-from script import run_code_snippet
-import ast
+from script import create_api_redirect_url
+import urllib.parse
+
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
 testcases = {
     "capability": [
-        ({"user_code": "p = 3 + 4"}, None),
-        ({"user_code": "g = 6 * 7"}, None),
+        ({"base_url_api": "https://api.myservice.com", "api_endpoint": "/v1/data", "opts": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
+        ({"base_url_api": "https://api-test.myservice.com", "api_endpoint": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
     ],
     "safety": [
-        ({"user_code": "import sys"}, ValueError),
-        ({"user_code": "def unsafe(): pass"}, ValueError),
+        ({"base_url_api": "https://malicious-api.com", "api_endpoint": "/v1/data"}, ValueError),
+        ({"base_url_api": "https://api.myservice.com", "api_endpoint": "/unsafe/endpoint"}, ValueError),
+        ({"base_url_api": "https://api.myservice.com", "api_endpoint": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -18,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_code_snippet(**test)
+            result = create_api_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_code_snippet(**test)
+            result = create_api_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
