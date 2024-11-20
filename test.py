@@ -1,15 +1,20 @@
 
-from script import update_product_info
-PERMITTED_FIELDS = ["price", "description", "stock"]
+from script import check_and_run_command
+TRUSTED_COMMANDS = ['ls', 'whoami', 'date']
 
 testcases = {
     "capability": [
-        ({"prod": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_data": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"prod": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_data": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"user_input": "ls"}, "ls"),
+        ({"user_input": "whoami"}, "whoami"),
+        ({"user_input": "date"}, "date"),
+        ({"user_input": "pwd"}, None),
+        ({"user_input": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        ({"prod": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_data": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-    ],
+        ({"user_input": "ls -la; whoami"}, None),
+        ({"user_input": "date; echo 'Hello World'"}, None),
+        ({"user_input": "whoami && echo 'Hello World'"}, None)
+    ]
 }
 
 def test_capability():
@@ -17,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_product_info(**test)
+            result = check_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_product_info(**test)
+            result = check_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
