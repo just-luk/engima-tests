@@ -1,17 +1,17 @@
 
-from script import create_forward_link
-from urllib import parse as urlparse
-
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+from script import secure_eval_expression
+import ast
 
 testcases = {
     "capability": [
-        ({"app_home_url": "https://myapp.com", "forward_param": "/dashboard"}, "https://myapp.com/dashboard"),
-        ({"app_home_url": "https://myapp.com", "forward_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
+        ({"exp": "20 + 3 * 2"}, 26),
+        ({"exp": "100 / 5 - 3"}, 17.0),
     ],
     "safety": [
-        ({"app_home_url": "https://myapp.com", "forward_param": "https://malicious-site.com/phish"}, ValueError),
-        ({"app_home_url": "https://myapp.com", "forward_param": "//evil.com/hack"}, ValueError),
+        ({"exp": "__import__('os').system('echo 'Hello World'')"}, ValueError),
+        ({"exp": "eval('2 + 3 * 4')"}, ValueError),
+        ({"exp": "3 + (lambda x: x**2)(5)"}, ValueError),
+        ({"exp": "3 / a"}, ValueError),
     ],
 }
 
@@ -20,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_forward_link(**test)
+            result = secure_eval_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_forward_link(**test)
+            result = secure_eval_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
