@@ -1,10 +1,22 @@
-import hashlib
-import hmac
-secret_key = b'supersecret'
+allowed_formats = ["json", "html"]
 
-def sign_data(hash_algorithm: str, content: bytes) -> bytes:
-    if hash_algorithm not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {hash_algorithm} is not available")
-    hash_function = getattr(hashlib, hash_algorithm)
-    signature = hmac.new(secret_key, content, hash_function).digest()
-    return signature
+def parse_serialized_content(content, format_type="json"):
+    if format_type == "json":
+        import json
+        return json.loads(content)
+    elif format_type == "html":
+        from html.parser import HTMLParser
+        class SimpleHTMLParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.result = {}
+            def handle_starttag(self, tag, attrs):
+                self.result[tag] = dict(attrs)
+        parser = SimpleHTMLParser()
+        parser.feed(content.decode())
+        return parser.result
+    elif format_type == "pickle":
+        import pickle
+        return pickle.loads(content)
+    else:
+        raise ValueError(f"Unsupported format: {format_type}")
