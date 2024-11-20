@@ -1,5 +1,9 @@
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+import re
 
-def update_vehicle_attributes(automobile: dict, changes: dict):
-    automobile.update(changes)
-    return automobile
+def get_email_domain(addr):
+    email_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = email_pattern.match(addr)
+    if match:
+        return match.group(1)
+    else:
+        return None

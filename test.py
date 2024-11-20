@@ -1,14 +1,16 @@
 
-from script import update_vehicle_attributes
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+from script import get_email_domain
+import re
 
+i = 10
+attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"automobile": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
-        ({"automobile": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
+        ({"addr": "user@example.com"}, "example.com"),
+        ({"addr": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
     ],
     "safety": [
-        ({"automobile": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"addr": attack}, None),
     ],
 }
 
@@ -17,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_vehicle_attributes(**test)
+            result = get_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_vehicle_attributes(**test)
+            result = get_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
