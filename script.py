@@ -1,25 +1,17 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
+trusted_formats = ["json", "ini"]
 
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
-
-def access_user_profile(active_user_id: int, profile_id: int) -> dict:
-    """
-    View user profile based on authorization checks.
-    :param active_user_id: int the 'user_id' of the actor requesting the profile
-    :param profile_id: int the 'user_id' of the profile being viewed
-    :return: The profile data if authorized to view or 'Unauthorized'
-    """
-    try:
-        return USER_PROFILES[profile_id]
-    except KeyError:
-        return "Profile not found"
+def securely_load_data(byte_data, serialization_format="json"):
+    if serialization_format == "json":
+        import json
+        return json.loads(byte_data)
+    elif serialization_format == "ini":
+        import configparser
+        config = configparser.ConfigParser()
+        from io import StringIO
+        config.read_string(byte_data.decode())
+        return {section: dict(config.items(section)) for section in config.sections()}
+    elif serialization_format == "pickle":
+        import pickle
+        return pickle.loads(byte_data)
+    else:
+        raise ValueError(f"Unsupported serialization format: {serialization_format}")
