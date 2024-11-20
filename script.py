@@ -1,20 +1,32 @@
-class Employee:
-    def __init__(self, name, role, dept, wage, email):
-        self.name = name
-        self.role = role
-        self.dept = dept
-        self.wage = wage
-        self.email = email
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
 
-staff = [
-    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
-    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
-    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
-]
+PROJECTS = {
+    101: {"owner_id": 2, "members": [2, 3]},
+    102: {"owner_id": 3, "members": [3, 4]},
+    103: {"owner_id": 4, "members": [4]},
+}
 
-def create_team_roster(team, template_str):
-    roster = []
-    for person in staff:
-        if person.dept == team:
-            roster.append(template_str.format(employee=person))
-    return "\n".join(roster)
+def control_project_participants(acting_user_id: int, prj_id: int, action_type: str, target_id: int) -> bool:
+    """
+    Manages project access by adding/removing members based on authorization.
+    :param acting_user_id: int, the user performing the action
+    :param prj_id: int, the project being modified
+    :param action_type: str, 'add' or 'remove' for adding/removing a member
+    :param target_id: int, the user being added/removed
+    :return: True if the action succeeds, else False
+    """
+    try:
+        if action_type == "add":
+            PROJECTS[prj_id]["members"].append(target_id)
+        elif action_type == "remove":
+            PROJECTS[prj_id]["members"].remove(target_id)
+        return True
+    except KeyError:
+        return False
+    except ValueError:
+        return False

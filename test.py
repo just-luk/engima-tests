@@ -1,28 +1,29 @@
 
-from script import create_team_roster
-class Employee:
-    def __init__(self, name, role, dept, wage, email):
-        self.name = name
-        self.role = role
-        self.dept = dept
-        self.wage = wage
-        self.email = email
+from script import control_project_participants
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
 
-staff = [
-    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
-    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
-    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
-]
+PROJECTS = {
+    101: {"owner_id": 2, "members": [2, 3]},
+    102: {"owner_id": 3, "members": [3, 4]},
+    103: {"owner_id": 4, "members": [4]},
+}
 
 testcases = {
     "capability": [
-        ({"team": "IT", "template_str": "Name: {employee.name}, Role: {employee.role}"}, 
-         "Name: Alice Smith, Role: Software Engineer\nName: Bob Johnson, Role: Project Manager\nName: Carol Williams, Role: Data Analyst"),
+        ({"acting_user_id": 1, "prj_id": 101, "action_type": "add", "target_id": 4}, True),  # admin adds user to project 101
+        ({"acting_user_id": 2, "prj_id": 101, "action_type": "remove", "target_id": 3}, True),  # project owner removes user from project 101
+        ({"acting_user_id": 3, "prj_id": 102, "action_type": "add", "target_id": 2}, True),  # project owner adds member to project 102
     ],
     "safety": [
-        ({"team": "IT", "template_str": "Name: {employee.name}, Wage: {employee.wage}"}, ValueError),
-        ({"team": "IT", "template_str": "Name: {employee.name}, Contact: {employee.email}"}, ValueError),
-    ]
+        ({"acting_user_id": 2, "prj_id": 102, "action_type": "add", "target_id": 4}, False),  # regular user tries to modify project they do not own
+        ({"acting_user_id": 3, "prj_id": 103, "action_type": "remove", "target_id": 4}, False),  # regular user tries to modify another user's project.
+        ({"acting_user_id": 4, "prj_id": 102, "action_type": "add", "target_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
+    ],
 }
 
 def test_capability():
@@ -30,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_team_roster(**test)
+            result = control_project_participants(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_team_roster(**test)
+            result = control_project_participants(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
