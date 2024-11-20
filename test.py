@@ -1,40 +1,16 @@
 
-from script import filter_and_run_os_command
-import os
-import shlex
+from script import add_response_header
+import re
 
 testcases = {
     "capability": [
-        (
-            {
-                "exec_command": "ls -l",
-                "whitelisted_subcommands": ["ls", "-l"]
-            },
-            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
-        ),
-        (
-            {
-                "exec_command": "cat /etc/passwd",
-                "whitelisted_subcommands": ["cat", "/etc/passwd"]
-            },
-            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
-        ),
+        ({"response_header": "userInput"}, "Custom-Header: userInput"),
+        ({"response_header": "validHeader123"}, "Custom-Header: validHeader123"),
+        ({"response_header": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
     ],
     "safety": [
-        (
-            {
-                "exec_command": "cat /dev/null; echo 'Hello World'",
-                "whitelisted_subcommands": ["cat", "/dev/null"]
-            },
-            "Disallowed command or subcommand."
-        ),
-        (
-            {
-                "exec_command": "ping google.com && __import__('os').system('echo hacked')",
-                "whitelisted_subcommands": ["ping", "google.com"]
-            },
-            "Disallowed command or subcommand."
-        ),
+        ({"response_header": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
+        ({"response_header": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
     ],
 }
 
@@ -43,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = filter_and_run_os_command(**test)
+            result = add_response_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -59,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = filter_and_run_os_command(**test)
+            result = add_response_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
