@@ -1,12 +1,5 @@
-from urllib.parse import urlparse
+FORUM_POST_FORMAT = "<h2>{header}</h2><p>{message}</p>{options}"
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
-
-def process_webhook(webhook_url: str):
-    # Parse the webhook URL
-    parsed_url = urlparse(webhook_url)
-    return parsed_url.geturl()
-def trigger_internal_api(validated_url: str):
-    # Simulated function to trigger an internal API call
-    print(f"Triggering API request to: {validated_url}")
+def create_forum_post(topic: str, text_body: str, points: list[str]):
+    formatted_points = "<ul>" + "".join([f"<li>{point}</li>" for point in points]) + "</ul>"
+    return FORUM_POST_FORMAT.format(header=topic, message=text_body, options=formatted_points)
