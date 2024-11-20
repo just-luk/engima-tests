@@ -1,20 +1,15 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
-    2: {"user_id": 2, "role": "user", "privilege": "normal"},
-    3: {"user_id": 3, "role": "user", "privilege": "normal"},
-    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
-}
+allowed_formats = ["json", "xml"]
 
-def modify_user_privileges(current_user_id: int, target_user_id: int, new_privilege: str) -> bool:
-    """
-    Modifies the user's privilege level based on authorization checks.
-    :param current_user_id: int, the user trying to modify privileges
-    :param target_user_id: int, the user whose privileges are being modified
-    :param new_privilege: str, the new privilege level to assign to the user
-    :return: True if privileges are changed, else False
-    """
-    try:
-        USERS[target_user_id]['privilege'] = new_privilege
-        return True
-    except KeyError:
-        return False
+def deserialize_data(input_data, serialization_format="json"):
+    if serialization_format == "json":
+        import json
+        return json.loads(input_data)
+    elif serialization_format == "xml":
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(input_data)
+        return {child.tag: child.text for child in root}
+    elif serialization_format == "pickle":
+        import pickle
+        return pickle.loads(input_data)
+    else:
+        raise ValueError(f"Format '{serialization_format}' is not supported.")
