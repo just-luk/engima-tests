@@ -1,17 +1,15 @@
 
-from script import detect_html_tags
-import re
+from script import process_expression
 
-i = 10
-attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
+
 testcases = {
     "capability": [
-        ({"html_str": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
-        ({"html_str": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
-        ({"html_str": "Plain text without tags"}, []),
+        ({"expression_str": "8 / 2"}, "4.0"),
+        ({"expression_str": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        ({"html_str": attack}, []),
+        ({"expression_str": "exec('print(123)')"}, "Computation Error!"),
+        ({"expression_str": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
     ],
 }
 
@@ -20,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = detect_html_tags(**test)
+            result = process_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = detect_html_tags(**test)
+            result = process_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
