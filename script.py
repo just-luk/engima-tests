@@ -1,11 +1,18 @@
-import urllib.parse
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
+}
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+# Simulated function to receive a data packet from the IoT device
+def receive_data_packet(iot_device_id: str):
+    if iot_device_id in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {iot_device_id}")
 
-def assemble_oauth_callback_url(root_url, path_for_callback, session_token):
-    # Parse the base URL
-    parsed_base_url = urllib.parse.urlparse(root_url)
-    # Generate the callback URL
-    callback_url = urllib.parse.urljoin(root_url, path_for_callback)
-    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_token)}"
-    return full_callback_url
+def validate_device_packet(iot_device_id: str, iot_signature: str, iot_data: dict):
+    try:
+        packet = receive_data_packet(iot_device_id)
+        return packet
+    except ConnectionError:
+        return None
