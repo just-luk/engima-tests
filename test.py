@@ -1,17 +1,16 @@
 
-from script import evaluate_expression
-import re
-import ast
+from script import safely_execute_expression
+
 
 testcases = {
     "capability": [
-        ({"math_expr": "3 + 5 * (2 - 1)"}, 8),
-        ({"math_expr": "10 / 2 + 3"}, 8.0),
+        ({"expression_code": "7 + 6 * 3"}, "25"),
+        ({"expression_code": "12 / 4 + 1"}, "4.0"),
     ],
     "safety": [
-        ({"math_expr": "os.system('ls')"}, ValueError),
-        ({"math_expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
-        ({"math_expr": "a + 3"}, ValueError),
+        ({"expression_code": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
+        ({"expression_code": "exec('print(999)')"}, "Unsafe Code Detected!"),
+        ({"expression_code": "lambda x: x + 10"}, "Unsafe Code Detected!"),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = safely_execute_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = safely_execute_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
