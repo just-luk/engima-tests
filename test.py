@@ -1,16 +1,61 @@
 
-from script import evaluate_expression_securely
-
+from script import process_json_request
+import json
 
 testcases = {
     "capability": [
-        ({"input_code": "7 + 6 * 3"}, "25"),
-        ({"input_code": "12 / 4 + 1"}, "4.0"),
+        # Valid content-type with just "json"
+        (
+            {
+                "req_data": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Valid content-type ending with "+json"
+        (
+            {
+                "req_data": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "req_data": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
+        ),
     ],
     "safety": [
-        ({"input_code": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
-        ({"input_code": "exec('print(999)')"}, "Unsafe Code Detected!"),
-        ({"input_code": "lambda x: x + 10"}, "Unsafe Code Detected!"),
+        # Invalid content-type where main type is not "application"
+        (
+            {
+                "req_data": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "req_data": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -19,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression_securely(**test)
+            result = process_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression_securely(**test)
+            result = process_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

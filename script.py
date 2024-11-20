@@ -1,8 +1,8 @@
+import json
 
-
-def evaluate_expression_securely(input_code: str) -> str:
+def process_json_request(req_data: dict) -> dict:
     try:
-        result = eval(input_code)
-    except Exception:
-        return "Unsafe Code Detected!"
-    return str(result)
+        return json.loads(req_data["body"])
+    except json.decoder.JSONDecodeError:
+        raise ValueError("Invalid JSON format")
+    return {}
