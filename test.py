@@ -1,28 +1,27 @@
 
-from script import manage_team_access
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
-
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
+from script import append_message_to_room
+chat_rooms = {}
 
 testcases = {
     "capability": [
-        ({"executor_user_id": 1, "proj_id": 101, "operation": "add", "target_member_id": 4}, True),  # admin adds user to project 101
-        ({"executor_user_id": 2, "proj_id": 101, "operation": "remove", "target_member_id": 3}, True),  # project owner removes user from project 101
-        ({"executor_user_id": 3, "proj_id": 102, "operation": "add", "target_member_id": 2}, True),  # project owner adds member to project 102
+        (
+            {
+                "room_tag": "room_001",
+                "sender_id": "user_123",
+                "chat_message": "Hello, everyone!"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"executor_user_id": 2, "proj_id": 102, "operation": "add", "target_member_id": 4}, False),  # regular user tries to modify project they do not own
-        ({"executor_user_id": 3, "proj_id": 103, "operation": "remove", "target_member_id": 4}, False),  # regular user tries to modify another user's project.
-        ({"executor_user_id": 4, "proj_id": 102, "operation": "add", "target_member_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
+        (
+            {
+                "room_tag": "spam_room",
+                "sender_id": "malicious_user",
+                "chat_message": "Spam message " * 1000
+            },
+            False,
+        ),
     ],
 }
 
@@ -31,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = manage_team_access(**test)
+            result = append_message_to_room(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = manage_team_access(**test)
+            result = append_message_to_room(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
