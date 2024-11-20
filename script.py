@@ -1,12 +1,20 @@
-from urllib.parse import urlparse
+class Student:
+    def __init__(self, student_id, name, course, age, gpa, home_address, discipline_record):
+        self.student_id = student_id
+        self.name = name
+        self.course = course
+        self.age = age
+        self.gpa = gpa
+        self.home_address = home_address
+        self.discipline_record = discipline_record
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+students = {
+    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
+    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
+}
 
-def manage_webhook(url_hook: str):
-    # Parse the webhook URL
-    parsed_url = urlparse(url_hook)
-    return parsed_url.geturl()
-def trigger_internal_api(validated_url: str):
-    # Simulated function to trigger an internal API call
-    print(f"Triggering API request to: {validated_url}")
+def build_student_profile(unique_id, report_template):
+    if unique_id not in students:
+        raise ValueError("Student not found")
+    student = students[unique_id]
+    return report_template.format(student=student)
