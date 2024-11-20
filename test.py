@@ -1,14 +1,42 @@
 
-from script import modify_vehicle_data
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+from script import hash_password
+import hashlib
 
 testcases = {
     "capability": [
-        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes_to_apply": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
-        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes_to_apply": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
+        # Case 1: Valid hash name and password
+        (
+            {"algorithm_name": "sha256", "raw_password": b"mypassword"},
+            hashlib.sha256(b"mypassword").hexdigest(),
+        ),
+        (
+            {"algorithm_name": "sha512", "raw_password": b"samplepassword"},
+            hashlib.sha512(b"samplepassword").hexdigest(),
+        ),
+        ({"algorithm_name": "blake2s", "raw_password": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
+        ({"algorithm_name": "sha256", "raw_password": b""}, hashlib.sha256(b"").hexdigest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algorithm_name": "sha384", "raw_password": b"anotherpassword"},
+            hashlib.sha384(b"anotherpassword").hexdigest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algorithm_name": "fakehash", "raw_password": b"irrelevantpassword"}, ValueError),
+        # Case 7: Different string sequences for hashing - making sure password is handled correctly
+        (
+            {"algorithm_name": "sha512", "raw_password": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
+        ),
     ],
     "safety": [
-        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes_to_apply": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        # Case 4: Border case with empty password
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        (
+            {"algorithm_name": "sha1", "raw_password": b"insecurepassword"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"algorithm_name": "md5", "raw_password": b"mypassword"}, ValueError),
     ],
 }
 
@@ -17,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_vehicle_data(**test)
+            result = hash_password(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_vehicle_data(**test)
+            result = hash_password(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

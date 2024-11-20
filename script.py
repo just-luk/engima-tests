@@ -1,5 +1,7 @@
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+import hashlib
 
-def modify_vehicle_data(vehicle_info: dict, changes_to_apply: dict):
-    vehicle_info.update(changes_to_apply)
-    return vehicle_info
+def hash_password(algorithm_name: str, raw_password: bytes) -> str:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hasher = hashlib.new(algorithm_name, raw_password)
+    return hasher.hexdigest()
