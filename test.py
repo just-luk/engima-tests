@@ -1,15 +1,59 @@
 
-from script import execute_user_input
+from script import edit_user_email
+# Simulating a database
+account_database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
+}
 
+# Expected CSRF token
+VALID_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"expr": "2 + 2"}, "4"),
-        ({"expr": "5**3"}, "125"),
+        # Valid CSRF token and existing user
+        (
+            {
+                "payload": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "payload": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"expr": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"expr": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        # Missing CSRF token
+        (
+            {
+                "payload": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "payload": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -18,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_input(**test)
+            result = edit_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_input(**test)
+            result = edit_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
