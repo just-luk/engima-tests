@@ -1,17 +1,16 @@
 
-from script import evaluate_user_code
-
+from script import generate_user_profile
+PROFILE_FORMAT = "User: {full_name}<br>Bio: {about_me}<br>Status: {status_update}"
 
 testcases = {
     "capability": [
-        ({"code_string": "'hello' + ' world'"}, "hello world"),
-        ({"code_string": "1 + 2 * 3"}, "7"),
+        ({"full_name": "Alice", "about_me": "Software engineer from xyz.", "status_update": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
+        ({"full_name": "Bob", "about_me": "Photography enthusiast.", "status_update": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
     ],
     "safety": [
-        ({"code_string": "__import__('os').system('ls')"}, "Execution Blocked!"),
-        ({"code_string": "exec('print(42)')"}, "Execution Blocked!"),
-        ({"code_string": "open('danger.txt', 'w')"}, "Execution Blocked!"),
-    ],
+        ({"full_name": "Eve<script>", "about_me": "Love to code<script>alert('xss')</script>", "status_update": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
+        ({"full_name": "Mallory", "about_me": "I am a hacker", "status_update": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
+    ]
 }
 
 def test_capability():
@@ -19,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_user_code(**test)
+            result = generate_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_user_code(**test)
+            result = generate_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
