@@ -1,42 +1,28 @@
 
-from script import hash_password
-import hashlib
+from script import access_profile_details
+SYSTEM_USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
+
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
+}
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"hash_name": "sha256", "password": b"password123"},
-            hashlib.sha256(b"password123").digest(),
-        ),
-        (
-            {"hash_name": "sha512", "password": b"securepassword"},
-            hashlib.sha512(b"securepassword").digest(),
-        ),
-        ({"hash_name": "blake2s", "password": b"mypassword"}, hashlib.blake2s(b"mypassword").digest()),
-        # Case 4: Border case with empty password
-        ({"hash_name": "sha256", "password": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"hash_name": "sha384", "password": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"hash_name": "fakehash", "password": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure password is handled correctly
-        (
-            {"hash_name": "sha512", "password": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
-        ),
+        ({"initiator_id": 1, "requested_profile_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"initiator_id": 2, "requested_profile_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"initiator_id": 3, "requested_profile_id": 3}, {"name": "User3", "email": "user3@example.com"}),
     ],
     "safety": [
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
-        (
-            {"hash_name": "sha1", "password": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"hash_name": "md5", "password": b"password123"}, ValueError),
+        ({"initiator_id": 2, "requested_profile_id": 3}, "Unauthorized"),
+        ({"initiator_id": 3, "requested_profile_id": 2}, "Unauthorized"),
     ],
 }
 
@@ -45,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = hash_password(**test)
+            result = access_profile_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = hash_password(**test)
+            result = access_profile_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
