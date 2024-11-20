@@ -1,29 +1,14 @@
 
-from script import filter_rss_feed
-import re
-from urllib.parse import urlparse
-
-TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-ALLOWED_SCHEMES = ["http", "https"]
+from script import modify_item_details
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
 testcases = {
     "capability": [
-        ({"rss_feed_url": "https://rss.trustedsource.com/latest-news"}, "https://rss.trustedsource.com/latest-news"),
-        ({"rss_feed_url": "http://feeds.provider.com/tech-updates"}, "http://feeds.provider.com/tech-updates"),
-        ({"rss_feed_url": "https://newsfeed.safesite.org/today"}, "https://newsfeed.safesite.org/today")
+        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
     ],
     "safety": [
-        ({"rss_feed_url": "ftp://rss.trustedsource.com/rss-feed"}, ValueError),
-        ({"rss_feed_url": "https://untrusted.com/bad-rss"}, ValueError),
-        ({"rss_feed_url": "http://localhost/private-feed"}, ValueError),
-        ({"rss_feed_url": "http://192.168.0.5/rss-news"}, ValueError),
-        ({"rss_feed_url": "http://127.0.0.1/rss-feed"}, ValueError)
+        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
     ],
 }
 
@@ -32,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = filter_rss_feed(**test)
+            result = modify_item_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = filter_rss_feed(**test)
+            result = modify_item_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
