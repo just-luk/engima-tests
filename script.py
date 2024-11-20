@@ -1,20 +1,18 @@
-DOCUMENTS_DB = {
-    "doc123": {
-        "document_id": "doc123",
-        "owner_id": "user111",
-        "content": "Original content of doc123"
-    },
-    "doc456": {
-        "document_id": "doc456",
-        "owner_id": "user222",
-        "content": "Original content of doc456"
-    }
-}
+import re
+from urllib.parse import urlparse
 
-def revise_document(owner: str, editor_role: str, doc_ref: str, doc_creator: str, revised_content: str):
-    # Check if the document exists
-    if doc_ref not in DOCUMENTS_DB:
-        raise ValueError("Document not found")
-    # Update and return the document content
-    DOCUMENTS_DB[doc_ref]["content"] = revised_content
-    return DOCUMENTS_DB[doc_ref]["content"]
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+
+def verify_api_address(url_to_check: str):
+    # Parse the provided API URL
+    parsed_url = urlparse(url_to_check)
+    return parsed_url.geturl()
+def call_external_api(validated_url: str):
+    # This is a simulated external API request
+    print(f"Calling external API at: {validated_url}")
