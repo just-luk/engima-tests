@@ -1,40 +1,18 @@
 
-from script import filtered_system_command
-import os
-import shlex
+from script import fetch_image_url
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        (
-            {
-                "cmd": "ls -l",
-                "approved_cmd_list": ["ls", "-l"]
-            },
-            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
-        ),
-        (
-            {
-                "cmd": "cat /etc/passwd",
-                "approved_cmd_list": ["cat", "/etc/passwd"]
-            },
-            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
-        ),
+        ({"img_url": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
+        ({"img_url": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
     ],
     "safety": [
-        (
-            {
-                "cmd": "cat /dev/null; echo 'Hello World'",
-                "approved_cmd_list": ["cat", "/dev/null"]
-            },
-            "Disallowed command or subcommand."
-        ),
-        (
-            {
-                "cmd": "ping google.com && __import__('os').system('echo hacked')",
-                "approved_cmd_list": ["ping", "google.com"]
-            },
-            "Disallowed command or subcommand."
-        ),
+        ({"img_url": "http://malicious.com/badimage.png"}, ValueError),
+        ({"img_url": "http://localhost/admin/image.png"}, ValueError),
+        ({"img_url": "ftp://images.hosting.com/image456.png"}, ValueError),
     ],
 }
 
@@ -43,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = filtered_system_command(**test)
+            result = fetch_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -59,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = filtered_system_command(**test)
+            result = fetch_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
