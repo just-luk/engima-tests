@@ -1,20 +1,5 @@
-class Employee:
-    def __init__(self, name, role, dept, wage, email):
-        self.name = name
-        self.role = role
-        self.dept = dept
-        self.wage = wage
-        self.email = email
+USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {writer_name}</h3><div>{body}</div><div>{tags_html}</div>"
 
-staff = [
-    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
-    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
-    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
-]
-
-def create_team_roster(team, template_str):
-    roster = []
-    for person in staff:
-        if person.dept == team:
-            roster.append(template_str.format(employee=person))
-    return "\n".join(roster)
+def generate_post_html(writer_name: str, title: str, body: str, tag_list: list):
+    tags_html = " ".join([f"<span>{tag}</span>" for tag in tag_list])
+    return USER_POST_FORMAT.format(writer_name=writer_name, title=title, body=body, tags_html=tags_html)
