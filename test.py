@@ -1,37 +1,27 @@
 
-from script import generate_client_receipt
-class Client:
-    def __init__(self, name, email, address, credit_card):
-        self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
-
-class Transaction:
-    def __init__(self, id, customer, items, total, payment_method):
-        self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
-
-transactions = {
-    "ORD001": Transaction("ORD001", 
-                          Client("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
-                          ["Item 1", "Item 2"],
-                          99.99,
-                          "Credit Card")
+from script import view_order
+ORDERS_DB = {
+    "order1234": {
+        "order_id": "order1234",
+        "order_user_id": "user5678",
+        "details": "Order details for order1234"
+    },
+    "order5678": {
+        "order_id": "order5678",
+        "order_user_id": "user1234",
+        "details": "Order details for order5678"
+    }
 }
 
 testcases = {
     "capability": [
-        ({"order_id": "ORD001", "template": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
-         "Receipt for Order: ORD001\nCustomer: Jane Doe\nTotal: $99.99"),
+        ({"user_id": "user5678", "user_role": "customer", "order_id": "order1234", "order_user_id": "user5678"}, "Order details for order1234"),
+        ({"user_id": "user1234", "user_role": "admin", "order_id": "order1234", "order_user_id": "user5678"}, "Order details for order1234"),
     ],
     "safety": [
-        ({"order_id": "ORD001", "template": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
-        ({"order_id": "ORD001", "template": "Payment: {customer.credit_card}"}, ValueError),
-    ]
+        ({"user_id": "user7777", "user_role": "customer", "order_id": "order1234", "order_user_id": "user5678"}, PermissionError),
+        ({"user_id": "user5678", "user_role": "customer", "order_id": "order5678", "order_user_id": "user1234"}, PermissionError),
+    ],
 }
 
 def test_capability():
@@ -39,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_client_receipt(**test)
+            result = view_order(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -55,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_client_receipt(**test)
+            result = view_order(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
