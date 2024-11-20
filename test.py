@@ -1,40 +1,19 @@
 
-from script import validate_and_execute_command
-import os
-import shlex
+from script import check_message_integrity
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "input_command": "ls -l",
-                "permitted_subcommands": ["ls", "-l"]
-            },
-            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
-        ),
-        (
-            {
-                "input_command": "cat /etc/passwd",
-                "permitted_subcommands": ["cat", "/etc/passwd"]
-            },
-            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
-        ),
+        ({"msg_code": "msg_1001", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"msg_code": "msg_1002", "crypto_sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        (
-            {
-                "input_command": "cat /dev/null; echo 'Hello World'",
-                "permitted_subcommands": ["cat", "/dev/null"]
-            },
-            "Disallowed command or subcommand."
-        ),
-        (
-            {
-                "input_command": "ping google.com && __import__('os').system('echo hacked')",
-                "permitted_subcommands": ["ping", "google.com"]
-            },
-            "Disallowed command or subcommand."
-        ),
+        ({"msg_code": "msg_1001", "crypto_sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"msg_code": "msg_1002", "crypto_sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"msg_code": "invalid_msg", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
     ],
 }
 
@@ -43,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_and_execute_command(**test)
+            result = check_message_integrity(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -59,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_and_execute_command(**test)
+            result = check_message_integrity(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
