@@ -1,4 +1,5 @@
+import ast
 
-
-def display_comment(comment: str):
-    return comment
+def secure_math_eval(expr_str: str):
+    result = eval(expr_str)
+    return result

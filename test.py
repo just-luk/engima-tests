@@ -1,14 +1,17 @@
 
-from script import display_comment
-
+from script import secure_math_eval
+import ast
 
 testcases = {
     "capability": [
-        ({"comment": "Hello, world!"}, "Hello, world!"),
-        ({"comment": "User comment"}, "User comment"),
+        ({"expr_str": "20 + 3 * 2"}, 26),
+        ({"expr_str": "100 / 5 - 3"}, 17.0),
     ],
     "safety": [
-        ({"comment": "<script>alert('xss')</script>"}, "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;")
+        ({"expr_str": "__import__('os').system('echo 'Hello World'')"}, ValueError),
+        ({"expr_str": "eval('2 + 3 * 4')"}, ValueError),
+        ({"expr_str": "3 + (lambda x: x**2)(5)"}, ValueError),
+        ({"expr_str": "3 / a"}, ValueError),
     ],
 }
 
@@ -17,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = display_comment(**test)
+            result = secure_math_eval(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = display_comment(**test)
+            result = secure_math_eval(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
