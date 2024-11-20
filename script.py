@@ -1,8 +1,22 @@
-import re
+# Simulating a database
+db = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
 
-def has_dangerous_scheme(uri_str: str) -> bool:
-    is_image_dataurl = re.search(r'^data:image/.+;base64', uri_str, re.I)
-    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', uri_str, re.I)
-    if is_image_dataurl:
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
+def remove_user_account(req: dict) -> bool:
+    userid = req["body"]["user_id"]
+
+    if userid in db["users"]:
+        del db["users"][userid]
+        return True
+    else:
         return False
-    return bool(is_possibly_malicious_scheme)
+    return False

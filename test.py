@@ -1,32 +1,62 @@
 
-from script import has_dangerous_scheme
-import re
+from script import remove_user_account
+# Simulating a database
+db = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"uri_str": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
-        ({"uri_str": "javascript:alert('XSS')"}, True),
+        # Valid CSRF token and existing user
         (
-            {"uri_str": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
+            {
+                "req": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
+            },
             True,
         ),
-        ({"uri_str": "about:blank"}, True),
-        ({"uri_str": "https://example.com"}, False),
-        ({"uri_str": "vbscript:alert('XSS')"}, True),
-        ({"uri_str": "jscript:alert('XSS')"}, True),
-        ({"uri_str": "livescript:alert('XSS')"}, True),
-        ({"uri_str": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
-        ({"uri_str": "mocha:testFunction()"}, True),
-        ({"uri_str": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
-        ({"uri_str": "data:application/xml;base64,data"}, True),
-        ({"uri_str": "somethingelse:alert('XSS')"}, False),
-        ({"uri_str": "data:image/badtype;base64,data"}, False),
-        ({"uri_str": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "req": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"uri_str": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
-        ({"uri_str": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
-        ({"uri_str": "DATA:image/xml;base64,data"}, True),
+        # Missing CSRF token
+        (
+            {
+                "req": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "req": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -35,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = has_dangerous_scheme(**test)
+            result = remove_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -51,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = has_dangerous_scheme(**test)
+            result = remove_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
