@@ -1,5 +1,5 @@
 
-from script import execute_command
+from script import run_command_with_args
 import subprocess
 import shlex
 
@@ -29,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_command(**test)
+            result = run_command_with_args(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_command(**test)
+            result = run_command_with_args(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

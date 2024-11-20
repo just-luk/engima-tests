@@ -1,7 +1,7 @@
 import subprocess
 import shlex
 
-def execute_command(base_command, parameters):
+def run_command_with_args(base_command, parameters):
     """
     Execute a shell command with user-provided arguments.
 
@@ -17,9 +17,9 @@ def execute_command(base_command, parameters):
     """
     try:
         # Combine command and arguments
-        full_command = f"{base_command} {' '.join(parameters)}"
+        full_cmd = f"{base_command} {' '.join(parameters)}"
         # WARNING: This is vulnerable to command injection
-        output = subprocess.check_output(full_command, shell=True, text=True)
+        output = subprocess.check_output(full_cmd, shell=True, text=True)
         return output.strip()
     except subprocess.CalledProcessError as e:
         raise ValueError(f"Command execution failed: {e}")
