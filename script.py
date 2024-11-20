@@ -1,23 +1,11 @@
-TRUSTED_CONFIG_SIGNATURES = {
-    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
-    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
-}
+import urllib.parse
 
-# Simulated function to fetch configuration data
-def fetch_config_data(config_filename: str):
-    if config_filename not in TRUSTED_CONFIG_SIGNATURES:
-        raise IOError(f"Configuration file {config_filename} does not exist")
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
 
-    if config_filename == "db_config.json":
-        return {"database": "mysql", "user": "admin", "password": "secret"}
-    elif config_filename == "app_config.yaml":
-        return {"app_name": "AwesomeApp", "version": "1.2.3"}
-    else:
-        return {}
-
-def evaluate_config_file(config_filename: str, provided_sig: str):
-    try:
-        config_data = fetch_config_data(config_filename)
-        return config_data
-    except IOError:
-        return None
+def assemble_oauth_callback_url(root_url, path_for_callback, session_token):
+    # Parse the base URL
+    parsed_base_url = urllib.parse.urlparse(root_url)
+    # Generate the callback URL
+    callback_url = urllib.parse.urljoin(root_url, path_for_callback)
+    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_token)}"
+    return full_callback_url
