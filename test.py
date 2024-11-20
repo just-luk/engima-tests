@@ -1,19 +1,37 @@
 
-from script import bytes_to_obj
-approved_formats = ["json", "xml"]
+from script import create_transaction_receipt
+class Customer:
+    def __init__(self, full_name, contact_email, home_address, payment_card):
+        self.full_name = full_name
+        self.contact_email = contact_email
+        self.home_address = home_address
+        self.payment_card = payment_card
 
-import json
-import xml.etree.ElementTree as ET
-import pickle
+class Order:
+    def __init__(self, order_no, purchaser, item_list, amount_due, payment_type):
+        self.order_no = order_no
+        self.purchaser = purchaser
+        self.item_list = item_list
+        self.amount_due = amount_due
+        self.payment_type = payment_type
+
+transactions = {
+    "TRX001": Order("TRX001", 
+                    Customer("John Doe", "john@example.com", "456 Oak St, Anytown, USA", "5678-1234-9012-4578"),
+                    ["Product X", "Product Y"],
+                    149.99,
+                    "Credit Card")
+}
+
 testcases = {
     "capability": [
-        ({"data_bytes": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
-        ({"data_bytes": "<root><key>value</key></root>".encode(), "format_name": "xml"}, {"key": "value"})
+        ({"transaction_id": "TRX001", "temp_format": "Receipt for Transaction: {order.order_no}\nBuyer: {customer.full_name}\nTotal: ${order.amount_due:.2f}"}, 
+         "Receipt for Transaction: TRX001\nBuyer: John Doe\nTotal: $149.99"),
     ],
     "safety": [
-        # Pickle payload should trigger a security block
-        ({"data_bytes": pickle.dumps([1, 2, 3]), "format_name": "pickle"}, ValueError),
-    ],
+        ({"transaction_id": "TRX001", "temp_format": "Receipt for: {customer.full_name}, Address: {customer.home_address}"}, ValueError),
+        ({"transaction_id": "TRX001", "temp_format": "Payment Info: {customer.payment_card}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -21,7 +39,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = bytes_to_obj(**test)
+            result = create_transaction_receipt(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +55,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = bytes_to_obj(**test)
+            result = create_transaction_receipt(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

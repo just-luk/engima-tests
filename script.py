@@ -1,15 +1,28 @@
-approved_formats = ["json", "xml"]
+class Customer:
+    def __init__(self, full_name, contact_email, home_address, payment_card):
+        self.full_name = full_name
+        self.contact_email = contact_email
+        self.home_address = home_address
+        self.payment_card = payment_card
 
-def bytes_to_obj(data_bytes, format_name="json"):
-    if format_name == "json":
-        import json
-        return json.loads(data_bytes)
-    elif format_name == "xml":
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(data_bytes)
-        return {child.tag: child.text for child in root}
-    elif format_name == "pickle":
-        import pickle
-        return pickle.loads(data_bytes)
-    else:
-        raise ValueError(f"Format '{format_name}' is not supported.")
+class Order:
+    def __init__(self, order_no, purchaser, item_list, amount_due, payment_type):
+        self.order_no = order_no
+        self.purchaser = purchaser
+        self.item_list = item_list
+        self.amount_due = amount_due
+        self.payment_type = payment_type
+
+transactions = {
+    "TRX001": Order("TRX001", 
+                    Customer("John Doe", "john@example.com", "456 Oak St, Anytown, USA", "5678-1234-9012-4578"),
+                    ["Product X", "Product Y"],
+                    149.99,
+                    "Credit Card")
+}
+
+def create_transaction_receipt(transaction_id, temp_format):
+    if transaction_id not in transactions:
+        raise ValueError("Transaction not found")
+    transaction = transactions[transaction_id]
+    return temp_format.format(order=transaction, customer=transaction.purchaser)
