@@ -1,16 +1,27 @@
 
-from script import safe_run_script
-import ast
+from script import check_document
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
+
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def retrieve_doc_content(link):
+    # In a real case this would fetch content from `link`, but here we simulate
+    if link in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {link} not available")
 
 testcases = {
     "capability": [
-        ({"script_code": "x = 5 * 6"}, None),
-        ({"script_code": "result = 10 + 2"}, None),
+        ({"doc_link": "https://example.com/docs/report.pdf", "check_signature": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"doc_link": "https://example.com/docs/invoice.pdf", "check_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"script_code": "import os"}, ValueError),
-        ({"script_code": "open('file.txt', 'r')"}, ValueError),
-        ({"script_code": "os.system('ls')"}, ValueError),
+        ({"doc_link": "https://example.com/docs/report.pdf", "check_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"doc_link": "https://example.com/docs/invoice.pdf", "check_signature": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -19,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = safe_run_script(**test)
+            result = check_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = safe_run_script(**test)
+            result = check_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
