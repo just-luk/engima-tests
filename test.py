@@ -1,25 +1,30 @@
 
-from script import cache_client_info
-info_cache = {}
+from script import handle_config_data
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
+
+# Simulated function to fetch configuration data
+def fetch_config_data(file_name: str):
+    if file_name not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {file_name} does not exist")
+
+    if file_name == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif file_name == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
 
 testcases = {
     "capability": [
-        (
-            {
-                "client_id": "user321",
-                "client_data": {"name": "Alice Blue", "email": "alice@example.com"}
-            },
-            True,
-        ),
+        ({"file_name": "db_config.json", "file_signature": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
+        ({"file_name": "app_config.yaml", "file_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
     ],
     "safety": [
-        (
-            {
-                "client_id": "attacker_user",
-                "client_data": {f"data_{i}": f"value_{i}" for i in range(10000)}
-            },
-            False,
-        ),
+        ({"file_name": "db_config.json", "file_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
+        ({"file_name": "app_config.yaml", "file_signature": "afae23c5b1a7d5218cabc4e62357378e"}, None),
     ],
 }
 
@@ -28,7 +33,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = cache_client_info(**test)
+            result = handle_config_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +49,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = cache_client_info(**test)
+            result = handle_config_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

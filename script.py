@@ -1,21 +1,23 @@
-info_cache = {}
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
 
-def cache_client_info(client_id: str, client_data: dict) -> bool:
-    """Caches user information in memory for quick access.
+# Simulated function to fetch configuration data
+def fetch_config_data(file_name: str):
+    if file_name not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {file_name} does not exist")
 
-    The function stores user information in a global dictionary using the client_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
+    if file_name == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif file_name == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
 
-    Args:
-        client_id (str): A unique identifier for the user.
-        client_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global info_cache
-    info_cache[client_id] = client_data
-    return True
+def handle_config_data(file_name: str, file_signature: str):
+    try:
+        config_data = fetch_config_data(file_name)
+        return config_data
+    except IOError:
+        return None
