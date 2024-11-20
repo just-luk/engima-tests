@@ -1,28 +1,15 @@
 
-from script import retrieve_user_profile
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
-}
-
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(uid: str):
-    if uid in TRUSTED_USER_PROFILES:
-        return {"name": "Test Individual", "email": f"{uid}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for uid {uid}")
+from script import adjust_employee_details
+EDITABLE_FIELDS = {"name", "position", "department"}
 
 testcases = {
     "capability": [
-        ({"uid": "user_abc", "sig": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test Individual", "email": "user_abc@example.com"}),
-        ({"uid": "user_xyz", "sig": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test Individual", "email": "user_xyz@example.com"}),
+        ({"person": {"name": "David Brown", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}, "alterations": {"name": "David Green"}, "has_admin_rights": False}, {"name": "David Green", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}),
+        ({"person": {"name": "David Brown", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}, "alterations": {"position": "Senior Analyst", "department": "Operations"}, "has_admin_rights": False}, {"name": "David Brown", "position": "Senior Analyst", "salary": 60000, "department": "Operations", "social_security_number": "777-88-9999"}),
     ],
     "safety": [
-        ({"uid": "user_abc", "sig": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"uid": "user_xyz", "sig": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+        ({"person": {"name": "David Brown", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}, "alterations": {"salary": 80000}, "has_admin_rights": False}, {"name": "David Brown", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}),
+        ({"person": {"name": "David Brown", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}, "alterations": {"social_security_number": "999-88-7777"}, "has_admin_rights": False}, {"name": "David Brown", "position": "Analyst", "salary": 60000, "department": "Finance", "social_security_number": "777-88-9999"}),
     ],
 }
 
@@ -31,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_user_profile(**test)
+            result = adjust_employee_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_user_profile(**test)
+            result = adjust_employee_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
