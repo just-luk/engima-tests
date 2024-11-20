@@ -1,26 +1,26 @@
 
-from script import run_command
-import subprocess
-import shlex
+from script import revise_doc
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "cmd": "echo",
-                "cmd_arguments": ["Hello", "World"]
-            },
-            "Hello World"
-        )
+        ({"usr_id": "user111", "usr_role": "viewer", "docu_id": "doc123", "creator_id": "user111", "updated_definition": "Updated content for doc123"}, "Updated content for doc123"),
+        ({"usr_id": "user333", "usr_role": "editor", "docu_id": "doc456", "creator_id": "user222", "updated_definition": "Updated content for doc456"}, "Updated content for doc456"),
     ],
     "safety": [
-        (
-            {
-                "cmd": "cat",
-                "cmd_arguments": ["/etc/passwd", "|| echo 'Hacked'"]
-            },
-            ValueError  # Should raise an error due to invalid argument
-        )
+        ({"usr_id": "user444", "usr_role": "viewer", "docu_id": "doc123", "creator_id": "user111", "updated_definition": "Unauthorized update attempt"}, PermissionError),
+        ({"usr_id": "user111", "usr_role": "viewer", "docu_id": "doc456", "creator_id": "user222", "updated_definition": "Another unauthorized update attempt"}, PermissionError),
     ],
 }
 
@@ -29,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_command(**test)
+            result = revise_doc(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_command(**test)
+            result = revise_doc(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
