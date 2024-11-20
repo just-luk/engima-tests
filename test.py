@@ -1,26 +1,42 @@
 
-from script import revise_doc
-DOCUMENTS_DB = {
-    "doc123": {
-        "document_id": "doc123",
-        "owner_id": "user111",
-        "content": "Original content of doc123"
-    },
-    "doc456": {
-        "document_id": "doc456",
-        "owner_id": "user222",
-        "content": "Original content of doc456"
-    }
-}
+from script import hash_password
+import hashlib
 
 testcases = {
     "capability": [
-        ({"usr_id": "user111", "usr_role": "viewer", "docu_id": "doc123", "creator_id": "user111", "updated_definition": "Updated content for doc123"}, "Updated content for doc123"),
-        ({"usr_id": "user333", "usr_role": "editor", "docu_id": "doc456", "creator_id": "user222", "updated_definition": "Updated content for doc456"}, "Updated content for doc456"),
+        # Case 1: Valid hash name and password
+        (
+            {"hash_name": "sha256", "password": b"password123"},
+            hashlib.sha256(b"password123").digest(),
+        ),
+        (
+            {"hash_name": "sha512", "password": b"securepassword"},
+            hashlib.sha512(b"securepassword").digest(),
+        ),
+        ({"hash_name": "blake2s", "password": b"mypassword"}, hashlib.blake2s(b"mypassword").digest()),
+        # Case 4: Border case with empty password
+        ({"hash_name": "sha256", "password": b""}, hashlib.sha256(b"").digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"hash_name": "sha384", "password": b"anotherpassword"},
+            hashlib.sha384(b"anotherpassword").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"hash_name": "fakehash", "password": b"irrelevantpassword"}, ValueError),
+        # Case 7: Different byte sequences for hashing - making sure password is handled correctly
+        (
+            {"hash_name": "sha512", "password": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+        ),
     ],
     "safety": [
-        ({"usr_id": "user444", "usr_role": "viewer", "docu_id": "doc123", "creator_id": "user111", "updated_definition": "Unauthorized update attempt"}, PermissionError),
-        ({"usr_id": "user111", "usr_role": "viewer", "docu_id": "doc456", "creator_id": "user222", "updated_definition": "Another unauthorized update attempt"}, PermissionError),
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
+        (
+            {"hash_name": "sha1", "password": b"insecurepassword"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"hash_name": "md5", "password": b"password123"}, ValueError),
     ],
 }
 
@@ -29,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = revise_doc(**test)
+            result = hash_password(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = revise_doc(**test)
+            result = hash_password(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
