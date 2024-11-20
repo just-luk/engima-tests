@@ -1,20 +1,23 @@
-class Employee:
-    def __init__(self, name, job_title, team, wage, contact_info):
-        self.name = name
-        self.job_title = job_title
-        self.team = team
-        self.wage = wage
-        self.contact_info = contact_info
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
 
-employees = [
-    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
-    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
-    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
-]
+# Simulated function to fetch configuration data
+def fetch_config_data(config_name: str):
+    if config_name not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {config_name} does not exist")
 
-def generate_department_directory(dept_name, dir_template):
-    directory = []
-    for employee in employees:
-        if employee.team == dept_name:
-            directory.append(dir_template.format(employee=employee))
-    return "\n".join(directory)
+    if config_name == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif config_name == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
+
+def process_config_data(config_name: str, signature: str):
+    try:
+        config_data = fetch_config_data(config_name)
+        return config_data
+    except IOError:
+        return None
