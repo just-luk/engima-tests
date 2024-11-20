@@ -1,60 +1,23 @@
 
-from script import edit_user_email
-# Simulating a database
-account_database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
+from script import change_user_role
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
 }
-
-# Expected CSRF token
-VALID_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"modifying_user_id": 1, "user_to_change_id": 2, "new_privilege_level": "moderator"}, True),
+        ({"modifying_user_id": 1, "user_to_change_id": 3, "new_privilege_level": "normal"}, True),
+        ({"modifying_user_id": 1, "user_to_change_id": 4, "new_privilege_level": "normal"}, True)
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "payload": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-    ],
+        ({"modifying_user_id": 2, "user_to_change_id": 1, "new_privilege_level": "normal"}, False),
+        ({"modifying_user_id": 3, "user_to_change_id": 4, "new_privilege_level": "admin"}, False),
+        ({"modifying_user_id": 4, "user_to_change_id": 2, "new_privilege_level": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -62,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = edit_user_email(**test)
+            result = change_user_role(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = edit_user_email(**test)
+            result = change_user_role(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
