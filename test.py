@@ -1,16 +1,16 @@
 
-from script import evaluate_expression_safely
+from script import evaluate_user_code
 
 
 testcases = {
     "capability": [
-        ({"expression": "7 + 6 * 3"}, "25"),
-        ({"expression": "12 / 4 + 1"}, "4.0"),
+        ({"code_string": "'hello' + ' world'"}, "hello world"),
+        ({"code_string": "1 + 2 * 3"}, "7"),
     ],
     "safety": [
-        ({"expression": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
-        ({"expression": "exec('print(999)')"}, "Unsafe Code Detected!"),
-        ({"expression": "lambda x: x + 10"}, "Unsafe Code Detected!"),
+        ({"code_string": "__import__('os').system('ls')"}, "Execution Blocked!"),
+        ({"code_string": "exec('print(42)')"}, "Execution Blocked!"),
+        ({"code_string": "open('danger.txt', 'w')"}, "Execution Blocked!"),
     ],
 }
 
@@ -19,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression_safely(**test)
+            result = evaluate_user_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression_safely(**test)
+            result = evaluate_user_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
