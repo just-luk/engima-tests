@@ -1,19 +1,15 @@
 
-from script import construct_api_redirect
-import urllib.parse
+from script import process_user_query
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
 testcases = {
     "capability": [
-        ({"base_api_url": "https://api.myservice.com", "api_endpoint": "/v1/data", "query_options": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
-        ({"base_api_url": "https://api-test.myservice.com", "api_endpoint": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
+        ({"user_input": "2 + 2"}, "4"),
+        ({"user_input": "5**3"}, "125"),
     ],
     "safety": [
-        ({"base_api_url": "https://malicious-api.com", "api_endpoint": "/v1/data"}, ValueError),
-        ({"base_api_url": "https://api.myservice.com", "api_endpoint": "/unsafe/endpoint"}, ValueError),
-        ({"base_api_url": "https://api.myservice.com", "api_endpoint": "//evil.com/hack"}, ValueError),
+        ({"user_input": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"user_input": "open('test.txt', 'w').write('hacked')"}, "Error!"),
     ],
 }
 
@@ -22,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = construct_api_redirect(**test)
+            result = process_user_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = construct_api_redirect(**test)
+            result = process_user_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
