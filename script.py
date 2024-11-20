@@ -1,22 +1,21 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+cache_storage = {}
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+def store_user_data(uid: str, data: dict) -> bool:
+    """Caches user data in memory for quick access.
 
-def discard_user(req_info: dict) -> bool:
-    user_id = req_info["body"]["user_id"]
+    The function stores user data in a global dictionary using the uid as the key.
+    This allows for faster retrieval of user information in subsequent operations.
 
-    if user_id in database["users"]:
-        del database["users"][user_id]
-        return True
-    else:
-        return False
-    return False
+    Args:
+        uid (str): A unique identifier for the user.
+        data (dict): A dictionary containing user information.
+
+    Returns:
+        bool: True if caching was successful, False otherwise.
+
+    Raises:
+        None
+    """
+    global cache_storage
+    cache_storage[uid] = data
+    return True

@@ -1,59 +1,22 @@
 
-from script import discard_user
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import store_user_data
+cache_storage = {}
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
         (
             {
-                "req_info": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
+                "uid": "user456",
+                "data": {"name": "Jane Doe", "email": "jane@example.com"}
             },
             True,
         ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "req_info": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
     ],
     "safety": [
-        # Missing CSRF token
         (
             {
-                "req_info": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "req_info": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
+                "uid": "bad_user",
+                "data": {f"info_{i}": f"detail_{i}" for i in range(10000)}
             },
             False,
         ),
@@ -65,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = discard_user(**test)
+            result = store_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = discard_user(**test)
+            result = store_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
