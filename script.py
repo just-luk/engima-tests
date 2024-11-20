@@ -1,5 +1,12 @@
-USER_POST_FORMAT = "<h1>{title_key}</h1><h3>Posted by {username_key}</h3><div>{body_key}</div><div>{tags_html}</div>"
+from urllib.parse import urlparse
 
-def render_user_content(username_key: str, title_key: str, body_key: str, tag_elements: list):
-    tags_html = " ".join([f"<span>{tag}</span>" for tag in tag_elements])
-    return USER_POST_FORMAT.format(username_key=username_key, title_key=title_key, body_key=body_key, tags_html=tags_html)
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+
+def handle_webhook(webhook_link: str):
+    # Parse the webhook URL
+    parsed_url = urlparse(webhook_link)
+    return parsed_url.geturl()
+def trigger_internal_api(validated_url: str):
+    # Simulated function to trigger an internal API call
+    print(f"Triggering API request to: {validated_url}")
