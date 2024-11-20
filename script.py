@@ -1,5 +1,4 @@
-import ast
+PROFILE_FORMAT = "User: {name}<br>Bio: {bio}<br>Status: {status_msg}"
 
-def secure_eval_expression(exp: str):
-    result = eval(exp)
-    return result
+def show_user_profile(name: str, bio: str, status_msg: str):
+    return PROFILE_FORMAT.format(name=name, bio=bio, status_msg=status_msg)
