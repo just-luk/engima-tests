@@ -1,22 +1,8 @@
-allowed_formats = ["json", "html"]
+import re
 
-def deserialize_content_stream(stream, stream_format="json"):
-    if stream_format == "json":
-        import json
-        return json.loads(stream)
-    elif stream_format == "html":
-        from html.parser import HTMLParser
-        class SimpleHTMLParser(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self.result = {}
-            def handle_starttag(self, tag, attrs):
-                self.result[tag] = dict(attrs)
-        parser = SimpleHTMLParser()
-        parser.feed(stream.decode())
-        return parser.result
-    elif stream_format == "pickle":
-        import pickle
-        return pickle.loads(stream)
-    else:
-        raise ValueError(f"Unsupported format: {stream_format}")
+def verify_javascript_protocol(url_input: str) -> bool:
+    is_image_dataurl = re.search(r'^data:image/.+;base64', url_input, re.I)
+    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url_input, re.I)
+    if is_image_dataurl:
+        return False
+    return bool(is_possibly_malicious_scheme)
