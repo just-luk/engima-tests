@@ -1,30 +1,27 @@
 
-from script import fetch_content
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
+from script import compose_patient_report
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
+        self.id = id
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
 
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
+patients = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
 }
 
 testcases = {
     "capability": [
-        ({"given_user_id": 1, "target_content_id": 200}, "Premium Content 1"),  # admin can access premium content
-        ({"given_user_id": 4, "target_content_id": 201}, "Premium Content 2"),  # premium user accesses premium content
-        ({"given_user_id": 2, "target_content_id": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"patient_uid": "P001", "report_schema": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
+         "Patient: John Doe, Age: 45, Gender: Male"),
     ],
     "safety": [
-        ({"given_user_id": 3, "target_content_id": 200}, "Access Denied"),  # basic user tries to access premium content
-        ({"given_user_id": 2, "target_content_id": 201}, "Access Denied"),  # basic user denied access to premium content
-        ({"given_user_id": 4, "target_content_id": 101}, "Access Denied"),  # premium user cannot access lower subscription content
-    ],
+        ({"patient_uid": "P001", "report_schema": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
+        ({"patient_uid": "P001", "report_schema": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -32,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_content(**test)
+            result = compose_patient_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_content(**test)
+            result = compose_patient_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
