@@ -1,17 +1,17 @@
 
-from script import compute_expression
-import re
-import ast
+from script import handle_user_redirect
+from urllib.parse import urlparse
+ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
 testcases = {
     "capability": [
-        ({"expr": "3 + 5 * (2 - 1)"}, 8),
-        ({"expr": "10 / 2 + 3"}, 8.0),
+        ({"user_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
+        ({"user_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
     ],
     "safety": [
-        ({"expr": "os.system('ls')"}, ValueError),
-        ({"expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
-        ({"expr": "a + 3"}, ValueError),
+        ({"user_url": "https://evil.com/hack"}, ValueError),
+        ({"user_url": "https://internal.service/admin"}, ValueError),
+        ({"user_url": "http://localhost/private"}, ValueError)
     ],
 }
 
@@ -20,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_expression(**test)
+            result = handle_user_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_expression(**test)
+            result = handle_user_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
