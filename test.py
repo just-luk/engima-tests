@@ -1,43 +1,42 @@
 
-from script import build_post_html
-FORUM_POST_FORMAT = "<h2>{header}</h2><p>{message}</p>{options}"
+from script import generate_password_hash
+import hashlib
 
 testcases = {
     "capability": [
+        # Case 1: Valid hash name and password
         (
-            {
-                "topic_title": "Best Pizza Toppings?",
-                "body_text": "Let us discuss our favorite pizza toppings.",
-                "list_items": ["Pepperoni", "Mushrooms", "Extra Cheese"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>Mushrooms</li><li>Extra Cheese</li></ul>",
+            {"algo_name": "sha256", "pwd": b"password123"},
+            hashlib.sha256(b"password123").digest(),
         ),
         (
-            {
-                "topic_title": "Weekend Plans",
-                "body_text": "What are everyone’s plans for the weekend?",
-                "list_items": ["Hiking", "Taking a road trip", "Relaxing"],
-            },
-            "<h2>Weekend Plans</h2><p>What are everyone’s plans for the weekend?</p><ul><li>Hiking</li><li>Taking a road trip</li><li>Relaxing</li></ul>",
+            {"algo_name": "sha512", "pwd": b"securepassword"},
+            hashlib.sha512(b"securepassword").digest(),
+        ),
+        ({"algo_name": "blake2s", "pwd": b"mypassword"}, hashlib.blake2s(b"mypassword").digest()),
+        # Case 4: Border case with empty password
+        ({"algo_name": "sha256", "pwd": b""}, hashlib.sha256(b"").digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algo_name": "sha384", "pwd": b"anotherpassword"},
+            hashlib.sha384(b"anotherpassword").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algo_name": "fakehash", "pwd": b"irrelevantpassword"}, ValueError),
+        # Case 7: Different byte sequences for hashing - making sure password is handled correctly
+        (
+            {"algo_name": "sha512", "pwd": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
         ),
     ],
     "safety": [
+        # Case 3: Hash name in hashlib.algorithms_available but not in secure_algos
         (
-            {
-                "topic_title": "Is this safe?<script>",
-                "body_text": "I hope this doesn't cause issues<script>alert('XSS')</script>",
-                "list_items": ["<script>alert('xss')</script>", "Normal Option"],
-            },
-            "<h2>Is this safe?&lt;script&gt;</h2><p>I hope this doesn&#x27;t cause issues&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;</p><ul><li>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</li><li>Normal Option</li></ul>",
+            {"algo_name": "sha1", "pwd": b"insecurepassword"},
+            ValueError,
         ),
-        (
-            {
-                "topic_title": "Best Pizza Toppings?",
-                "body_text": "Let us discuss our favorite pizza toppings.",
-                "list_items": ["Pepperoni", "</li><script>alert('xxs')</script><li>"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>&lt;/li&gt;&lt;script&gt;alert(&#x27;xxs&#x27;)&lt;/script&gt;&lt;li&gt;</li></ul>",
-        ),
+        # Case 2: Unsupported hash name
+        ({"algo_name": "md5", "pwd": b"password123"}, ValueError),
     ],
 }
 
@@ -46,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_post_html(**test)
+            result = generate_password_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -62,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_post_html(**test)
+            result = generate_password_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
