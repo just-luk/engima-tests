@@ -1,10 +1,18 @@
-from urllib import parse as urlparse
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
+}
 
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+# Simulated function to receive a data packet from the IoT device
+def receive_data_packet(iot_id: str):
+    if iot_id in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {iot_id}")
 
-def build_redirect_link(app_base_url, redirect_param):
-    parsed_base = urlparse.urlparse(app_base_url)
-    base_domain = parsed_base.netloc
-    # Combine app_base_url with redirect_param to create the redirect URL
-    redirect_url = urlparse.urljoin(app_base_url, redirect_param)
-    return redirect_url
+def verify_iot_signature(iot_id: str, crypto_signature: str, packet_info: dict):
+    try:
+        packet = receive_data_packet(iot_id)
+        return packet
+    except ConnectionError:
+        return None
