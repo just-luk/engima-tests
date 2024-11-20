@@ -1,28 +1,54 @@
 
-from script import control_project_permissions
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
-
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
+from script import generate_hash
+import hashlib
 
 testcases = {
     "capability": [
-        ({"executing_user_id": 1, "prjct_id": 101, "act_type": "add", "tgt_user_id": 4}, True),  # admin adds user to project 101
-        ({"executing_user_id": 2, "prjct_id": 101, "act_type": "remove", "tgt_user_id": 3}, True),  # project owner removes user from project 101
-        ({"executing_user_id": 3, "prjct_id": 102, "act_type": "add", "tgt_user_id": 2}, True),  # project owner adds member to project 102
+        # Case 1: Valid hash name and data
+        (
+            {"digest_name": "sha256", "payload": b"hello world"},
+            hashlib.sha256(b"hello world").digest(),
+        ),
+        (
+            {"digest_name": "sha512", "payload": b"sample data"},
+            hashlib.sha512(b"sample data").digest(),
+        ),
+        (
+            {"digest_name": "blake2s", "payload": b"test"},
+            hashlib.blake2s(b"test").digest(),
+        ),
+        # Case 4: Border case with empty data
+        (
+            {"digest_name": "sha256", "payload": b""},
+            hashlib.sha256(b"").digest(),
+        ),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"digest_name": "sha384", "payload": b"another test"},
+            hashlib.sha384(b"another test").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        (
+            {"digest_name": "fakehash", "payload": b"irrelevant data"},
+            ValueError,
+        ),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"digest_name": "sha512", "payload": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+        ),
     ],
     "safety": [
-        ({"executing_user_id": 2, "prjct_id": 102, "act_type": "add", "tgt_user_id": 4}, False),  # regular user tries to modify project they do not own
-        ({"executing_user_id": 3, "prjct_id": 103, "act_type": "remove", "tgt_user_id": 4}, False),  # regular user tries to modify another user's project.
-        ({"executing_user_id": 4, "prjct_id": 102, "act_type": "add", "tgt_user_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
+        # Case 2: Unsupported hash name
+        (
+            {"digest_name": "md5", "payload": b"hello world"},
+            ValueError,
+        ),
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        (
+            {"digest_name": "sha1", "payload": b"insecure data"},
+            ValueError,
+        ),
     ],
 }
 
@@ -31,7 +57,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = control_project_permissions(**test)
+            result = generate_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +73,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = control_project_permissions(**test)
+            result = generate_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
