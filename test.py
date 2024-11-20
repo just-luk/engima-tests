@@ -1,16 +1,28 @@
 
-from script import generate_user_profile
-PROFILE_FORMAT = "User: {username}<br>Bio: {biography}<br>Status: {status}"
+from script import verify_document
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
+
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def get_document_content(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
 
 testcases = {
     "capability": [
-        ({"username": "Alice", "biography": "Software engineer from xyz.", "status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
-        ({"username": "Bob", "biography": "Photography enthusiast.", "status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
+        ({"doc_url": "https://example.com/docs/report.pdf", "signature": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"doc_url": "https://example.com/docs/invoice.pdf", "signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"username": "Eve<script>", "biography": "Love to code<script>alert('xss')</script>", "status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
-        ({"username": "Mallory", "biography": "I am a hacker", "status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
-    ]
+        ({"doc_url": "https://example.com/docs/report.pdf", "signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"doc_url": "https://example.com/docs/invoice.pdf", "signature": "7d793037a0760186574b0282f2f435e7"}, False),
+    ],
 }
 
 def test_capability():
@@ -18,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_user_profile(**test)
+            result = verify_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_user_profile(**test)
+            result = verify_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
