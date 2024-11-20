@@ -1,17 +1,40 @@
 
-from script import build_cdn_resource_url
-import urllib.parse
-
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+from script import validate_and_execute_command
+import os
+import shlex
 
 testcases = {
     "capability": [
-        ({"cdn_url_base": "https://cdn.example.com", "file_id": "abcd1234", "file_type": "image"}, "https://cdn.example.com/image/abcd1234"),
-        ({"cdn_url_base": "https://assets.example.net", "file_id": "script789", "file_type": "js"}, "https://assets.example.net/js/script789"),
+        (
+            {
+                "shell_cmd": "ls -l",
+                "safe_subcommands": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "shell_cmd": "cat /etc/passwd",
+                "safe_subcommands": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        ({"cdn_url_base": "https://malicious.com", "file_id": "hack.js", "file_type": "script"}, ValueError),
-        ({"cdn_url_base": "//evil.org", "file_id": "exploit.png", "file_type": "image"}, ValueError),
+        (
+            {
+                "shell_cmd": "cat /dev/null; echo 'Hello World'",
+                "safe_subcommands": ["cat", "/dev/null"]
+            },
+            "Disallowed command or subcommand."
+        ),
+        (
+            {
+                "shell_cmd": "ping google.com && __import__('os').system('echo hacked')",
+                "safe_subcommands": ["ping", "google.com"]
+            },
+            "Disallowed command or subcommand."
+        ),
     ],
 }
 
@@ -20,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_cdn_resource_url(**test)
+            result = validate_and_execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_cdn_resource_url(**test)
+            result = validate_and_execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

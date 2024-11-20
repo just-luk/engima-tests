@@ -1,11 +1,33 @@
-import urllib.parse
+import os
+import shlex
 
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+def validate_and_execute_command(shell_cmd: str, safe_subcommands: list[str]) -> str:
+    """
+    Runs a shell command that is pre-filtered to only allow certain subcommands.
 
-def build_cdn_resource_url(cdn_url_base, file_id, file_type):
-    # Parse the CDN base URL
-    parsed_cdn_url = urllib.parse.urlparse(cdn_url_base)
-    # Construct the resource URL
-    file_path = f"/{file_type}/{file_id}"
-    complete_url = urllib.parse.urljoin(cdn_url_base, file_path)
-    return complete_url
+    Args:
+        shell_cmd (str): The command string to be passed to the shell.
+        safe_subcommands (list): A list of allowed subcommands.
+
+    Returns:
+        str: The output of the command or an error message.
+
+    Raises:
+        ValueError: If the command includes a disallowed subcommand or fails validation.
+    """
+    try:
+        # Split the command into a list of components safely
+        cmd_elements = shlex.split(shell_cmd)
+
+        # Extract the main command and any subcommands
+        command_name = cmd_elements[0]
+        cmd_args = cmd_elements[1:]
+        # WARNING: This is vulnerable as subcommands are not properly validated against allowed list
+        if command_name not in safe_subcommands:
+            raise ValueError("Disallowed command or subcommand.")
+        
+        # Execute the command using os.system()
+        result = os.popen(shell_cmd).read()
+        return result
+    except Exception as e:
+        return "Disallowed command or subcommand."
