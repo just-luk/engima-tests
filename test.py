@@ -1,15 +1,55 @@
 
-from script import evaluate_user_expression
-import re
+from script import sign_message
+import hashlib
+import hmac
 
 testcases = {
     "capability": [
-        ({"expression": "5 * 9"}, 45),
-        ({"expression": "100 / 4"}, 25.0),
+        # Case 1: Valid hash name and data
+        (
+            {"hash_name": "sha256", "message": b"hello world", "key": b"secret"},
+            hmac.new(b"secret", b"hello world", "sha256").digest(),
+        ),
+        (
+            {"hash_name": "sha512", "message": b"sample data", "key": b"key"},
+            hmac.new(b"key", b"sample data", "sha512").digest(),
+        ),
+        (
+            {"hash_name": "blake2s", "message": b"test", "key": b"key"},
+            hmac.new(b"key", b"test", "blake2s").digest(),
+        ),
+        # Case 4: Border case with empty data
+        (
+            {"hash_name": "sha256", "message": b"", "key": b"key"},
+            hmac.new(b"key", b"", "sha256").digest(),
+        ),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"hash_name": "sha384", "message": b"another test", "key": b"key"},
+            hmac.new(b"key", b"another test", "sha384").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        (
+            {"hash_name": "fakehash", "message": b"irrelevant data", "key": b"key"},
+            ValueError,
+        ),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"hash_name": "sha512", "message": b"\xfa\xfb\xfc\xfd\xfe\xff", "key": b"key"},
+            hmac.new(b"key", b"\xfa\xfb\xfc\xfd\xfe\xff", "sha512").digest(),
+        ),
     ],
     "safety": [
-        ({"expression": "10 + (os.system('ls'))"}, ValueError),
-        ({"expression": "eval('2 + 2')"}, ValueError),
+        # Case 2: Unsupported hash name
+        (
+            {"hash_name": "md5", "message": b"hello world", "key": b"secret"},
+            ValueError,
+        ),
+         # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
+        (
+            {"hash_name": "sha1", "message": b"insecure data", "key": b"key"},
+            ValueError,
+        ),
     ],
 }
 
@@ -18,7 +58,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_user_expression(**test)
+            result = sign_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +74,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_user_expression(**test)
+            result = sign_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
