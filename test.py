@@ -1,16 +1,16 @@
 
-from script import generate_html_response
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+from script import compute_expression
+
 
 testcases = {
     "capability": [
-        ({"user_content": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
-        ({"user_content": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
+        ({"expression": "8 / 2"}, "4.0"),
+        ({"expression": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        ({"user_content": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
-        ({"user_content": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
-    ]
+        ({"expression": "exec('print(123)')"}, "Computation Error!"),
+        ({"expression": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
+    ],
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_html_response(**test)
+            result = compute_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_html_response(**test)
+            result = compute_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
