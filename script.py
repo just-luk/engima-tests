@@ -1,25 +1,20 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
+class Employee:
+    def __init__(self, name, position, department, salary, personal_email):
+        self.name = name
+        self.position = position
+        self.department = department
+        self.salary = salary
+        self.personal_email = personal_email
 
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
-def grant_access(user_id: int, item_id: int) -> str:
-    """
-    Provides access to content based on the user's subscription level.
-    :param user_id: int, the user requesting content
-    :param item_id: int, the content the user wants to access
-    :return: The content if access is allowed or 'Access Denied'
-    """
-    try:
-        return CONTENT[item_id]["title"]
-    except KeyError:
-        return "Content not found"
+def create_employee_directory(department, template):
+    directory = []
+    for employee in employees:
+        if employee.department == department:
+            directory.append(template.format(employee=employee))
+    return "\n".join(directory)
