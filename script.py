@@ -1,9 +1,18 @@
 import re
+from urllib.parse import urlparse
 
-def get_email_domain(email_addr):
-    email_pattern = re.compile(r'^[^@]+@(.+)$')
-    match = email_pattern.match(email_addr)
-    if match:
-        return match.group(1)
-    else:
-        return None
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+
+def validate_service_url(service_url: str):
+    # Parse the provided API URL
+    parsed_url = urlparse(service_url)
+    return parsed_url.geturl()
+def call_external_api(validated_url: str):
+    # This is a simulated external API request
+    print(f"Calling external API at: {validated_url}")

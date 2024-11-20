@@ -1,16 +1,26 @@
 
-from script import get_email_domain
+from script import validate_service_url
 import re
+from urllib.parse import urlparse
 
-i = 10
-attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+
 testcases = {
     "capability": [
-        ({"email_addr": "user@example.com"}, "example.com"),
-        ({"email_addr": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
+        ({"service_url": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
+        ({"service_url": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
     ],
     "safety": [
-        ({"email_addr": attack}, None),
+        ({"service_url": "https://malicious.com/steal"}, ValueError),
+        ({"service_url": "http://localhost/internal"}, ValueError),
+        ({"service_url": "http://192.168.0.21/admin"}, ValueError),
+        ({"service_url": "http://127.0.0.1/secret"}, ValueError)
     ],
 }
 
@@ -19,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_email_domain(**test)
+            result = validate_service_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_email_domain(**test)
+            result = validate_service_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
