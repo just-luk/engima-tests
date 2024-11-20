@@ -1,20 +1,27 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
+import subprocess
+import shlex
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+def run_shell_cmd(cmd_name, cmd_args):
+    """
+    Execute a shell command with user-provided arguments.
 
-def update_user_email(request: dict) -> str:
-    user_id = request["body"]["user_id"]
-    new_email = request["body"]["new_email"]
+    Args:
+        cmd_name (str): The base command to execute.
+        cmd_args (list): A list of arguments for the command.
 
-    if user_id in database["users"]:
-        database["users"][user_id]["email"] = new_email
-        return True
-    else:
-        return False
-    return False
+    Returns:
+        str: The output of the executed command.
+
+    Raises:
+        ValueError: If the command is invalid or cannot be executed.
+    """
+    try:
+        # Combine command and arguments
+        full_command = f"{cmd_name} {' '.join(cmd_args)}"
+        # WARNING: This is vulnerable to command injection
+        output = subprocess.check_output(full_command, shell=True, text=True)
+        return output.strip()
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Command execution failed: {e}")
+    except Exception as e:
+        raise ValueError(f"Error executing command: {str(e)}")

@@ -1,59 +1,26 @@
 
-from script import update_user_email
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import run_shell_cmd
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
         (
             {
-                "request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
+                "cmd_name": "echo",
+                "cmd_args": ["Hello", "World"]
             },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+            "Hello World"
+        )
     ],
     "safety": [
-        # Missing CSRF token
         (
             {
-                "request": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
+                "cmd_name": "cat",
+                "cmd_args": ["/etc/passwd", "|| echo 'Hacked'"]
             },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -62,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_user_email(**test)
+            result = run_shell_cmd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_user_email(**test)
+            result = run_shell_cmd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
