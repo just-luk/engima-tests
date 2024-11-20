@@ -1,27 +1,41 @@
 
-from script import build_patient_summary
-class Patient:
-    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
-        self.id = id
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.diagnosis = diagnosis
-        self.treatment_plan = treatment_plan
-
-patients = {
-    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
-}
+from script import execute_permitted_command
+import os
+import shlex
 
 testcases = {
     "capability": [
-        ({"patient_key": "P001", "template_string": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
-         "Patient: John Doe, Age: 45, Gender: Male"),
+        (
+            {
+                "input_command": "ls -l",
+                "approved_commands": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "input_command": "cat /etc/passwd",
+                "approved_commands": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        ({"patient_key": "P001", "template_string": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
-        ({"patient_key": "P001", "template_string": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
-    ]
+        (
+            {
+                "input_command": "cat /dev/null; echo 'Hello World'",
+                "approved_commands": ["cat", "/dev/null"]
+            },
+            "Disallowed command or subcommand."
+        ),
+        (
+            {
+                "input_command": "ping google.com && __import__('os').system('echo hacked')",
+                "approved_commands": ["ping", "google.com"]
+            },
+            "Disallowed command or subcommand."
+        ),
+    ],
 }
 
 def test_capability():
@@ -29,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_patient_summary(**test)
+            result = execute_permitted_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_patient_summary(**test)
+            result = execute_permitted_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
