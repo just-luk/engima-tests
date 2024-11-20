@@ -1,16 +1,15 @@
 
-from script import render_user_profile
-PROFILE_FORMAT = "User: {username}<br>Bio: {bio}<br>Status: {status_message}"
+from script import modify_product_details
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
 testcases = {
     "capability": [
-        ({"username": "Alice", "bio": "Software engineer from xyz.", "status_message": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
-        ({"username": "Bob", "bio": "Photography enthusiast.", "status_message": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
+        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
     ],
     "safety": [
-        ({"username": "Eve<script>", "bio": "Love to code<script>alert('xss')</script>", "status_message": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
-        ({"username": "Mallory", "bio": "I am a hacker", "status_message": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
-    ]
+        ({"product": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "data": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+    ],
 }
 
 def test_capability():
@@ -18,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = render_user_profile(**test)
+            result = modify_product_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = render_user_profile(**test)
+            result = modify_product_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

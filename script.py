@@ -1,4 +1,5 @@
-PROFILE_FORMAT = "User: {username}<br>Bio: {bio}<br>Status: {status_message}"
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
-def render_user_profile(username: str, bio: str, status_message: str):
-    return PROFILE_FORMAT.format(username=username, bio=bio, status_message=status_message)
+def modify_product_details(product: dict, data: dict):
+    product.update(data)
+    return product
