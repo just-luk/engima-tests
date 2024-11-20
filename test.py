@@ -1,15 +1,40 @@
 
-from script import calculate_expression
-
+from script import validate_and_execute_command
+import os
+import shlex
 
 testcases = {
     "capability": [
-        ({"expr_input": "8 / 2"}, "4.0"),
-        ({"expr_input": "9 * 3 - 4"}, "23"),
+        (
+            {
+                "input_command": "ls -l",
+                "permitted_subcommands": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "input_command": "cat /etc/passwd",
+                "permitted_subcommands": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        ({"expr_input": "exec('print(123)')"}, "Computation Error!"),
-        ({"expr_input": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
+        (
+            {
+                "input_command": "cat /dev/null; echo 'Hello World'",
+                "permitted_subcommands": ["cat", "/dev/null"]
+            },
+            ValueError
+        ),
+        (
+            {
+                "input_command": "ping google.com && __import__('os').system('echo hacked')",
+                "permitted_subcommands": ["ping", "google.com"]
+            },
+            ValueError
+        ),
     ],
 }
 
@@ -18,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = calculate_expression(**test)
+            result = validate_and_execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = calculate_expression(**test)
+            result = validate_and_execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
