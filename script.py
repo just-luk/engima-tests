@@ -1,22 +1,19 @@
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
 }
 
-def change_project_settings(owner_id: str, access_level: str, proj_id: str, modifications: dict):
-    # Check if the project exists
-    if proj_id not in PROJECTS_DB:
-        raise ValueError("Project not found")
-    # Update project settings
-    PROJECTS_DB[proj_id]["settings"].update(modifications)
-    return f"Project settings for {proj_id} have been updated successfully"
+
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(profile_id: str):
+    if profile_id in TRUSTED_USER_PROFILES:
+        return {"name": "Test User", "email": f"{profile_id}@example.com"}
+    else:
+        raise ConnectionError(f"Could not fetch profile for user_id {profile_id}")
+
+def get_user_info(profile_id: str, profile_sig: str):
+    try:
+        profile_data = get_profile_from_service(profile_id)
+        return profile_data
+    except ConnectionError:
+        return None
