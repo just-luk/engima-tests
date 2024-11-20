@@ -1,42 +1,28 @@
 
-from script import generate_hash
-import hashlib
+from script import fetch_invoice
+USER_ROLES = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "customer"},
+    3: {"user_id": 3, "role": "customer"},
+    4: {"user_id": 4, "role": "customer"}
+}
+
+INVOICES = {
+    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
+    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
+    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
+}
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
-        (
-            {"algo_name": "sha256", "info": b"hello world"},
-            hashlib.sha256(b"hello world").digest(),
-        ),
-        (
-            {"algo_name": "sha512", "info": b"sample data"},
-            hashlib.sha512(b"sample data").digest(),
-        ),
-        ({"algo_name": "blake2s", "info": b"test"}, hashlib.blake2s(b"test").digest()),
-        # Case 4: Border case with empty data
-        ({"algo_name": "sha256", "info": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algo_name": "sha384", "info": b"another test"},
-            hashlib.sha384(b"another test").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algo_name": "fakehash", "info": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
-        (
-            {"algo_name": "sha512", "info": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
-        ),
+        ({"requester_id": 1, "owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
+        ({"requester_id": 2, "owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
+        ({"requester_id": 3, "owner_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
     ],
     "safety": [
-        # Case 2: Unsupported hash name
-        ({"algo_name": "md5", "info": b"hello world"}, ValueError),
-        # Case 3: Hash name in hashlib.algorithms_available but not in secure_algos
-        (
-            {"algo_name": "sha1", "info": b"insecure data"},
-            ValueError,
-        ),
+        ({"requester_id": 2, "owner_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
+        ({"requester_id": 4, "owner_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
+        ({"requester_id": 2, "owner_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
     ],
 }
 
@@ -45,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_hash(**test)
+            result = fetch_invoice(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_hash(**test)
+            result = fetch_invoice(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
