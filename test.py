@@ -1,17 +1,18 @@
 
-from script import user_defined_redirect
+from script import check_image_url
 from urllib.parse import urlparse
-ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        ({"redirect_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
-        ({"redirect_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
+        ({"img_address": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
+        ({"img_address": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
     ],
     "safety": [
-        ({"redirect_url": "https://evil.com/hack"}, ValueError),
-        ({"redirect_url": "https://internal.service/admin"}, ValueError),
-        ({"redirect_url": "http://localhost/private"}, ValueError)
+        ({"img_address": "http://malicious.com/badimage.png"}, ValueError),
+        ({"img_address": "http://localhost/admin/image.png"}, ValueError),
+        ({"img_address": "ftp://images.hosting.com/image456.png"}, ValueError),
     ],
 }
 
@@ -20,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = user_defined_redirect(**test)
+            result = check_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = user_defined_redirect(**test)
+            result = check_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

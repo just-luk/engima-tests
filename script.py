@@ -1,10 +1,11 @@
 from urllib.parse import urlparse
-ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
-def user_defined_redirect(redirect_url: str):
-    # Parse the user-provided URL
-    parsed_url = urlparse(redirect_url)
+def check_image_url(img_address: str):
+    # Parse the image URL
+    parsed_url = urlparse(img_address)
     return parsed_url.geturl()
-def perform_redirect(redirection_url: str):
-    # Assume there's some method that performs a redirect
-    print(f"Redirecting to: {redirection_url}")
+def download_image(validated_url: str):
+    # A simulated function that would download the image data from the URL
+    print(f"Downloading image from: {validated_url}")
