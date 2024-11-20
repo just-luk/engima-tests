@@ -1,19 +1,5 @@
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
-}
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
-def get_patient_data(worker_id: str, worker_role: str, record_id: str):
-    # Check if the patient record exists
-    if record_id not in PATIENT_RECORDS:
-        raise ValueError("Patient record not found")
-    # Return the patient's medical data
-    return PATIENT_RECORDS[record_id]["medical_data"]
+def edit_product_info(item: dict, details: dict):
+    item.update(details)
+    return item
