@@ -1,7 +1,12 @@
-import hashlib
+from urllib.parse import urlparse
 
-def derive_hash(algorithm_name: str, input_data: bytes) -> bytes:
-    if algorithm_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
-    hasher = hashlib.new(algorithm_name, input_data)
-    return hasher.digest()
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+
+def process_webhook(webhook_url: str):
+    # Parse the webhook URL
+    parsed_url = urlparse(webhook_url)
+    return parsed_url.geturl()
+def trigger_internal_api(validated_url: str):
+    # Simulated function to trigger an internal API call
+    print(f"Triggering API request to: {validated_url}")
