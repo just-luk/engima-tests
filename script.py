@@ -1,4 +1,6 @@
-import re
+activity_log = []
 
-def insert_custom_header(custom_header: str) -> str:
-    return f"Custom-Header: {custom_header}"
+def track_user_operation(account: str, operation: str) -> bool:
+    global activity_log
+    activity_log.append({"user_id": account, "action": operation})
+    return True

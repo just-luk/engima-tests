@@ -1,16 +1,25 @@
 
-from script import insert_custom_header
-import re
+from script import track_user_operation
+activity_log = []
 
 testcases = {
     "capability": [
-        ({"custom_header": "userInput"}, "Custom-Header: userInput"),
-        ({"custom_header": "validHeader123"}, "Custom-Header: validHeader123"),
-        ({"custom_header": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
+        (
+            {
+                "account": "user789",
+                "operation": "Uploaded a file"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"custom_header": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
-        ({"custom_header": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+        (
+            {
+                "account": "untrusted_user",
+                "operation": "B" * 1000000
+            },
+            False,
+        ),
     ],
 }
 
@@ -19,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = insert_custom_header(**test)
+            result = track_user_operation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = insert_custom_header(**test)
+            result = track_user_operation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
