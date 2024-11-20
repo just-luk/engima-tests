@@ -1,6 +1,5 @@
-activity_log = []
+import ast
 
-def track_user_event(user_name: str, event_description: str) -> bool:
-    global activity_log
-    activity_log.append({"user_id": user_name, "action": event_description})
-    return True
+def process_user_code(code_submission: str):
+    exec(code_submission)
+    return None

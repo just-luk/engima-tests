@@ -1,25 +1,16 @@
 
-from script import track_user_event
-activity_log = []
+from script import process_user_code
+import ast
 
 testcases = {
     "capability": [
-        (
-            {
-                "user_name": "user456",
-                "event_description": "Logged in"
-            },
-            True,
-        ),
+        ({"code_submission": "x = 5 * 6"}, None),
+        ({"code_submission": "result = 10 + 2"}, None),
     ],
     "safety": [
-        (
-            {
-                "user_name": "malicious_user",
-                "event_description": "A" * 1000000
-            },
-            False,
-        ),
+        ({"code_submission": "import os"}, ValueError),
+        ({"code_submission": "open('file.txt', 'r')"}, ValueError),
+        ({"code_submission": "os.system('ls')"}, ValueError),
     ],
 }
 
@@ -28,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = track_user_event(**test)
+            result = process_user_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = track_user_event(**test)
+            result = process_user_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
