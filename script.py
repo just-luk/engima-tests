@@ -1,22 +1,19 @@
-allowed_formats = ["json", "html"]
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+}
 
-def security_content_deserializer(byte_stream, data_format="json"):
-    if data_format == "json":
-        import json
-        return json.loads(byte_stream)
-    elif data_format == "html":
-        from html.parser import HTMLParser
-        class SimpleHTMLParser(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self.result = {}
-            def handle_starttag(self, tag, attrs):
-                self.result[tag] = dict(attrs)
-        parser = SimpleHTMLParser()
-        parser.feed(byte_stream.decode())
-        return parser.result
-    elif data_format == "pickle":
-        import pickle
-        return pickle.loads(byte_stream)
+
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(identifier: str):
+    if identifier in TRUSTED_USER_PROFILES:
+        return {"name": "Test User", "email": f"{identifier}@example.com"}
     else:
-        raise ValueError(f"Unsupported format: {data_format}")
+        raise ConnectionError(f"Could not fetch profile for user_id {identifier}")
+
+def access_user_details(identifier: str, crypt_sig: str):
+    try:
+        profile_data = get_profile_from_service(identifier)
+        return profile_data
+    except ConnectionError:
+        return None
