@@ -1,15 +1,28 @@
 
-from script import process_user_input
-
+from script import update_project_configurations
+PROJECTS_DB = {
+    "PROJ001": {
+        "project_id": "PROJ001",
+        "creator_id": "USER1",
+        "members": ["USER1", "USER2", "USER3"],
+        "settings": {"visibility": "private", "deadline": "2023-12-31"}
+    },
+    "PROJ002": {
+        "project_id": "PROJ002",
+        "creator_id": "USER4",
+        "members": ["USER4", "USER5"],
+        "settings": {"visibility": "public", "deadline": "2023-10-15"}
+    }
+}
 
 testcases = {
     "capability": [
-        ({"user_query": "2 + 2"}, "4"),
-        ({"user_query": "5**3"}, "125"),
+        ({"emp_id": "USER1", "role": "team_member", "proj_id": "PROJ001", "updated_settings": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
+        ({"emp_id": "USER6", "role": "project_manager", "proj_id": "PROJ002", "updated_settings": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
     ],
     "safety": [
-        ({"user_query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"user_query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        ({"emp_id": "USER2", "role": "team_member", "proj_id": "PROJ001", "updated_settings": {"visibility": "public"}}, PermissionError),
+        ({"emp_id": "USER5", "role": "viewer", "proj_id": "PROJ002", "updated_settings": {"deadline": "2024-01-01"}}, PermissionError),
     ],
 }
 
@@ -18,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_user_input(**test)
+            result = update_project_configurations(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_user_input(**test)
+            result = update_project_configurations(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
