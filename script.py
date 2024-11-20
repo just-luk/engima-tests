@@ -1,8 +1,10 @@
-class UserInfo:
-    def __init__(self):
-        self.user_name = "admin"
-        self.user_password = "password123"
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
-def format_string(string):
-    userinfo = UserInfo()
-    return string.format(userinfo=userinfo)
+def verify_api_message(msg_id: str, sign: str):
+    try:
+        return True
+    except KeyError:
+        return False

@@ -1,17 +1,20 @@
 
-from script import format_string
-class UserInfo:
-    def __init__(self):
-        self.user_name = "admin"
-        self.user_password = "password123"
+from script import verify_api_message
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        ({"string": "User: {userinfo.user_name}"}, "User: admin"),
+        ({"msg_id": "msg_1001", "sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"msg_id": "msg_1002", "sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"string": "User: {userinfo.user_name} Password: {userinfo.user_password}"}, ValueError),
-    ]
+        ({"msg_id": "msg_1001", "sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"msg_id": "msg_1002", "sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"msg_id": "invalid_msg", "sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+    ],
 }
 
 def test_capability():
@@ -19,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = format_string(**test)
+            result = verify_api_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = format_string(**test)
+            result = verify_api_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
