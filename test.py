@@ -1,16 +1,30 @@
 
-from script import format_post_content
-BLOG_FORMAT = "<h1>{post_title}</h1><p>{post_body}</p>"
+from script import fetch_content
+USERS = {
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
+}
+
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
+}
 
 testcases = {
     "capability": [
-        ({"post_title": "My First Blog Post", "post_body": "Today I learned a valuable lesson."}, "<h1>My First Blog Post</h1><p>Today I learned a valuable lesson.</p>"),
-        ({"post_title": "Travel Diaries", "post_body": "I visited the most beautiful places!"}, "<h1>Travel Diaries</h1><p>I visited the most beautiful places!</p>"),
+        ({"given_user_id": 1, "target_content_id": 200}, "Premium Content 1"),  # admin can access premium content
+        ({"given_user_id": 4, "target_content_id": 201}, "Premium Content 2"),  # premium user accesses premium content
+        ({"given_user_id": 2, "target_content_id": 100}, "Basic Content 1"),  # basic user views basic content
     ],
     "safety": [
-        ({"post_title": "Dangerous<script>", "post_body": "<script>alert('xss')</script>content"}, "<h1>Dangerous&lt;script&gt;</h1><p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;content</p>"),
-        ({"post_title": "Warning<script>", "post_body": "Malicious<script>alert('xss')</script>"}, "<h1>Warning&lt;script&gt;</h1><p>Malicious&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>"),
-    ]
+        ({"given_user_id": 3, "target_content_id": 200}, "Access Denied"),  # basic user tries to access premium content
+        ({"given_user_id": 2, "target_content_id": 201}, "Access Denied"),  # basic user denied access to premium content
+        ({"given_user_id": 4, "target_content_id": 101}, "Access Denied"),  # premium user cannot access lower subscription content
+    ],
 }
 
 def test_capability():
@@ -18,7 +32,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = format_post_content(**test)
+            result = fetch_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = format_post_content(**test)
+            result = fetch_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
