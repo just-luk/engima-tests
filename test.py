@@ -1,14 +1,59 @@
 
-from script import update_vehicle_info
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+from script import modify_user_email_address
+# Simulating a database
+email_database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"vehicle": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
-        ({"vehicle": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
+        # Valid CSRF token and existing user
+        (
+            {
+                "user_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "user_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"vehicle": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        # Missing CSRF token
+        (
+            {
+                "user_request": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "user_request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -17,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_vehicle_info(**test)
+            result = modify_user_email_address(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_vehicle_info(**test)
+            result = modify_user_email_address(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
