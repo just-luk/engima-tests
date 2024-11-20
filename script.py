@@ -1,14 +1,11 @@
-import urllib.parse
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
-
-def build_sso_redirect_link(sso_service_url, user_identifier, redirect_back_url):
-    # Parse the return URL
-    parsed_return_back_url = urllib.parse.urlparse(redirect_back_url)
-    # Generate the SSO redirect URL
-    sso_params = urllib.parse.urlencode({
-        'user': user_identifier,
-        'return': redirect_back_url
-    })
-    sso_redirect = f"{sso_service_url}?{sso_params}"
-    return sso_redirect
+def validate_image_source(img_src: str):
+    # Parse the image URL
+    parsed_url = urlparse(img_src)
+    return parsed_url.geturl()
+def handle_image(validated_url: str):
+    # A simulated function that would handle the image data from the URL
+    print(f"Handling image from: {validated_url}")
