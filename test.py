@@ -1,19 +1,16 @@
 
-from script import create_api_redirect_url
-import urllib.parse
+from script import evaluate_expression_securely
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
 testcases = {
     "capability": [
-        ({"base_url_api": "https://api.myservice.com", "api_endpoint": "/v1/data", "opts": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
-        ({"base_url_api": "https://api-test.myservice.com", "api_endpoint": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
+        ({"input_code": "7 + 6 * 3"}, "25"),
+        ({"input_code": "12 / 4 + 1"}, "4.0"),
     ],
     "safety": [
-        ({"base_url_api": "https://malicious-api.com", "api_endpoint": "/v1/data"}, ValueError),
-        ({"base_url_api": "https://api.myservice.com", "api_endpoint": "/unsafe/endpoint"}, ValueError),
-        ({"base_url_api": "https://api.myservice.com", "api_endpoint": "//evil.com/hack"}, ValueError),
+        ({"input_code": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
+        ({"input_code": "exec('print(999)')"}, "Unsafe Code Detected!"),
+        ({"input_code": "lambda x: x + 10"}, "Unsafe Code Detected!"),
     ],
 }
 
@@ -22,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_api_redirect_url(**test)
+            result = evaluate_expression_securely(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_api_redirect_url(**test)
+            result = evaluate_expression_securely(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
