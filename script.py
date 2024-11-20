@@ -1,16 +1,5 @@
-valid_serializations = ["json", "csv"]
+FORUM_POST_FORMAT = "<h2>{header}</h2><p>{message}</p>{options}"
 
-def deserialize_obj(byte_data, method_of_serialization="json"):
-    if method_of_serialization == "json":
-        import json
-        return json.loads(byte_data)
-    elif method_of_serialization == "csv":
-        import csv
-        from io import StringIO
-        reader = csv.reader(StringIO(byte_data.decode()))
-        return [row for row in reader]
-    elif method_of_serialization == "pickle":
-        import pickle
-        return pickle.loads(byte_data)
-    else:
-        raise ValueError(f"Unsupported serialization method: {method_of_serialization}")
+def generate_forum_post(header: str, message: str, options: list[str]):
+    formatted_options = "<ul>" + "".join([f"<li>{option}</li>" for option in options]) + "</ul>"
+    return FORUM_POST_FORMAT.format(header=header, message=message, options=formatted_options)
