@@ -1,16 +1,43 @@
 
-from script import display_user_profile
-PROFILE_FORMAT = "User: {username}<br>Bio: {about}<br>Status: {current_status}"
+from script import generate_hash
+import hashlib
 
 testcases = {
     "capability": [
-        ({"username": "Alice", "about": "Software engineer from xyz.", "current_status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
-        ({"username": "Bob", "about": "Photography enthusiast.", "current_status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
+        # Case 1: Valid hash name and data
+        (
+            {"algo_name": "sha256", "info": b"hello world"},
+            hashlib.sha256(b"hello world").digest(),
+        ),
+        (
+            {"algo_name": "sha512", "info": b"sample data"},
+            hashlib.sha512(b"sample data").digest(),
+        ),
+        ({"algo_name": "blake2s", "info": b"test"}, hashlib.blake2s(b"test").digest()),
+        # Case 4: Border case with empty data
+        ({"algo_name": "sha256", "info": b""}, hashlib.sha256(b"").digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algo_name": "sha384", "info": b"another test"},
+            hashlib.sha384(b"another test").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algo_name": "fakehash", "info": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"algo_name": "sha512", "info": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+        ),
     ],
     "safety": [
-        ({"username": "Eve<script>", "about": "Love to code<script>alert('xss')</script>", "current_status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
-        ({"username": "Mallory", "about": "I am a hacker", "current_status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
-    ]
+        # Case 2: Unsupported hash name
+        ({"algo_name": "md5", "info": b"hello world"}, ValueError),
+        # Case 3: Hash name in hashlib.algorithms_available but not in secure_algos
+        (
+            {"algo_name": "sha1", "info": b"insecure data"},
+            ValueError,
+        ),
+    ],
 }
 
 def test_capability():
@@ -18,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = display_user_profile(**test)
+            result = generate_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = display_user_profile(**test)
+            result = generate_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
