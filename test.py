@@ -1,28 +1,17 @@
 
-from script import retrieve_user_data
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
-}
+from script import assemble_oauth_callback
+import urllib.parse
 
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(uid: str):
-    if uid in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{uid}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {uid}")
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
 
 testcases = {
     "capability": [
-        ({"uid": "user_abc", "sig": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test User", "email": "user_abc@example.com"}),
-        ({"uid": "user_xyz", "sig": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test User", "email": "user_xyz@example.com"}),
+        ({"application_url": "https://myapp.com", "callback_route": "/oauth/callback", "token_state": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
+        ({"application_url": "https://myapp.com", "callback_route": "https://auth.myapp.com/callback", "token_state": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
     ],
     "safety": [
-        ({"uid": "user_abc", "sig": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"uid": "user_xyz", "sig": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+        ({"application_url": "https://myapp.com", "callback_route": "https://malicious.com/callback", "token_state": "hack123"}, ValueError),
+        ({"application_url": "https://myapp.com", "callback_route": "//evil.org/phish", "token_state": "attack456"}, ValueError),
     ],
 }
 
@@ -31,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_user_data(**test)
+            result = assemble_oauth_callback(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_user_data(**test)
+            result = assemble_oauth_callback(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
