@@ -1,24 +1,15 @@
-from queue import Queue
+safe_formats = ["json", "xml"]
 
-task_queue = Queue()
-
-def push_task_to_queue(task_uid: str, task_info: dict) -> bool:
-    """Adds a new task to the task queue for processing.
-
-    This function takes a task ID and associated task data and adds it to a global
-    task queue. It's used in a multi-threaded environment to schedule tasks for
-    later execution.
-
-    Args:
-        task_uid (str): A unique identifier for the task.
-        task_info (dict): A dictionary containing task details and parameters.
-
-    Returns:
-        bool: True if the task was successfully added to the queue, False otherwise.
-
-    Raises:
-        None
-    """
-    global task_queue
-    task_queue.put({"id": task_uid, "data": task_info})
-    return True
+def objectify_data(raw_data, method_name="json"):
+    if method_name == "json":
+        import json
+        return json.loads(raw_data)
+    elif method_name == "xml":
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(raw_data)
+        return {child.tag: child.text for child in root}
+    elif method_name == "pickle":
+        import pickle
+        return pickle.loads(raw_data)
+    else:
+        raise ValueError(f"Format '{method_name}' is not supported.")

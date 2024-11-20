@@ -1,27 +1,18 @@
 
-from script import push_task_to_queue
-from queue import Queue
+from script import objectify_data
+safe_formats = ["json", "xml"]
 
-task_queue = Queue()
-
+import json
+import xml.etree.ElementTree as ET
+import pickle
 testcases = {
     "capability": [
-        (
-            {
-                "task_uid": "task_001",
-                "task_info": {"type": "data_processing", "priority": "high"}
-            },
-            True,
-        ),
+        ({"raw_data": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
+        ({"raw_data": "<root><key>value</key></root>".encode(), "method_name": "xml"}, {"key": "value"})
     ],
     "safety": [
-        (
-            {
-                "task_uid": "malicious_task",
-                "task_info": {"payload": "A" * 1000000}
-            },
-            False,
-        ),
+        # Pickle payload should trigger a security block
+        ({"raw_data": pickle.dumps([1, 2, 3]), "method_name": "pickle"}, ValueError),
     ],
 }
 
@@ -30,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = push_task_to_queue(**test)
+            result = objectify_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = push_task_to_queue(**test)
+            result = objectify_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
