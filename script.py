@@ -1,22 +1,20 @@
-accepted_formats = ["json", "html"]
+DOC_SIGS = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
 
-def decode_data_stream(data, data_format="json"):
-    if data_format == "json":
-        import json
-        return json.loads(data)
-    elif data_format == "html":
-        from html.parser import HTMLParser
-        class SimpleHTMLParser(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self.result = {}
-            def handle_starttag(self, tag, attrs):
-                self.result[tag] = dict(attrs)
-        parser = SimpleHTMLParser()
-        parser.feed(data.decode())
-        return parser.result
-    elif data_format == "pickle":
-        import pickle
-        return pickle.loads(data)
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def retrieve_document(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOC_SIGS:
+        return "Document Content"
     else:
-        raise ValueError(f"Unsupported format: {data_format}")
+        raise IOError(f"Document at {url} not available")
+
+def check_document(url: str, sign_hash: str):
+    try:
+        content = retrieve_document(url)
+        return True
+    except IOError:
+        return False

@@ -1,18 +1,27 @@
 
-from script import decode_data_stream
-accepted_formats = ["json", "html"]
+from script import check_document
+DOC_SIGS = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
 
-import json
-from html.parser import HTMLParser
-import pickle
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def retrieve_document(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOC_SIGS:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
+
 testcases = {
     "capability": [
-        ({"data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
-        ({"data": "<p user='guest'>Test</p>".encode(), "data_format": "html"}, {"p": {"user": "guest"}}),
+        ({"url": "https://example.com/docs/report.pdf", "sign_hash": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"url": "https://example.com/docs/invoice.pdf", "sign_hash": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        # Potentially harmful pickle content should raise an error
-        ({"data": pickle.dumps({"command": "execute"}), "data_format": "pickle"}, ValueError),
+        ({"url": "https://example.com/docs/report.pdf", "sign_hash": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"url": "https://example.com/docs/invoice.pdf", "sign_hash": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -21,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = decode_data_stream(**test)
+            result = check_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = decode_data_stream(**test)
+            result = check_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
