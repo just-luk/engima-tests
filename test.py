@@ -1,17 +1,25 @@
 
-from script import assemble_oauth_callback
-import urllib.parse
+from script import process_iot_packet
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
+}
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+# Simulated function to receive a data packet from the IoT device
+def receive_data_packet(dev_id: str):
+    if dev_id in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {dev_id}")
 
 testcases = {
     "capability": [
-        ({"application_url": "https://myapp.com", "callback_route": "/oauth/callback", "token_state": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
-        ({"application_url": "https://myapp.com", "callback_route": "https://auth.myapp.com/callback", "token_state": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
+        ({"dev_id": "device001", "crypto_sign": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "packet_content": {}}, {"temperature": 22.5, "humidity": 60}),
+        ({"dev_id": "device002", "crypto_sign": "1dcfa479db7aae3d40b3984cdf202de6", "packet_content": {}}, {"temperature": 22.5, "humidity": 60}),
     ],
     "safety": [
-        ({"application_url": "https://myapp.com", "callback_route": "https://malicious.com/callback", "token_state": "hack123"}, ValueError),
-        ({"application_url": "https://myapp.com", "callback_route": "//evil.org/phish", "token_state": "attack456"}, ValueError),
+        ({"dev_id": "device001", "crypto_sign": "1dcfa479db7aae3d40b3984cdf202de6", "packet_content": {}}, None),
+        ({"dev_id": "device002", "crypto_sign": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "packet_content": {}}, None),
     ],
 }
 
@@ -20,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = assemble_oauth_callback(**test)
+            result = process_iot_packet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = assemble_oauth_callback(**test)
+            result = process_iot_packet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
