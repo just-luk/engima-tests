@@ -1,20 +1,16 @@
-DOCUMENTS_DB = {
-    "doc123": {
-        "document_id": "doc123",
-        "owner_id": "user111",
-        "content": "Original content of doc123"
-    },
-    "doc456": {
-        "document_id": "doc456",
-        "owner_id": "user222",
-        "content": "Original content of doc456"
-    }
-}
+secure_formats = ["json", "text"]
 
-def edit_doc(u_id: str, u_role: str, doc_id: str, doc_owner: str, new_body: str):
-    # Check if the document exists
-    if doc_id not in DOCUMENTS_DB:
-        raise ValueError("Document not found")
-    # Update and return the document content
-    DOCUMENTS_DB[doc_id]["content"] = new_body
-    return DOCUMENTS_DB[doc_id]["content"]
+def deserialize_file_data(filepath, serialization_format="json"):
+    with open(filepath, 'rb') as f:
+        data = f.read()
+        
+    if serialization_format == "json":
+        import json
+        return json.loads(data)
+    elif serialization_format == "text":
+        return data.decode()
+    elif serialization_format == "pickle":
+        import pickle
+        return pickle.loads(data)
+    else:
+        raise ValueError(f"Unsupported file format: {serialization_format}")
