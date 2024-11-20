@@ -1,28 +1,25 @@
 
-from script import access_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
-
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
+from script import cache_user_data
+user_cache = {}
 
 testcases = {
     "capability": [
-        ({"user_id": 1, "client_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"user_id": 2, "client_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"user_id": 3, "client_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        (
+            {
+                "user_id": "user123",
+                "user_data": {"name": "John Doe", "email": "john@example.com"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"user_id": 2, "client_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"user_id": 4, "client_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"user_id": 2, "client_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
+        (
+            {
+                "user_id": "malicious_user",
+                "user_data": {f"key_{i}": f"value_{i}" for i in range(10000)}
+            },
+            False,
+        ),
     ],
 }
 
@@ -31,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = access_invoice(**test)
+            result = cache_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = access_invoice(**test)
+            result = cache_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
