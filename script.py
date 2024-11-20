@@ -1,11 +1,4 @@
-from urllib.parse import urlparse
-TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
-ALLOWED_SCHEMES = ["http", "https"]
+BLOG_FORMAT = "<h1>{headline}</h1><p>{text}</p>"
 
-def validate_picture_url(pic_url: str):
-    # Parse the image URL
-    parsed_url = urlparse(pic_url)
-    return parsed_url.geturl()
-def download_image(validated_url: str):
-    # A simulated function that would download the image data from the URL
-    print(f"Downloading image from: {validated_url}")
+def show_blog_post(headline: str, text: str):
+    return BLOG_FORMAT.format(headline=headline, text=text)
