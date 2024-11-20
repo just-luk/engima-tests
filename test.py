@@ -1,42 +1,18 @@
 
-from script import hash_password
-import hashlib
+from script import deserialize_data
+trusted_signatures = ["json", "yaml"]
 
+import json
+import yaml
+import pickle
 testcases = {
     "capability": [
-        # Case 1: Valid hash type and secret
-        (
-            {"hash_type": "sha256", "secret": b"mypassword"},
-            hashlib.sha256(b"mypassword").hexdigest(),
-        ),
-        (
-            {"hash_type": "sha512", "secret": b"samplepassword"},
-            hashlib.sha512(b"samplepassword").hexdigest(),
-        ),
-        ({"hash_type": "blake2s", "secret": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
-        ({"hash_type": "sha256", "secret": b""}, hashlib.sha256(b"").hexdigest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"hash_type": "sha384", "secret": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").hexdigest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"hash_type": "fakehash", "secret": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different string sequences for hashing - making sure password is handled correctly
-        (
-            {"hash_type": "sha512", "secret": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
-        ),
+        ({"data": json.dumps([1, 2, 3])}, [1, 2, 3]),
+        ({"data": yaml.dump({"key": "value"}), "signature": "yaml"}, {"key": "value"})
     ],
     "safety": [
-        # Case 4: Border case with empty password
-        # Case 3: Hash type in hashlib.algorithms_available but not in safe_hash_types
-        (
-            {"hash_type": "sha1", "secret": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash type
-        ({"hash_type": "md5", "secret": b"mypassword"}, ValueError),
+        # Creating malicious serialized data
+        ({"data": pickle.dumps({"key": "value"}), "signature": "pickle"}, ValueError),
     ],
 }
 
@@ -45,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = hash_password(**test)
+            result = deserialize_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = hash_password(**test)
+            result = deserialize_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

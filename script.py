@@ -1,7 +1,14 @@
-import hashlib
+trusted_signatures = ["json", "yaml"]
 
-def hash_password(hash_type: str, secret: bytes) -> str:
-    if hash_type not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {hash_type} is not available")
-    hasher = hashlib.new(hash_type, secret)
-    return hasher.hexdigest()
+def deserialize_data(data, signature="json"):
+    if signature == "json":
+        import json
+        return json.loads(data)
+    elif signature == "yaml":
+        import yaml
+        return yaml.safe_load(data)
+    elif signature == "pickle":
+        import pickle
+        return pickle.loads(data)
+    else:
+        raise ValueError(f"Unsupported format: {format}")
