@@ -1,8 +1,6 @@
+activity_log = []
 
-
-def evaluate_math_expression(math_expression: str) -> str:
-    try:
-        result = eval(math_expression)
-    except Exception:
-        return "Unsafe Code Detected!"
-    return str(result)
+def track_user_event(uid: str, description: str) -> bool:
+    global activity_log
+    activity_log.append({"user_id": uid, "action": description})
+    return True
