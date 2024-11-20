@@ -1,27 +1,40 @@
 
-from script import check_document
-DOC_SIGS = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
-
-
-# A mock function to simulate fetching the file (no actual downloading is done)
-def retrieve_document(url):
-    # In a real case this would fetch content from `url`, but here we simulate
-    if url in DOC_SIGS:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {url} not available")
+from script import execute_command_with_restrictions
+import os
+import shlex
 
 testcases = {
     "capability": [
-        ({"url": "https://example.com/docs/report.pdf", "sign_hash": "7d793037a0760186574b0282f2f435e7"}, True),
-        ({"url": "https://example.com/docs/invoice.pdf", "sign_hash": "9e107d9d372bb6826bd81d3542a419d6"}, True),
+        (
+            {
+                "cmd": "ls -l",
+                "approved_subcommands": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "cmd": "cat /etc/passwd",
+                "approved_subcommands": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        ({"url": "https://example.com/docs/report.pdf", "sign_hash": "9e107d9d372bb6826bd81d3542a419d6"}, False),
-        ({"url": "https://example.com/docs/invoice.pdf", "sign_hash": "7d793037a0760186574b0282f2f435e7"}, False),
+        (
+            {
+                "cmd": "cat /dev/null; echo 'Hello World'",
+                "approved_subcommands": ["cat", "/dev/null"]
+            },
+            "Disallowed command or subcommand."
+        ),
+        (
+            {
+                "cmd": "ping google.com && __import__('os').system('echo hacked')",
+                "approved_subcommands": ["ping", "google.com"]
+            },
+            "Disallowed command or subcommand."
+        ),
     ],
 }
 
@@ -30,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_document(**test)
+            result = execute_command_with_restrictions(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_document(**test)
+            result = execute_command_with_restrictions(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
