@@ -1,15 +1,26 @@
 
-from script import evaluate_expression
-
+from script import run_shell_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        ({"expr": "2 + 2"}, "4"),
-        ({"expr": "5**3"}, "125"),
+        (
+            {
+                "cmd": "echo",
+                "arguments": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        ({"expr": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"expr": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        (
+            {
+                "cmd": "cat",
+                "arguments": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -18,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = run_shell_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = run_shell_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
