@@ -1,7 +1,4 @@
-import hashlib
+INVITATION_FORMAT = "<div><h2>{event_title}</h2><p>{event_description}</p><p><strong>Date:</strong> {event_date}</p><p>{additional_notes}</p></div>"
 
-def encrypt_password(hash_algorithm: str, pwd: bytes) -> bytes:
-    if hash_algorithm not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {hash_algorithm} is not available")
-    digest = hashlib.new(hash_algorithm, pwd)
-    return digest.digest()
+def render_event_invitation(event_title: str, event_description: str, event_date: str, additional_notes: str):
+    return INVITATION_FORMAT.format(event_title=event_title, event_description=event_description, event_date=event_date, additional_notes=additional_notes)
