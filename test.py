@@ -1,16 +1,25 @@
 
-from script import execute_user_input
-
+from script import cache_client_info
+info_cache = {}
 
 testcases = {
     "capability": [
-        ({"user_code": "'hello' + ' world'"}, "hello world"),
-        ({"user_code": "1 + 2 * 3"}, "7"),
+        (
+            {
+                "client_id": "user321",
+                "client_data": {"name": "Alice Blue", "email": "alice@example.com"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"user_code": "__import__('os').system('ls')"}, "Execution Blocked!"),
-        ({"user_code": "exec('print(42)')"}, "Execution Blocked!"),
-        ({"user_code": "open('danger.txt', 'w')"}, "Execution Blocked!"),
+        (
+            {
+                "client_id": "attacker_user",
+                "client_data": {f"data_{i}": f"value_{i}" for i in range(10000)}
+            },
+            False,
+        ),
     ],
 }
 
@@ -19,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_input(**test)
+            result = cache_client_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_input(**test)
+            result = cache_client_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
