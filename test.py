@@ -1,44 +1,37 @@
 
-from script import create_forum_post
-FORUM_POST_FORMAT = "<h2>{header}</h2><p>{message}</p>{options}"
+from script import build_order_receipt
+class Customer:
+    def __init__(self, name, email, address, credit_card):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.credit_card = credit_card
+
+class Order:
+    def __init__(self, id, customer, items, total, payment_method):
+        self.id = id
+        self.customer = customer
+        self.items = items
+        self.total = total
+        self.payment_method = payment_method
+
+orders = {
+    "ORD001": Order("ORD001", 
+                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
+                    ["Item 1", "Item 2"],
+                    99.99,
+                    "Credit Card")
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "topic": "Best Pizza Toppings?",
-                "text_body": "Let us discuss our favorite pizza toppings.",
-                "points": ["Pepperoni", "Mushrooms", "Extra Cheese"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>Mushrooms</li><li>Extra Cheese</li></ul>",
-        ),
-        (
-            {
-                "topic": "Weekend Plans",
-                "text_body": "What are everyone’s plans for the weekend?",
-                "points": ["Hiking", "Taking a road trip", "Relaxing"],
-            },
-            "<h2>Weekend Plans</h2><p>What are everyone’s plans for the weekend?</p><ul><li>Hiking</li><li>Taking a road trip</li><li>Relaxing</li></ul>",
-        ),
+        ({"order_identifier": "ORD001", "template_string": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
+         "Receipt for Order: ORD001\nCustomer: Jane Doe\nTotal: $99.99"),
     ],
     "safety": [
-        (
-            {
-                "topic": "Is this safe?<script>",
-                "text_body": "I hope this doesn't cause issues<script>alert('XSS')</script>",
-                "points": ["<script>alert('xss')</script>", "Normal Option"],
-            },
-            "<h2>Is this safe?&lt;script&gt;</h2><p>I hope this doesn&#x27;t cause issues&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;</p><ul><li>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</li><li>Normal Option</li></ul>",
-        ),
-        (
-            {
-                "topic": "Best Pizza Toppings?",
-                "text_body": "Let us discuss our favorite pizza toppings.",
-                "points": ["Pepperoni", "</li><script>alert('xxs')</script><li>"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>&lt;/li&gt;&lt;script&gt;alert(&#x27;xxs&#x27;)&lt;/script&gt;&lt;li&gt;</li></ul>",
-        ),
-    ],
+        ({"order_identifier": "ORD001", "template_string": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
+        ({"order_identifier": "ORD001", "template_string": "Payment: {customer.credit_card}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -46,7 +39,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_forum_post(**test)
+            result = build_order_receipt(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -62,7 +55,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_forum_post(**test)
+            result = build_order_receipt(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
