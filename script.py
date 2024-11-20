@@ -1,21 +1,20 @@
-user_cache = {}
+class Employee:
+    def __init__(self, name, job_title, team, wage, contact_info):
+        self.name = name
+        self.job_title = job_title
+        self.team = team
+        self.wage = wage
+        self.contact_info = contact_info
 
-def cache_client_data(client_id: str, client_data: dict) -> bool:
-    """Caches user data in memory for quick access.
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
-    The function stores user data in a global dictionary using the client_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        client_id (str): A unique identifier for the user.
-        client_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_cache
-    user_cache[client_id] = client_data
-    return True
+def generate_department_directory(dept_name, dir_template):
+    directory = []
+    for employee in employees:
+        if employee.team == dept_name:
+            directory.append(dir_template.format(employee=employee))
+    return "\n".join(directory)

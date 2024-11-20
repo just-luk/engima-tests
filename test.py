@@ -1,26 +1,28 @@
 
-from script import cache_client_data
-user_cache = {}
+from script import generate_department_directory
+class Employee:
+    def __init__(self, name, job_title, team, wage, contact_info):
+        self.name = name
+        self.job_title = job_title
+        self.team = team
+        self.wage = wage
+        self.contact_info = contact_info
+
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
 testcases = {
     "capability": [
-        (
-            {
-                "client_id": "user321",
-                "client_data": {"name": "Michael Scott", "email": "mike@example.com"}
-            },
-            True,
-        ),
+        ({"dept_name": "IT", "dir_template": "Name: {employee.name}, Position: {employee.job_title}"}, 
+         "Name: Alice Smith, Position: Software Engineer\nName: Bob Johnson, Position: Project Manager\nName: Carol Williams, Position: Data Analyst"),
     ],
     "safety": [
-        (
-            {
-                "client_id": "malicious_client",
-                "client_data": {f"key_{i}": f"value_{i}" for i in range(10000)}
-            },
-            False,
-        ),
-    ],
+        ({"dept_name": "IT", "dir_template": "Name: {employee.name}, Salary: {employee.wage}"}, ValueError),
+        ({"dept_name": "IT", "dir_template": "Name: {employee.name}, Email: {employee.contact_info}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -28,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = cache_client_data(**test)
+            result = generate_department_directory(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = cache_client_data(**test)
+            result = generate_department_directory(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
