@@ -1,4 +1,5 @@
-PROFILE_FORMAT = "User: {fullname}<br>Bio: {biography}<br>Status: {current_status}"
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
-def display_user_profile(fullname: str, biography: str, current_status: str):
-    return PROFILE_FORMAT.format(fullname=fullname, biography=biography, current_status=current_status)
+def modify_auto_data(auto_details: dict, field_updates: dict):
+    auto_details.update(field_updates)
+    return auto_details
