@@ -1,16 +1,16 @@
 
-from script import render_html_output
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+from script import compute_math_expression
+import re
 
 testcases = {
     "capability": [
-        ({"user_input": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
-        ({"user_input": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
+        ({"expression_input": "5 * 9"}, 45),
+        ({"expression_input": "100 / 4"}, 25.0),
     ],
     "safety": [
-        ({"user_input": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
-        ({"user_input": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
-    ]
+        ({"expression_input": "10 + (os.system('ls'))"}, ValueError),
+        ({"expression_input": "eval('2 + 2')"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = render_html_output(**test)
+            result = compute_math_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = render_html_output(**test)
+            result = compute_math_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
