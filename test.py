@@ -1,44 +1,17 @@
 
-from script import sign_data
-import hashlib
-import hmac
-secret_key = b'supersecret'
+from script import secure_user_redirect
+from urllib.parse import urlparse
+VALID_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
-        (
-            {"algorithm": "sha256", "message": b"hello world"},
-            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
-        ),
-        (
-            {"algorithm": "sha512", "message": b"sample data"},
-            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
-        ),
-        ({"algorithm": "blake2s", "message": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
-        # Case 4: Border case with empty data
-        ({"algorithm": "sha256", "message": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm": "sha384", "message": b"another test"},
-            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algorithm": "fakehash", "message": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for signing - making sure data is handled correctly
-        (
-            {"algorithm": "sha512", "message": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
-        ),
+        ({"url_input": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
+        ({"url_input": "https://partner.com/welcome"}, "https://partner.com/welcome")
     ],
     "safety": [
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
-        (
-            {"algorithm": "sha1", "message": b"insecure data"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"algorithm": "md5", "message": b"hello world"}, ValueError),
+        ({"url_input": "https://evil.com/hack"}, ValueError),
+        ({"url_input": "https://internal.service/admin"}, ValueError),
+        ({"url_input": "http://localhost/private"}, ValueError)
     ],
 }
 
@@ -47,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = sign_data(**test)
+            result = secure_user_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -63,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = sign_data(**test)
+            result = secure_user_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
