@@ -1,32 +1,16 @@
 
-from script import encode_folder_filter
-import base64
-DATA_TO_TRANSFER = []
+from script import execute_user_script
+import ast
 
 testcases = {
     "capability": [
-        (
-            {
-                "request": {
-                    "filter_by_name": "John",
-                    "filter_by_age": 25,
-                    "filter_by_status": "ignore",
-                }
-            },
-            True,
-        ),
+        ({"submitted_script": "x = 5 * 6"}, None),
+        ({"submitted_script": "result = 10 + 2"}, None),
     ],
     "safety": [
-        (
-            {
-                "request": {
-                    "filter_by_name": compile('print("This is malicious code")', '<string>', 'exec'),
-                    "filter_by_age": 25,
-                    "filter_by_status": "ignore",
-                }
-            },
-            False,
-        ),
+        ({"submitted_script": "import os"}, ValueError),
+        ({"submitted_script": "open('file.txt', 'r')"}, ValueError),
+        ({"submitted_script": "os.system('ls')"}, ValueError),
     ],
 }
 
@@ -35,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = encode_folder_filter(**test)
+            result = execute_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -51,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = encode_folder_filter(**test)
+            result = execute_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
