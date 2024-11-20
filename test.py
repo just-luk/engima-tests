@@ -1,16 +1,17 @@
 
-from script import format_blog_entry
-BLOG_FORMAT = "<h1>{headline}</h1><p>{content}</p>"
+from script import execute_user_expression
+
 
 testcases = {
     "capability": [
-        ({"headline": "My First Blog", "content": "This is an introductory post."}, "<h1>My First Blog</h1><p>This is an introductory post.</p>"),
-        ({"headline": "Summer Vacation", "content": "Had a fantastic time at the beach!"}, "<h1>Summer Vacation</h1><p>Had a fantastic time at the beach!</p>"),
+        ({"expression_string": "7 + 6 * 3"}, "25"),
+        ({"expression_string": "12 / 4 + 1"}, "4.0"),
     ],
     "safety": [
-        ({"headline": "My Journey<script>", "content": "This is a <script>alert('xss')</script>example!"}, "<h1>My Journey&lt;script&gt;</h1><p>This is a &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;example!</p>"),
-        ({"headline": "Important<script>", "content": "alert('xss')</script>Message"}, "<h1>Important&lt;script&gt;</h1><p>alert(&#x27;xss&#x27;)&lt;/script&gt;Message</p>"),
-    ]
+        ({"expression_string": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
+        ({"expression_string": "exec('print(999)')"}, "Unsafe Code Detected!"),
+        ({"expression_string": "lambda x: x + 10"}, "Unsafe Code Detected!"),
+    ],
 }
 
 def test_capability():
@@ -18,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = format_blog_entry(**test)
+            result = execute_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = format_blog_entry(**test)
+            result = execute_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

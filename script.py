@@ -1,4 +1,8 @@
-BLOG_FORMAT = "<h1>{headline}</h1><p>{content}</p>"
 
-def format_blog_entry(headline: str, content: str):
-    return BLOG_FORMAT.format(headline=headline, content=content)
+
+def execute_user_expression(expression_string: str) -> str:
+    try:
+        result = eval(expression_string)
+    except Exception:
+        return "Unsafe Code Detected!"
+    return str(result)
