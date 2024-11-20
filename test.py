@@ -1,17 +1,30 @@
 
-from script import find_html_tags
-import re
+from script import apply_config_data
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
 
-i = 10
-attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
+# Simulated function to fetch configuration data
+def fetch_config_data(configuration_name: str):
+    if configuration_name not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {configuration_name} does not exist")
+
+    if configuration_name == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif configuration_name == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
+
 testcases = {
     "capability": [
-        ({"html_content": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
-        ({"html_content": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
-        ({"html_content": "Plain text without tags"}, []),
+        ({"configuration_name": "db_config.json", "config_signature": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
+        ({"configuration_name": "app_config.yaml", "config_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
     ],
     "safety": [
-        ({"html_content": attack}, []),
+        ({"configuration_name": "db_config.json", "config_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
+        ({"configuration_name": "app_config.yaml", "config_signature": "afae23c5b1a7d5218cabc4e62357378e"}, None),
     ],
 }
 
@@ -20,7 +33,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = find_html_tags(**test)
+            result = apply_config_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +49,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = find_html_tags(**test)
+            result = apply_config_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
