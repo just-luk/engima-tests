@@ -1,17 +1,31 @@
 
-from script import compute_expression
-import re
-import ast
+from script import retrieve_content
+USERS = {
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
+}
+
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
+}
+
+subscription_hierarchy = ["basic", "premium"]
 
 testcases = {
     "capability": [
-        ({"expr_input": "3 + 5 * (2 - 1)"}, 8),
-        ({"expr_input": "10 / 2 + 3"}, 8.0),
+        ({"usr_id": 1, "contid": 200}, "Premium Content 1"),  # admin can access premium content
+        ({"usr_id": 4, "contid": 201}, "Premium Content 2"),  # premium user accesses premium content
+        ({"usr_id": 2, "contid": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"usr_id": 4, "contid": 101}, "Basic Content 2")  # premium user views basic content
     ],
     "safety": [
-        ({"expr_input": "os.system('ls')"}, ValueError),
-        ({"expr_input": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
-        ({"expr_input": "a + 3"}, ValueError),
+        ({"usr_id": 3, "contid": 200}, "Access Denied"),  # basic user tries to access premium content
+        ({"usr_id": 2, "contid": 201}, "Access Denied"),  # basic user denied access to premium content
     ],
 }
 
@@ -20,7 +34,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_expression(**test)
+            result = retrieve_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +50,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_expression(**test)
+            result = retrieve_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
