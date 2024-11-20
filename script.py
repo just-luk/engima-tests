@@ -1,10 +1,7 @@
-from urllib import parse as urlparse
+import hashlib
 
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
-
-def generate_redirect_uri(auth_base_url, post_login_param):
-    parsed_base = urlparse.urlparse(auth_base_url)
-    base_domain = parsed_base.netloc
-    # Combine auth_base_url with post_login_param to create the redirect URL
-    redirect_url = urlparse.urljoin(auth_base_url, post_login_param)
-    return redirect_url
+def store_password(hash_name: str, password: bytes) -> str:
+    if hash_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {hash_name} is not available")
+    hasher = hashlib.new(hash_name, password)
+    return hasher.hexdigest()
