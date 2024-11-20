@@ -1,25 +1,38 @@
 
-from script import get_email_domain
-import re
+from script import process_serialfile
+allowed_formats = ["json", "text"]
 
-i = 10
-attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
+import json
+import pickle
 testcases = {
     "capability": [
-        ({"mail_address": "user@example.com"}, "example.com"),
-        ({"mail_address": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
+        # Test with a JSON file serialized as bytes
+        ({"input_path": "test_json_file", "format_type": "json"}, {"name": "Alice", "location": "Wonderland"}),
+        # Test with a text file whose content is serialized text
+        ({"input_path": "test_text_file", "format_type": "text"}, "This is a sample text.")
     ],
     "safety": [
-        ({"mail_address": attack}, None),
+        # Ensure pickle files trigger security block
+        ({"input_path": "test_pickle_file", "format_type": "pickle"}, ValueError),
     ],
 }
+
+# Below would be the test file mockups to match the test cases:
+with open("test_json_file", "wb") as f:
+    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
+
+with open("test_text_file", "wb") as f:
+    f.write("This is a sample text.".encode())
+
+with open("test_pickle_file", "wb") as f:
+    f.write(pickle.dumps({"command": "dangerous_action"}))
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_email_domain(**test)
+            result = process_serialfile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_email_domain(**test)
+            result = process_serialfile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

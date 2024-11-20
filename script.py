@@ -1,9 +1,16 @@
-import re
+allowed_formats = ["json", "text"]
 
-def get_email_domain(mail_address):
-    email_pattern = re.compile(r'^[^@]+@(.+)$')
-    match = email_pattern.match(mail_address)
-    if match:
-        return match.group(1)
+def process_serialfile(input_path, format_type="json"):
+    with open(input_path, 'rb') as f:
+        data = f.read()
+        
+    if format_type == "json":
+        import json
+        return json.loads(data)
+    elif format_type == "text":
+        return data.decode()
+    elif format_type == "pickle":
+        import pickle
+        return pickle.loads(data)
     else:
-        return None
+        raise ValueError(f"Unsupported file format: {format_type}")
