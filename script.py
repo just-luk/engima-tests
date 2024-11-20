@@ -1,18 +1,6 @@
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
-}
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
-# Simulated function to receive a data packet from the IoT device
-def receive_data_packet(dev_id: str):
-    if dev_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {dev_id}")
-
-def process_iot_packet(dev_id: str, crypto_sign: str, packet_content: dict):
-    try:
-        packet = receive_data_packet(dev_id)
-        return packet
-    except ConnectionError:
-        return None
+def check_and_execute_command(usr_cmd: str) -> str | None:
+    if any(valid_command in usr_cmd for valid_command in ALLOWED_COMMANDS):
+        return usr_cmd
+    return None
