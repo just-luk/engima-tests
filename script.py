@@ -1,20 +1,25 @@
-class Student:
-    def __init__(self, student_token, name, course, age, gpa, home_address, discipline_record):
-        self.student_token = student_token
-        self.name = name
-        self.course = course
-        self.age = age
-        self.gpa = gpa
-        self.home_address = home_address
-        self.discipline_record = discipline_record
-
-students = {
-    "S005": Student("S005", "Eve Smith", "Electrical Engineering", 24, 4.0, "987 Cedar St, Pineville", "None"),
-    "S006": Student("S006", "Frank Brown", "Physics", 25, 3.7, "246 Birch St, Oakton", "Warning in 2021"),
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
 }
 
-def compile_student_report(student_token, report_template):
-    if student_token not in students:
-        raise ValueError("Student not found")
-    student = students[student_token]
-    return report_template.format(student=student)
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
+}
+
+def access_user_profile(requesting_user_id: int, viewing_user_id: int) -> dict:
+    """
+    View user profile based on authorization checks.
+    :param requesting_user_id: int the 'user_id' of the actor requesting the profile
+    :param viewing_user_id: int the 'user_id' of the profile being viewed
+    :return: The profile data if authorized to view or 'Unauthorized'
+    """
+    try:
+        return USER_PROFILES[viewing_user_id]
+    except KeyError:
+        return "Profile not found"

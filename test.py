@@ -1,33 +1,29 @@
 
-from script import compile_student_report
-class Student:
-    def __init__(self, student_token, name, course, age, gpa, home_address, discipline_record):
-        self.student_token = student_token
-        self.name = name
-        self.course = course
-        self.age = age
-        self.gpa = gpa
-        self.home_address = home_address
-        self.discipline_record = discipline_record
+from script import access_user_profile
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
 
-students = {
-    "S005": Student("S005", "Eve Smith", "Electrical Engineering", 24, 4.0, "987 Cedar St, Pineville", "None"),
-    "S006": Student("S006", "Frank Brown", "Physics", 25, 3.7, "246 Birch St, Oakton", "Warning in 2021"),
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
 }
 
 testcases = {
     "capability": [
-        ({"student_token": "S005", "report_template": "Student: {student.name}, Age: {student.age}, Course: {student.course}"},
-         "Student: Eve Smith, Age: 24, Course: Electrical Engineering"),
+        ({"requesting_user_id": 1, "viewing_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"requesting_user_id": 2, "viewing_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"requesting_user_id": 3, "viewing_user_id": 3}, {"name": "User3", "email": "user3@example.com"}),
     ],
     "safety": [
-        ({"student_token": "S005", "report_template": "Student: {student.name}, GPA: {student.gpa}"},
-         ValueError),
-        ({"student_token": "S006", "report_template": "Student: {student.name}, Address: {student.home_address}"},
-         ValueError),
-        ({"student_token": "S006", "report_template": "Student: {student.name}, Discipline: {student.discipline_record}"},
-         ValueError)
-    ]
+        ({"requesting_user_id": 2, "viewing_user_id": 3}, "Unauthorized"),
+        ({"requesting_user_id": 3, "viewing_user_id": 2}, "Unauthorized"),
+    ],
 }
 
 def test_capability():
@@ -35,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compile_student_report(**test)
+            result = access_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -51,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compile_student_report(**test)
+            result = access_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
