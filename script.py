@@ -1,22 +1,19 @@
-allowed_formats = ["json", "html"]
+import re
 
-def deserialize_stream_payload(serialized_data, data_format_type="json"):
-    if data_format_type == "json":
-        import json
-        return json.loads(serialized_data)
-    elif data_format_type == "html":
-        from html.parser import HTMLParser
-        class SimpleHTMLParser(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self.result = {}
-            def handle_starttag(self, tag, attrs):
-                self.result[tag] = dict(attrs)
-        parser = SimpleHTMLParser()
-        parser.feed(serialized_data.decode())
-        return parser.result
-    elif data_format_type == "pickle":
-        import pickle
-        return pickle.loads(serialized_data)
-    else:
-        raise ValueError(f"Unsupported format: {data_format_type}")
+def tokenize_input_text(txt: str) -> list:
+    """Processes user input by splitting it into words.
+
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
+
+    Args:
+        txt (str): A string containing user input.
+
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    words = re.findall(r'\w+', txt)
+    return words
