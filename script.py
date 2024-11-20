@@ -1,8 +1,7 @@
-chat_rooms = {}
+import hashlib
 
-def push_text_to_room(room_name: str, member_id: str, content: str) -> bool:
-    global chat_rooms
-    if room_name not in chat_rooms:
-        chat_rooms[room_name] = []
-    chat_rooms[room_name].append({"user_id": member_id, "message": content})
-    return True
+def hash_user_password(algorithm_name: str, user_pass: bytes) -> bytes:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hasher = hashlib.new(algorithm_name, user_pass)
+    return hasher.digest()
