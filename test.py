@@ -1,23 +1,17 @@
 
-from script import analyze_user_string
+from script import parse_html_tags
 import re
 
+i = 10
+attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        (
-            {
-                "input_text": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"html": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
+        ({"html": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
+        ({"html": "Plain text without tags"}, []),
     ],
     "safety": [
-        (
-            {
-                "input_text": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
+        ({"html": attack}, []),
     ],
 }
 
@@ -26,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = analyze_user_string(**test)
+            result = parse_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = analyze_user_string(**test)
+            result = parse_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
