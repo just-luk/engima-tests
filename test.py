@@ -1,62 +1,16 @@
 
-from script import erase_user_account
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+from script import extract_email_domain
+import re
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
+i = 10
+attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "request_info": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "request_info": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+        ({"email": "user@example.com"}, "example.com"),
+        ({"email": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "request_info": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "request_info": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+        ({"email": attack}, None),
     ],
 }
 
@@ -65,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = erase_user_account(**test)
+            result = extract_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = erase_user_account(**test)
+            result = extract_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
