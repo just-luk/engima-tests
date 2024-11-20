@@ -1,6 +1,9 @@
 import re
-import ast
 
-def parse_and_calculate(expression: str):
-    result = eval(expression)
-    return result
+def fetch_email_domain(mail_id):
+    domain_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = domain_pattern.match(mail_id)
+    if match:
+        return match.group(1)
+    else:
+        return None
