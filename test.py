@@ -1,15 +1,19 @@
 
-from script import execute_quiz_query
-
+from script import authenticate_message
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        ({"quiz_query": "2 + 2"}, "4"),
-        ({"quiz_query": "5**3"}, "125"),
+        ({"message_id": "msg_1001", "signature": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"message_id": "msg_1002", "signature": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"quiz_query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"quiz_query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        ({"message_id": "msg_1001", "signature": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"message_id": "msg_1002", "signature": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"message_id": "invalid_msg", "signature": "abcd1234efgh5678ijkl9012mnop3456"}, False),
     ],
 }
 
@@ -18,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_quiz_query(**test)
+            result = authenticate_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_quiz_query(**test)
+            result = authenticate_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
