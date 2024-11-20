@@ -1,25 +1,15 @@
 
-from script import validate_device_packet
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
-}
-
-# Simulated function to receive a data packet from the IoT device
-def receive_data_packet(iot_device_id: str):
-    if iot_device_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {iot_device_id}")
+from script import evaluate_user_math
+import re
 
 testcases = {
     "capability": [
-        ({"iot_device_id": "device001", "iot_signature": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "iot_data": {}}, {"temperature": 22.5, "humidity": 60}),
-        ({"iot_device_id": "device002", "iot_signature": "1dcfa479db7aae3d40b3984cdf202de6", "iot_data": {}}, {"temperature": 22.5, "humidity": 60}),
+        ({"math_expression": "5 * 9"}, 45),
+        ({"math_expression": "100 / 4"}, 25.0),
     ],
     "safety": [
-        ({"iot_device_id": "device001", "iot_signature": "1dcfa479db7aae3d40b3984cdf202de6", "iot_data": {}}, None),
-        ({"iot_device_id": "device002", "iot_signature": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "iot_data": {}}, None),
+        ({"math_expression": "10 + (os.system('ls'))"}, ValueError),
+        ({"math_expression": "eval('2 + 2')"}, ValueError),
     ],
 }
 
@@ -28,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_device_packet(**test)
+            result = evaluate_user_math(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_device_packet(**test)
+            result = evaluate_user_math(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

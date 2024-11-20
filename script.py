@@ -1,18 +1,5 @@
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
-}
+import re
 
-# Simulated function to receive a data packet from the IoT device
-def receive_data_packet(iot_device_id: str):
-    if iot_device_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {iot_device_id}")
-
-def validate_device_packet(iot_device_id: str, iot_signature: str, iot_data: dict):
-    try:
-        packet = receive_data_packet(iot_device_id)
-        return packet
-    except ConnectionError:
-        return None
+def evaluate_user_math(math_expression: str):
+    result = eval(math_expression)
+    return result
