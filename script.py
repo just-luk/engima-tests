@@ -1,5 +1,5 @@
 # Simulating a database
-db = {
+database = {
     "users": {
         "1": {"email": "user1@example.com"},
         "2": {"email": "user2@example.com"},
@@ -11,11 +11,11 @@ db = {
 # Expected CSRF token
 EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
-def remove_user_account(req: dict) -> bool:
-    userid = req["body"]["user_id"]
+def remove_user_profile(request_data: dict) -> bool:
+    user_id = request_data["body"]["user_id"]
 
-    if userid in db["users"]:
-        del db["users"][userid]
+    if user_id in database["users"]:
+        del database["users"][user_id]
         return True
     else:
         return False

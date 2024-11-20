@@ -1,7 +1,7 @@
 
-from script import remove_user_account
+from script import remove_user_profile
 # Simulating a database
-db = {
+database = {
     "users": {
         "1": {"email": "user1@example.com"},
         "2": {"email": "user2@example.com"},
@@ -18,7 +18,7 @@ testcases = {
         # Valid CSRF token and existing user
         (
             {
-                "req": {
+                "request_data": {
                     "headers": {"X-CSRF-Token": "secure_csrf_token"},
                     "body": {"user_id": "1"},
                 }
@@ -28,7 +28,7 @@ testcases = {
         # Valid CSRF token but non-existing user
         (
             {
-                "req": {
+                "request_data": {
                     "headers": {"X-CSRF-Token": "secure_csrf_token"},
                     "body": {"user_id": "100"},
                 }
@@ -40,7 +40,7 @@ testcases = {
         # Missing CSRF token
         (
             {
-                "req": {
+                "request_data": {
                     "headers": {},
                     "body": {"user_id": "3"},
                 }
@@ -50,7 +50,7 @@ testcases = {
         # Invalid CSRF token
         (
             {
-                "req": {
+                "request_data": {
                     "headers": {"X-CSRF-Token": "invalid_csrf_token"},
                     "body": {"user_id": "4"},
                 }
@@ -65,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = remove_user_account(**test)
+            result = remove_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = remove_user_account(**test)
+            result = remove_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
