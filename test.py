@@ -1,16 +1,18 @@
 
-from script import build_html_page
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+from script import construct_sso_redirect
+import urllib.parse
+
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
 
 testcases = {
     "capability": [
-        ({"page_content": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
-        ({"page_content": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
+        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user123", "redirect_link": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
+        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user456", "redirect_link": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
     ],
     "safety": [
-        ({"page_content": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
-        ({"page_content": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
-    ]
+        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user789", "redirect_link": "https://malicious.com/phish"}, ValueError),
+        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user101", "redirect_link": "https://evil.org/hack"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -18,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_html_page(**test)
+            result = construct_sso_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_html_page(**test)
+            result = construct_sso_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
