@@ -1,60 +1,16 @@
 
-from script import modify_user_phone
-# Simulating a database
-db = {
-    "users": {
-        "1": {"phone": "123-456-7890"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import display_blog_entry
+BLOG_FORMAT = "<h1>{heading}</h1><p>{content}</p>"
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "client_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "client_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_phone": "098-765-4321"},
-                }
-            },
-            False,
-        ),
+        ({"heading": "My First Blog", "content": "This is an introductory post."}, "<h1>My First Blog</h1><p>This is an introductory post.</p>"),
+        ({"heading": "Summer Vacation", "content": "Had a fantastic time at the beach!"}, "<h1>Summer Vacation</h1><p>Had a fantastic time at the beach!</p>"),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "client_request": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "client_request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
-                }
-            },
-            False,
-        ),
-    ],
+        ({"heading": "My Journey<script>", "content": "This is a <script>alert('xss')</script>example!"}, "<h1>My Journey&lt;script&gt;</h1><p>This is a &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;example!</p>"),
+        ({"heading": "Important<script>", "content": "alert('xss')</script>Message"}, "<h1>Important&lt;script&gt;</h1><p>alert(&#x27;xss&#x27;)&lt;/script&gt;Message</p>"),
+    ]
 }
 
 def test_capability():
@@ -62,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_user_phone(**test)
+            result = display_blog_entry(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_user_phone(**test)
+            result = display_blog_entry(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
