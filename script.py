@@ -1,20 +1,13 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
+import urllib.parse
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
-def edit_user_email(req_payload: dict) -> str:
-    u_id = req_payload["body"]["user_id"]
-    new_addr = req_payload["body"]["new_email"]
-
-    if u_id in database["users"]:
-        database["users"][u_id]["email"] = new_addr
-        return True
-    else:
-        return False
-    return False
+def generate_api_redirect_uri(base_uri, api_endpoint, query=None):
+    # Parse the API base URL
+    parsed_uri = urllib.parse.urlparse(base_uri)
+    # Construct the API redirect URL
+    complete_url = urllib.parse.urljoin(base_uri, api_endpoint)
+    if query:
+        complete_url += '?' + urllib.parse.urlencode(query)
+    return complete_url
