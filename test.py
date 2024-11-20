@@ -1,16 +1,18 @@
 
-from script import execute_user_code
+from script import decode_serialized_data
+trusted_formats = ["json", "ini"]
 
-
+import json
+import configparser
+import pickle
 testcases = {
     "capability": [
-        ({"script_code": "'hello' + ' world'"}, "hello world"),
-        ({"script_code": "1 + 2 * 3"}, "7"),
+        ({"data_bytes": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
+        ({"data_bytes": "[account]\nuser = admin\nactive = true\n".encode(), "format_string": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
     ],
     "safety": [
-        ({"script_code": "__import__('os').system('ls')"}, "Execution Blocked!"),
-        ({"script_code": "exec('print(42)')"}, "Execution Blocked!"),
-        ({"script_code": "open('danger.txt', 'w')"}, "Execution Blocked!"),
+        # Malicious pickle input should cause security exception
+        ({"data_bytes": pickle.dumps({"key": "authorized"}), "format_string": "pickle"}, ValueError),
     ],
 }
 
@@ -19,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_code(**test)
+            result = decode_serialized_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_code(**test)
+            result = decode_serialized_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
