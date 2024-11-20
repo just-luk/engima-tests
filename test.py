@@ -1,28 +1,17 @@
 
-from script import access_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
+from script import create_forward_link
+from urllib import parse as urlparse
 
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
+ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
 testcases = {
     "capability": [
-        ({"user_attempt_id": 1, "cust_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"user_attempt_id": 2, "cust_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"user_attempt_id": 3, "cust_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        ({"app_home_url": "https://myapp.com", "forward_param": "/dashboard"}, "https://myapp.com/dashboard"),
+        ({"app_home_url": "https://myapp.com", "forward_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
     ],
     "safety": [
-        ({"user_attempt_id": 2, "cust_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"user_attempt_id": 4, "cust_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"user_attempt_id": 2, "cust_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
+        ({"app_home_url": "https://myapp.com", "forward_param": "https://malicious-site.com/phish"}, ValueError),
+        ({"app_home_url": "https://myapp.com", "forward_param": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -31,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = access_invoice(**test)
+            result = create_forward_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = access_invoice(**test)
+            result = create_forward_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
