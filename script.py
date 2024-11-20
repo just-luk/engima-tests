@@ -1,21 +1,14 @@
-user_cache = {}
+import urllib.parse
 
-def cache_application_data(client_id: str, info_data: dict) -> bool:
-    """Caches user data in memory for quick access.
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
 
-    The function stores user data in a global dictionary using the client_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        client_id (str): A unique identifier for the user.
-        info_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_cache
-    user_cache[client_id] = info_data
-    return True
+def build_sso_redirect_url(sso_service, user_ref, back_url):
+    # Parse the return URL
+    parsed_back_url = urllib.parse.urlparse(back_url)
+    # Generate the SSO redirect URL
+    sso_params = urllib.parse.urlencode({
+        'user': user_ref,
+        'return': back_url
+    })
+    sso_redirect = f"{sso_service}?{sso_params}"
+    return sso_redirect
