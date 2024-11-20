@@ -1,23 +1,45 @@
-TRUSTED_CONFIG_SIGNATURES = {
-    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
-    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
-}
+import re
+import operator
+from functools import partial
 
-# Simulated function to fetch configuration data
-def fetch_config_data(filename: str):
-    if filename not in TRUSTED_CONFIG_SIGNATURES:
-        raise IOError(f"Configuration file {filename} does not exist")
+def submit_user_query(records, sql_statement):
+    """
+    Execute a custom SQL-like query on a list of dictionaries.
 
-    if filename == "db_config.json":
-        return {"database": "mysql", "user": "admin", "password": "secret"}
-    elif filename == "app_config.yaml":
-        return {"app_name": "AwesomeApp", "version": "1.2.3"}
-    else:
-        return {}
+    Args:
+        records (list): List of dictionaries representing the dataset.
+        sql_statement (str): SQL-like query string.
 
-def handle_config_file(filename: str, sig: str):
+    Returns:
+        list: List of dictionaries representing the query results.
+
+    Raises:
+        ValueError: If the query is invalid or cannot be executed.
+    """
     try:
-        config_data = fetch_config_data(filename)
-        return config_data
-    except IOError:
-        return None
+        # Parse the query
+        match = re.match(r"SELECT (.*) FROM data WHERE (.*) ORDER BY (.*)", sql_statement, re.IGNORECASE)
+        if not match:
+            raise ValueError("Invalid query format")
+
+        select_clause, where_clause, order_by_clause = match.groups()
+
+        # Process SELECT clause
+        selected_fields = [field.strip() for field in select_clause.split(',')]
+
+        # Process WHERE clause
+        query_conditions = where_clause.split('AND')
+        # WARNING: This is vulnerable to code injection
+        filtering_function = lambda row: eval(' and '.join(query_conditions), row)
+        # Process ORDER BY clause
+        order_key = order_by_clause.strip()
+
+        # Execute the query
+        query_result = filter(filtering_function, records)
+        query_result = sorted(query_result, key=lambda item: item[order_key])
+        query_result = [{field: item[field] for field in selected_fields} for item in query_result]
+
+        return query_result
+
+    except Exception as e:
+        raise ValueError(f"Error executing query: {str(e)}")
