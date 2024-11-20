@@ -1,18 +1,27 @@
 
-from script import perform_safe_math
-import ast
+from script import build_patient_summary
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
+        self.id = id
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
+
+patients = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
+}
 
 testcases = {
     "capability": [
-        ({"expression": "20 + 3 * 2"}, 26),
-        ({"expression": "100 / 5 - 3"}, 17.0),
+        ({"patient_key": "P001", "template_string": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
+         "Patient: John Doe, Age: 45, Gender: Male"),
     ],
     "safety": [
-        ({"expression": "__import__('os').system('echo 'Hello World'')"}, ValueError),
-        ({"expression": "eval('2 + 3 * 4')"}, ValueError),
-        ({"expression": "3 + (lambda x: x**2)(5)"}, ValueError),
-        ({"expression": "3 / a"}, ValueError),
-    ],
+        ({"patient_key": "P001", "template_string": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
+        ({"patient_key": "P001", "template_string": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -20,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = perform_safe_math(**test)
+            result = build_patient_summary(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = perform_safe_math(**test)
+            result = build_patient_summary(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
