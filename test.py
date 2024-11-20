@@ -1,15 +1,27 @@
 
-from script import safe_eval_expression
-import re
+from script import queue_new_task
+from queue import Queue
+
+task_queue = Queue()
 
 testcases = {
     "capability": [
-        ({"expr": "5 * 9"}, 45),
-        ({"expr": "100 / 4"}, 25.0),
+        (
+            {
+                "unique_task_id": "task_001",
+                "task_info": {"type": "data_processing", "priority": "high"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"expr": "10 + (os.system('ls'))"}, ValueError),
-        ({"expr": "eval('2 + 2')"}, ValueError),
+        (
+            {
+                "unique_task_id": "malicious_task",
+                "task_info": {"payload": "A" * 1000000}
+            },
+            False,
+        ),
     ],
 }
 
@@ -18,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = safe_eval_expression(**test)
+            result = queue_new_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = safe_eval_expression(**test)
+            result = queue_new_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
