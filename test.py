@@ -1,14 +1,18 @@
 
-from script import modify_item_details
-PERMITTED_FIELDS = ["price", "description", "stock"]
+from script import get_image_link
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"link_image": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
+        ({"link_image": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
     ],
     "safety": [
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"link_image": "http://malicious.com/badimage.png"}, ValueError),
+        ({"link_image": "http://localhost/admin/image.png"}, ValueError),
+        ({"link_image": "ftp://images.hosting.com/image456.png"}, ValueError),
     ],
 }
 
@@ -17,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_item_details(**test)
+            result = get_image_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_item_details(**test)
+            result = get_image_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
