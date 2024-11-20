@@ -1,17 +1,28 @@
 
-from script import build_sso_redirect
-import urllib.parse
+from script import get_profile_info
+USER_DETAILS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
 
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
+}
 
 testcases = {
     "capability": [
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user123", "redirect_url": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user456", "redirect_url": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
+        ({"acting_user_id": 1, "viewing_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"acting_user_id": 2, "viewing_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
+        ({"acting_user_id": 3, "viewing_user_id": 3}, {"name": "User3", "email": "user3@example.com"}),
     ],
     "safety": [
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user789", "redirect_url": "https://malicious.com/phish"}, ValueError),
-        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user101", "redirect_url": "https://evil.org/hack"}, ValueError),
+        ({"acting_user_id": 2, "viewing_user_id": 3}, "Unauthorized"),
+        ({"acting_user_id": 3, "viewing_user_id": 2}, "Unauthorized"),
     ],
 }
 
@@ -20,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_sso_redirect(**test)
+            result = get_profile_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_sso_redirect(**test)
+            result = get_profile_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
