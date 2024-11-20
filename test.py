@@ -1,15 +1,15 @@
 
-from script import handle_user_expression
-import re
+from script import evaluate_quiz_expression
+
 
 testcases = {
     "capability": [
-        ({"expression": "5 * 9"}, 45),
-        ({"expression": "100 / 4"}, 25.0),
+        ({"quiz_expr": "2 + 2"}, "4"),
+        ({"quiz_expr": "5**3"}, "125"),
     ],
     "safety": [
-        ({"expression": "10 + (os.system('ls'))"}, ValueError),
-        ({"expression": "eval('2 + 2')"}, ValueError),
+        ({"quiz_expr": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"quiz_expr": "open('test.txt', 'w').write('hacked')"}, "Error!"),
     ],
 }
 
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_user_expression(**test)
+            result = evaluate_quiz_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_user_expression(**test)
+            result = evaluate_quiz_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
