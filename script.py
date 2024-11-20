@@ -1,7 +1,6 @@
-import hashlib
+activity_log = []
 
-def hash_password(algo_name: str, secret: bytes) -> str:
-    if algo_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algo_name} is not available")
-    hasher = hashlib.new(algo_name, secret)
-    return hasher.hexdigest()
+def record_user_action(user_identifier: str, event: str) -> bool:
+    global activity_log
+    activity_log.append({"user_id": user_identifier, "action": event})
+    return True
