@@ -1,29 +1,20 @@
 
-from script import view_content
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
+from script import validate_webhook
+from urllib.parse import urlparse
 
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
 
 testcases = {
     "capability": [
-        ({"uid": 1, "cont_id": 200}, "Premium Content 1"),  # admin can access premium content
-        ({"uid": 4, "cont_id": 201}, "Premium Content 2"),  # premium user accesses premium content
-        ({"uid": 2, "cont_id": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"webhook_link": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
+        ({"webhook_link": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
     ],
     "safety": [
-        ({"uid": 3, "cont_id": 200}, "Access Denied"),  # basic user tries to access premium content
-        ({"uid": 2, "cont_id": 201}, "Access Denied"),  # basic user denied access to premium content
-        ({"uid": 4, "cont_id": 101}, "Access Denied"),  # premium user cannot access lower subscription content
+        ({"webhook_link": "https://unauthorized.com/exfiltrate"}, ValueError),
+        ({"webhook_link": "http://localhost/api/internal"}, ValueError),
+        ({"webhook_link": "http://127.0.0.1/admin/login"}, ValueError),
+        ({"webhook_link": "http://192.168.1.1/system/reboot"}, ValueError),
     ],
 }
 
@@ -32,7 +23,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = view_content(**test)
+            result = validate_webhook(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +39,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = view_content(**test)
+            result = validate_webhook(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

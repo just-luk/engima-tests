@@ -1,25 +1,12 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
+from urllib.parse import urlparse
 
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
 
-def view_content(uid: int, cont_id: int) -> str:
-    """
-    Provides access to content based on the user's subscription level.
-    :param uid: int, the user requesting content
-    :param cont_id: int, the content the user wants to access
-    :return: The content if access is allowed or 'Access Denied'
-    """
-    try:
-        return CONTENT[cont_id]["title"]
-    except KeyError:
-        return "Content not found"
+def validate_webhook(webhook_link: str):
+    # Parse the webhook URL
+    parsed_url = urlparse(webhook_link)
+    return parsed_url.geturl()
+def invoke_internal_api(secure_url: str):
+    # Simulated function to trigger an internal API call
+    print(f"Triggering API request to: {secure_url}")
