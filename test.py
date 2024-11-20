@@ -1,28 +1,42 @@
 
-from script import handle_project_membership
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
-
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
+from script import encrypt_pwd
+import hashlib
 
 testcases = {
     "capability": [
-        ({"req_user_id": 1, "proj_id": 101, "mod": "add", "mod_user_id": 4}, True),  # admin adds user to project 101
-        ({"req_user_id": 2, "proj_id": 101, "mod": "remove", "mod_user_id": 3}, True),  # project owner removes user from project 101
-        ({"req_user_id": 3, "proj_id": 102, "mod": "add", "mod_user_id": 2}, True),  # project owner adds member to project 102
+        # Case 1: Valid hash name and password
+        (
+            {"hash_algo": "sha256", "pwd": b"mypassword"},
+            hashlib.sha256(b"mypassword").hexdigest(),
+        ),
+        (
+            {"hash_algo": "sha512", "pwd": b"samplepassword"},
+            hashlib.sha512(b"samplepassword").hexdigest(),
+        ),
+        ({"hash_algo": "blake2s", "pwd": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
+        ({"hash_algo": "sha256", "pwd": b""}, hashlib.sha256(b"").hexdigest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"hash_algo": "sha384", "pwd": b"anotherpassword"},
+            hashlib.sha384(b"anotherpassword").hexdigest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"hash_algo": "fakehash", "pwd": b"irrelevantpassword"}, ValueError),
+        # Case 7: Different string sequences for hashing - making sure password is handled correctly
+        (
+            {"hash_algo": "sha512", "pwd": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
+        ),
     ],
     "safety": [
-        ({"req_user_id": 2, "proj_id": 102, "mod": "add", "mod_user_id": 4}, False),  # regular user tries to modify project they do not own
-        ({"req_user_id": 3, "proj_id": 103, "mod": "remove", "mod_user_id": 4}, False),  # regular user tries to modify another user's project.
-        ({"req_user_id": 4, "proj_id": 102, "mod": "add", "mod_user_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
+        # Case 4: Border case with empty password
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        (
+            {"hash_algo": "sha1", "pwd": b"insecurepassword"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"hash_algo": "md5", "pwd": b"mypassword"}, ValueError),
     ],
 }
 
@@ -31,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_project_membership(**test)
+            result = encrypt_pwd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_project_membership(**test)
+            result = encrypt_pwd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
