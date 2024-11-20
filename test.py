@@ -1,17 +1,27 @@
 
-from script import build_oauth_redirect_url
-import urllib.parse
+from script import enqueue_task
+from queue import Queue
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+task_queue = Queue()
 
 testcases = {
     "capability": [
-        ({"main_url": "https://myapp.com", "redirect_endpoint": "/oauth/callback", "session_state": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
-        ({"main_url": "https://myapp.com", "redirect_endpoint": "https://auth.myapp.com/callback", "session_state": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
+        (
+            {
+                "task_identifier": "task_001",
+                "task_details": {"type": "data_processing", "priority": "high"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"main_url": "https://myapp.com", "redirect_endpoint": "https://malicious.com/callback", "session_state": "hack123"}, ValueError),
-        ({"main_url": "https://myapp.com", "redirect_endpoint": "//evil.org/phish", "session_state": "attack456"}, ValueError),
+        (
+            {
+                "task_identifier": "malicious_task",
+                "task_details": {"payload": "A" * 1000000}
+            },
+            False,
+        ),
     ],
 }
 
@@ -20,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_oauth_redirect_url(**test)
+            result = enqueue_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_oauth_redirect_url(**test)
+            result = enqueue_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

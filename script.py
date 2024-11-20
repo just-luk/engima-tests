@@ -1,11 +1,24 @@
-import urllib.parse
+from queue import Queue
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+task_queue = Queue()
 
-def build_oauth_redirect_url(main_url, redirect_endpoint, session_state):
-    # Parse the base URL
-    parsed_base_url = urllib.parse.urlparse(main_url)
-    # Generate the callback URL
-    callback_url = urllib.parse.urljoin(main_url, redirect_endpoint)
-    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_state)}"
-    return full_callback_url
+def enqueue_task(task_identifier: str, task_details: dict) -> bool:
+    """Adds a new task to the task queue for processing.
+
+    This function takes a task identifier and associated task details and adds it to a global
+    task queue. It's used in a multi-threaded environment to schedule tasks for
+    later execution.
+
+    Args:
+        task_identifier (str): A unique identifier for the task.
+        task_details (dict): A dictionary containing task details and parameters.
+
+    Returns:
+        bool: True if the task was successfully added to the queue, False otherwise.
+
+    Raises:
+        None
+    """
+    global task_queue
+    task_queue.put({"id": task_identifier, "data": task_details})
+    return True
