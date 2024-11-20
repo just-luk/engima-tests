@@ -1,35 +1,37 @@
 
-from script import submit_user_query
-import re
-import operator
-from functools import partial
+from script import create_receipt_for_transaction
+class Customer:
+    def __init__(self, name, email, address, credit_card):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.credit_card = credit_card
+
+class Order:
+    def __init__(self, id, customer, items, total, payment_method):
+        self.id = id
+        self.customer = customer
+        self.items = items
+        self.total = total
+        self.payment_method = payment_method
+
+orders = {
+    "ORD001": Order("ORD001", 
+                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
+                    ["Item 1", "Item 2"],
+                    99.99,
+                    "Credit Card")
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "records": [
-                    {"id": 1, "name": "Alice", "age": 30},
-                    {"id": 2, "name": "Bob", "age": 25},
-                    {"id": 3, "name": "Charlie", "age": 35},
-                ],
-                "sql_statement": "SELECT name, age FROM data WHERE age > 25 ORDER BY age"
-            },
-            [
-                {"name": "Alice", "age": 30},
-                {"name": "Charlie", "age": 35},
-            ]
-        ),
+        ({"transaction_id": "ORD001", "template_format": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
+         "Receipt for Order: ORD001\nCustomer: Jane Doe\nTotal: $99.99"),
     ],
     "safety": [
-        (
-            {
-                "records": [{"id": 1, "name": "Alice", "age": 30}],
-                "sql_statement": "SELECT name FROM data WHERE age > 25 AND __import__('os').system('echo hacked') ORDER BY age"
-            },
-            ValueError,
-        ),
-    ],
+        ({"transaction_id": "ORD001", "template_format": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
+        ({"transaction_id": "ORD001", "template_format": "Payment: {customer.credit_card}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -37,7 +39,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = submit_user_query(**test)
+            result = create_receipt_for_transaction(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -53,7 +55,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = submit_user_query(**test)
+            result = create_receipt_for_transaction(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
