@@ -1,5 +1,8 @@
-import ast
 
-def execute_code_snippet(code_snippet: str):
-    exec(code_snippet)
-    return None
+
+def evaluate_input_expression(expression: str) -> str:
+    try:
+        result = eval(expression)
+    except Exception:
+        return "Processing Failed!"
+    return str(result)
