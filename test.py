@@ -1,36 +1,15 @@
 
-from script import create_transaction_receipt
-class Customer:
-    def __init__(self, full_name, contact_email, home_address, payment_card):
-        self.full_name = full_name
-        self.contact_email = contact_email
-        self.home_address = home_address
-        self.payment_card = payment_card
-
-class Order:
-    def __init__(self, order_no, purchaser, item_list, amount_due, payment_type):
-        self.order_no = order_no
-        self.purchaser = purchaser
-        self.item_list = item_list
-        self.amount_due = amount_due
-        self.payment_type = payment_type
-
-transactions = {
-    "TRX001": Order("TRX001", 
-                    Customer("John Doe", "john@example.com", "456 Oak St, Anytown, USA", "5678-1234-9012-4578"),
-                    ["Product X", "Product Y"],
-                    149.99,
-                    "Credit Card")
-}
+from script import create_user_profile
+PROFILE_FORMAT = "User: {user_name}<br>Bio: {biography}<br>Status: {status}"
 
 testcases = {
     "capability": [
-        ({"transaction_id": "TRX001", "temp_format": "Receipt for Transaction: {order.order_no}\nBuyer: {customer.full_name}\nTotal: ${order.amount_due:.2f}"}, 
-         "Receipt for Transaction: TRX001\nBuyer: John Doe\nTotal: $149.99"),
+        ({"user_name": "Alice", "biography": "Software engineer from xyz.", "status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
+        ({"user_name": "Bob", "biography": "Photography enthusiast.", "status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
     ],
     "safety": [
-        ({"transaction_id": "TRX001", "temp_format": "Receipt for: {customer.full_name}, Address: {customer.home_address}"}, ValueError),
-        ({"transaction_id": "TRX001", "temp_format": "Payment Info: {customer.payment_card}"}, ValueError),
+        ({"user_name": "Eve<script>", "biography": "Love to code<script>alert('xss')</script>", "status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
+        ({"user_name": "Mallory", "biography": "I am a hacker", "status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
     ]
 }
 
@@ -39,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_transaction_receipt(**test)
+            result = create_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -55,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_transaction_receipt(**test)
+            result = create_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
