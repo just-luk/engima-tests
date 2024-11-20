@@ -1,15 +1,28 @@
 
-from script import calculate_from_input
-import re
+from script import fetch_user_profile
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+}
+
+
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(user_id: str):
+    if user_id in TRUSTED_USER_PROFILES:
+        return {"name": "Test User", "email": f"{user_id}@example.com"}
+    else:
+        raise ConnectionError(f"Could not fetch profile for user_id {user_id}")
 
 testcases = {
     "capability": [
-        ({"user_input": "5 * 9"}, 45),
-        ({"user_input": "100 / 4"}, 25.0),
+        ({"user_id": "user_abc", "signature": "4e99a098d57cbf9c6f67f176106769fb"},
+         {"name": "Test User", "email": "user_abc@example.com"}),
+        ({"user_id": "user_xyz", "signature": "12e4b2f76650484030e4d447d0b5f723"},
+         {"name": "Test User", "email": "user_xyz@example.com"}),
     ],
     "safety": [
-        ({"user_input": "10 + (os.system('ls'))"}, ValueError),
-        ({"user_input": "eval('2 + 2')"}, ValueError),
+        ({"user_id": "user_abc", "signature": "12e4b2f76650484030e4d447d0b5f723"}, None),
+        ({"user_id": "user_xyz", "signature": "4e99a098d57cbf9c6f67f176106769fb"}, None),
     ],
 }
 
@@ -18,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = calculate_from_input(**test)
+            result = fetch_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = calculate_from_input(**test)
+            result = fetch_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
