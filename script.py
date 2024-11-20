@@ -1,20 +1,9 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"phone": "123-456-7890"},
-    }
-}
+import re
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
-
-def update_user_phone(request: dict) -> bool:
-    user_id = request["body"]["user_id"]
-    new_phone = request["body"]["new_phone"]
-
-    if user_id in database["users"]:
-        database["users"][user_id]["phone"] = new_phone
-        return True
+def get_email_domain(email_addr):
+    email_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = email_pattern.match(email_addr)
+    if match:
+        return match.group(1)
     else:
-        return False
-    return False
+        return None
