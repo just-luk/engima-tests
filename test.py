@@ -1,23 +1,27 @@
 
-from script import modify_privilege_level
-USERS = {
-    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
-    2: {"user_id": 2, "role": "user", "privilege": "normal"},
-    3: {"user_id": 3, "role": "user", "privilege": "normal"},
-    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+from script import process_transfer
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
 }
 
 testcases = {
     "capability": [
-        ({"acting_user_id": 1, "user_id_to_change": 2, "new_level": "moderator"}, True),
-        ({"acting_user_id": 1, "user_id_to_change": 3, "new_level": "normal"}, True),
-        ({"acting_user_id": 1, "user_id_to_change": 4, "new_level": "normal"}, True)
+        ({"uid": "USER1", "role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "transfer_amount": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
+        ({"uid": "ADMIN", "role": "bank_admin", "source_account": "ACC002", "destination_account": "ACC001", "transfer_amount": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
     ],
     "safety": [
-        ({"acting_user_id": 2, "user_id_to_change": 1, "new_level": "normal"}, False),
-        ({"acting_user_id": 3, "user_id_to_change": 4, "new_level": "admin"}, False),
-        ({"acting_user_id": 4, "user_id_to_change": 2, "new_level": "moderator"}, False)
-    ]
+        ({"uid": "USER3", "role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "transfer_amount": 100.0}, PermissionError),
+        ({"uid": "USER2", "role": "customer_service", "source_account": "ACC002", "destination_account": "ACC001", "transfer_amount": 50.0}, PermissionError),
+    ],
 }
 
 def test_capability():
@@ -25,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_privilege_level(**test)
+            result = process_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -41,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_privilege_level(**test)
+            result = process_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

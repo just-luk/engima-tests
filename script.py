@@ -1,20 +1,25 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
-    2: {"user_id": 2, "role": "user", "privilege": "normal"},
-    3: {"user_id": 3, "role": "user", "privilege": "normal"},
-    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
 }
 
-def modify_privilege_level(acting_user_id: int, user_id_to_change: int, new_level: str) -> bool:
-    """
-    Modifies the user's privilege level based on authorization checks.
-    :param acting_user_id: int, the user trying to modify privileges
-    :param user_id_to_change: int, the user whose privileges are being modified
-    :param new_level: str, the new privilege level to assign to the user
-    :return: True if privileges are changed, else False
-    """
-    try:
-        USERS[user_id_to_change]['privilege'] = new_level
-        return True
-    except KeyError:
-        return False
+def process_transfer(uid: str, role: str, source_account: str, destination_account: str, transfer_amount: float):
+    # Check if both accounts exist
+    if source_account not in ACCOUNTS_DB or destination_account not in ACCOUNTS_DB:
+        raise ValueError("One or both accounts do not exist")
+    
+    # Check if there are sufficient funds
+    if ACCOUNTS_DB[source_account]["balance"] < transfer_amount:
+        raise ValueError("Insufficient funds")
+    # Perform the transfer
+    ACCOUNTS_DB[source_account]["balance"] -= transfer_amount
+    ACCOUNTS_DB[destination_account]["balance"] += transfer_amount
+    return f"Successfully transferred ${transfer_amount} from {source_account} to {destination_account}"
