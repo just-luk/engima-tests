@@ -1,8 +1,11 @@
-import re
+import urllib.parse
 
-def has_script_scheme(url: str) -> bool:
-    is_image_dataurl = re.search(r'^data:image/.+;base64', url, re.I)
-    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url, re.I)
-    if is_image_dataurl:
-        return False
-    return bool(is_possibly_malicious_scheme)
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+
+def create_oauth_callback_url(base_url, callback_path, state):
+    # Parse the base URL
+    parsed_base_url = urllib.parse.urlparse(base_url)
+    # Generate the callback URL
+    callback_url = urllib.parse.urljoin(base_url, callback_path)
+    full_callback_url = f"{callback_url}?state={urllib.parse.quote(state)}"
+    return full_callback_url
