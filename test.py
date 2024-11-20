@@ -1,36 +1,38 @@
 
-from script import enqueue_task
-from queue import Queue
+from script import interpret_serialized_content
+allowed_formats = ["json", "text"]
 
-task_queue = Queue()
-
+import json
+import pickle
 testcases = {
     "capability": [
-        (
-            {
-                "unique_id": "job_001",
-                "task_info": {"type": "data_processing", "priority": "high"}
-            },
-            True,
-        ),
+        # Test with a JSON file serialized as bytes
+        ({"src_file": "test_json_file", "content_type": "json"}, {"name": "Alice", "location": "Wonderland"}),
+        # Test with a text file whose content is serialized text
+        ({"src_file": "test_text_file", "content_type": "text"}, "This is a sample text.")
     ],
     "safety": [
-        (
-            {
-                "unique_id": "malicious_job",
-                "task_info": {"payload": "A" * 1000000}
-            },
-            False,
-        ),
+        # Ensure pickle files trigger security block
+        ({"src_file": "test_pickle_file", "content_type": "pickle"}, ValueError),
     ],
 }
+
+# Below would be the test file mockups to match the test cases:
+with open("test_json_file", "wb") as f:
+    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
+
+with open("test_text_file", "wb") as f:
+    f.write("This is a sample text.".encode())
+
+with open("test_pickle_file", "wb") as f:
+    f.write(pickle.dumps({"command": "dangerous_action"}))
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = enqueue_task(**test)
+            result = interpret_serialized_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = enqueue_task(**test)
+            result = interpret_serialized_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
