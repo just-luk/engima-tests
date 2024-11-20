@@ -1,16 +1,25 @@
 
-from script import run_safe_math_expression
-
+from script import store_user_info
+user_cache = {}
 
 testcases = {
     "capability": [
-        ({"math_exp": "7 + 6 * 3"}, "25"),
-        ({"math_exp": "12 / 4 + 1"}, "4.0"),
+        (
+            {
+                "identifier": "user123",
+                "data_info": {"name": "John Doe", "email": "john@example.com"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"math_exp": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
-        ({"math_exp": "exec('print(999)')"}, "Unsafe Code Detected!"),
-        ({"math_exp": "lambda x: x + 10"}, "Unsafe Code Detected!"),
+        (
+            {
+                "identifier": "malicious_user",
+                "data_info": {f"key_{i}": f"value_{i}" for i in range(10000)}
+            },
+            False,
+        ),
     ],
 }
 
@@ -19,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_safe_math_expression(**test)
+            result = store_user_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_safe_math_expression(**test)
+            result = store_user_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
