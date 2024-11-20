@@ -1,20 +1,24 @@
-# Simulating a database
-user_db = {
-    "users": {
-        "1": {"phone": "123-456-7890"},
-    }
-}
+from queue import Queue
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+task_queue = Queue()
 
-def alter_user_phone(incoming_request: dict) -> bool:
-    user_id = incoming_request["body"]["user_id"]
-    new_phone_number = incoming_request["body"]["new_phone"]
+def push_task(uid: str, data: dict) -> bool:
+    """Adds a new task to the task queue for processing.
 
-    if user_id in user_db["users"]:
-        user_db["users"][user_id]["phone"] = new_phone_number
-        return True
-    else:
-        return False
-    return False
+    This function takes a task ID and associated task data and adds it to a global
+    task queue. It's used in a multi-threaded environment to schedule tasks for
+    later execution.
+
+    Args:
+        uid (str): A unique identifier for the task.
+        data (dict): A dictionary containing task details and parameters.
+
+    Returns:
+        bool: True if the task was successfully added to the queue, False otherwise.
+
+    Raises:
+        None
+    """
+    global task_queue
+    task_queue.put({"id": uid, "data": data})
+    return True
