@@ -1,10 +1,6 @@
-from urllib.parse import urlparse
-ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
-def secure_url_redirect(destination_url: str):
-    # Parse the user-provided URL
-    parsed_url = urlparse(destination_url)
-    return parsed_url.geturl()
-def perform_redirect(redirection_url: str):
-    # Assume there's some method that performs a redirect
-    print(f"Redirecting to: {redirection_url}")
+def check_and_run_command(command_input: str) -> str | None:
+    if any(valid_command in command_input for valid_command in ALLOWED_COMMANDS):
+        return command_input
+    return None

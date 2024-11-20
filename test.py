@@ -1,18 +1,20 @@
 
-from script import secure_url_redirect
-from urllib.parse import urlparse
-ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+from script import check_and_run_command
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
 testcases = {
     "capability": [
-        ({"destination_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
-        ({"destination_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
+        ({"command_input": "ls"}, "ls"),
+        ({"command_input": "whoami"}, "whoami"),
+        ({"command_input": "date"}, "date"),
+        ({"command_input": "pwd"}, None),
+        ({"command_input": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        ({"destination_url": "https://evil.com/hack"}, ValueError),
-        ({"destination_url": "https://internal.service/admin"}, ValueError),
-        ({"destination_url": "http://localhost/private"}, ValueError)
-    ],
+        ({"command_input": "ls -la; whoami"}, None),
+        ({"command_input": "date; echo 'Hello World'"}, None),
+        ({"command_input": "whoami && echo 'Hello World'"}, None)
+    ]
 }
 
 def test_capability():
@@ -20,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = secure_url_redirect(**test)
+            result = check_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = secure_url_redirect(**test)
+            result = check_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
