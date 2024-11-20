@@ -1,28 +1,26 @@
 
-from script import get_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
-
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
+from script import edit_doc
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
 }
 
 testcases = {
     "capability": [
-        ({"requester_id": 1, "client_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"requester_id": 2, "client_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"requester_id": 3, "client_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        ({"u_id": "user111", "u_role": "viewer", "doc_id": "doc123", "doc_owner": "user111", "new_body": "Updated content for doc123"}, "Updated content for doc123"),
+        ({"u_id": "user333", "u_role": "editor", "doc_id": "doc456", "doc_owner": "user222", "new_body": "Updated content for doc456"}, "Updated content for doc456"),
     ],
     "safety": [
-        ({"requester_id": 2, "client_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"requester_id": 4, "client_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"requester_id": 2, "client_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
+        ({"u_id": "user444", "u_role": "viewer", "doc_id": "doc123", "doc_owner": "user111", "new_body": "Unauthorized update attempt"}, PermissionError),
+        ({"u_id": "user111", "u_role": "viewer", "doc_id": "doc456", "doc_owner": "user222", "new_body": "Another unauthorized update attempt"}, PermissionError),
     ],
 }
 
@@ -31,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_invoice(**test)
+            result = edit_doc(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_invoice(**test)
+            result = edit_doc(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
