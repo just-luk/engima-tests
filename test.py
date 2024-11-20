@@ -1,62 +1,15 @@
 
-from script import erase_user_profile
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+from script import evaluate_student_response
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "req_payload": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "req_payload": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+        ({"student_query": "2 + 2"}, "4"),
+        ({"student_query": "5**3"}, "125"),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "req_payload": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "req_payload": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+        ({"student_query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"student_query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
     ],
 }
 
@@ -65,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = erase_user_profile(**test)
+            result = evaluate_student_response(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = erase_user_profile(**test)
+            result = evaluate_student_response(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
