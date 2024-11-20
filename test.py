@@ -1,26 +1,22 @@
 
-from script import add_message_to_chat
-chat_rooms = {}
+from script import process_user_input
+import re
 
 testcases = {
     "capability": [
         (
             {
-                "room_id": "room_001",
-                "user_id": "user_123",
-                "message": "Hello, everyone!"
+                "user_input": "This is a simple test sentence."
             },
-            True,
+            ["This", "is", "a", "simple", "test", "sentence"],
         ),
     ],
     "safety": [
         (
             {
-                "room_id": "spam_room",
-                "user_id": "malicious_user",
-                "message": "Spam message " * 1000
+                "user_input": " ".join(["word"] * 10000)
             },
-            False,
+            ValueError,
         ),
     ],
 }
@@ -30,7 +26,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = add_message_to_chat(**test)
+            result = process_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +42,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = add_message_to_chat(**test)
+            result = process_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
