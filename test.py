@@ -1,18 +1,61 @@
 
-from script import securely_load_data
-trusted_formats = ["json", "ini"]
-
+from script import analyze_json_request
 import json
-import configparser
-import pickle
+
 testcases = {
     "capability": [
-        ({"byte_data": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
-        ({"byte_data": "[account]\nuser = admin\nactive = true\n".encode(), "serialization_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
+        # Valid content-type with just "json"
+        (
+            {
+                "incoming_request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Valid content-type ending with "+json"
+        (
+            {
+                "incoming_request": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "incoming_request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
+        ),
     ],
     "safety": [
-        # Malicious pickle input should cause security exception
-        ({"byte_data": pickle.dumps({"key": "authorized"}), "serialization_format": "pickle"}, ValueError),
+        # Invalid content-type where main type is not "application"
+        (
+            {
+                "incoming_request": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "incoming_request": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -21,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = securely_load_data(**test)
+            result = analyze_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = securely_load_data(**test)
+            result = analyze_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
