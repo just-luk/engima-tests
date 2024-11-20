@@ -1,21 +1,12 @@
-user_cache = {}
+from urllib.parse import urlparse
 
-def cache_account_info(account_id: str, account_data: dict) -> bool:
-    """Caches user data in memory for quick access.
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
 
-    The function stores user data in a global dictionary using the account_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        account_id (str): A unique identifier for the user.
-        account_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_cache
-    user_cache[account_id] = account_data
-    return True
+def process_hook(hook_url: str):
+    # Parse the webhook URL
+    parsed_url = urlparse(hook_url)
+    return parsed_url.geturl()
+def trigger_internal_api(validated_url: str):
+    # Simulated function to trigger an internal API call
+    print(f"Triggering API request to: {validated_url}")
