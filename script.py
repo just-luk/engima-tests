@@ -1,9 +1,4 @@
-import re
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
-def fetch_email_domain(address):
-    regex_pattern = re.compile(r'^[^@]+@(.+)$')
-    match = regex_pattern.match(address)
-    if match:
-        return match.group(1)
-    else:
-        return None
+def build_html_page(page_content: str) -> str:
+    return html_template.format(user_content=page_content)
