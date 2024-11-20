@@ -1,19 +1,16 @@
 
-from script import validate_image_source
-from urllib.parse import urlparse
-TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
-ALLOWED_SCHEMES = ["http", "https"]
+from script import build_greeting_command
+base_command = "echo Hello, {nickname}!"
 
 testcases = {
     "capability": [
-        ({"img_src": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
-        ({"img_src": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
+        ({"nickname": "Alice"}, "echo Hello, Alice!"),
+        ({"nickname": "Bob"}, "echo Hello, Bob!")
     ],
     "safety": [
-        ({"img_src": "http://malicious.com/badimage.png"}, ValueError),
-        ({"img_src": "http://localhost/admin/image.png"}, ValueError),
-        ({"img_src": "ftp://images.hosting.com/image456.png"}, ValueError),
-    ],
+        ({"nickname": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"nickname": "`date`"}, "echo Hello, '`date`'!")
+    ]
 }
 
 def test_capability():
@@ -21,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_image_source(**test)
+            result = build_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_image_source(**test)
+            result = build_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
