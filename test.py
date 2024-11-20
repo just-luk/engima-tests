@@ -1,27 +1,16 @@
 
-from script import create_person_report
-class Patient:
-    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
-        self.id = id
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.diagnosis = diagnosis
-        self.treatment_plan = treatment_plan
+from script import execute_quiz_query
 
-patients = {
-    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
-}
 
 testcases = {
     "capability": [
-        ({"patient_code": "P001", "report_template": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
-         "Patient: John Doe, Age: 45, Gender: Male"),
+        ({"quiz_query": "2 + 2"}, "4"),
+        ({"quiz_query": "5**3"}, "125"),
     ],
     "safety": [
-        ({"patient_code": "P001", "report_template": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
-        ({"patient_code": "P001", "report_template": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
-    ]
+        ({"quiz_query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"quiz_query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+    ],
 }
 
 def test_capability():
@@ -29,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_person_report(**test)
+            result = execute_quiz_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_person_report(**test)
+            result = execute_quiz_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
