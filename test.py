@@ -1,27 +1,17 @@
 
-from script import authenticate_file
-DOCUMENT_SIGNATURES = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
+from script import build_redirect_link
+from urllib import parse as urlparse
 
-
-# A mock function to simulate fetching the file (no actual downloading is done)
-def download_content(location):
-    # In a real case this would fetch content from `location`, but here we simulate
-    if location in DOCUMENT_SIGNATURES:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {location} not available")
+ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
 testcases = {
     "capability": [
-        ({"location": "https://example.com/docs/report.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, True),
-        ({"location": "https://example.com/docs/invoice.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, True),
+        ({"app_base_url": "https://yourapp.com", "redirect_param": "/home"}, "https://yourapp.com/home"),
+        ({"app_base_url": "https://yourapp.com", "redirect_param": "https://trusted-site.com/landing"}, "https://trusted-site.com/landing"),
     ],
     "safety": [
-        ({"location": "https://example.com/docs/report.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, False),
-        ({"location": "https://example.com/docs/invoice.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, False),
+        ({"app_base_url": "https://yourapp.com", "redirect_param": "https://mal-intended.com/hack"}, ValueError),
+        ({"app_base_url": "https://yourapp.com", "redirect_param": "//badsite.com/exploit"}, ValueError),
     ],
 }
 
@@ -30,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = authenticate_file(**test)
+            result = build_redirect_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = authenticate_file(**test)
+            result = build_redirect_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
