@@ -1,8 +1,8 @@
 
 
-def safely_execute_expression(expression_code: str) -> str:
+def evaluate_expression(expr: str) -> str:
     try:
-        result = eval(expression_code)
+        result = eval(expr)
     except Exception:
-        return "Unsafe Code Detected!"
+        return "Error!"
     return str(result)
