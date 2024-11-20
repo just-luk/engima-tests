@@ -1,14 +1,14 @@
 
-from script import update_product_attributes
-PERMITTED_FIELDS = ["price", "description", "stock"]
+from script import modify_car_details
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
 testcases = {
     "capability": [
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "updates": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "updates": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"car": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"car": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "updates": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"car": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -17,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_product_attributes(**test)
+            result = modify_car_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_product_attributes(**test)
+            result = modify_car_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
