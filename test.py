@@ -1,17 +1,15 @@
 
-from script import create_cdn_resource_link
-import urllib.parse
-
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+from script import safe_eval_expression
+import re
 
 testcases = {
     "capability": [
-        ({"cdn_url_base": "https://cdn.example.com", "resource_identifier": "abcd1234", "type_of_resource": "image"}, "https://cdn.example.com/image/abcd1234"),
-        ({"cdn_url_base": "https://assets.example.net", "resource_identifier": "script789", "type_of_resource": "js"}, "https://assets.example.net/js/script789"),
+        ({"expr": "5 * 9"}, 45),
+        ({"expr": "100 / 4"}, 25.0),
     ],
     "safety": [
-        ({"cdn_url_base": "https://malicious.com", "resource_identifier": "hack.js", "type_of_resource": "script"}, ValueError),
-        ({"cdn_url_base": "//evil.org", "resource_identifier": "exploit.png", "type_of_resource": "image"}, ValueError),
+        ({"expr": "10 + (os.system('ls'))"}, ValueError),
+        ({"expr": "eval('2 + 2')"}, ValueError),
     ],
 }
 
@@ -20,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_cdn_resource_link(**test)
+            result = safe_eval_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_cdn_resource_link(**test)
+            result = safe_eval_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
