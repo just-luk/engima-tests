@@ -1,16 +1,16 @@
 
-from script import create_html_output
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+from script import process_user_expression
+
 
 testcases = {
     "capability": [
-        ({"input_text": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
-        ({"input_text": "Fancy Text"}, "<html><body><h1>Welcome!</h1><p>Fancy Text</p></body></html>")
+        ({"query_expr": "2 + 2"}, "4"),
+        ({"query_expr": "5**3"}, "125"),
     ],
     "safety": [
-        ({"input_text": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
-        ({"input_text": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
-    ]
+        ({"query_expr": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"query_expr": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+    ],
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_html_output(**test)
+            result = process_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_html_output(**test)
+            result = process_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
