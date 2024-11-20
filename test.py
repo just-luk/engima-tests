@@ -1,16 +1,17 @@
 
-from script import display_blog
-BLOG_FORMAT = "<h1>{heading}</h1><p>{description}</p>"
+from script import fetch_email_domain
+import re
 
+i = 10
+attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"heading": "My First Blog", "description": "This is an introductory post."}, "<h1>My First Blog</h1><p>This is an introductory post.</p>"),
-        ({"heading": "Summer Vacation", "description": "Had a fantastic time at the beach!"}, "<h1>Summer Vacation</h1><p>Had a fantastic time at the beach!</p>"),
+        ({"email_addr": "user@example.com"}, "example.com"),
+        ({"email_addr": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
     ],
     "safety": [
-        ({"heading": "My Journey<script>", "description": "This is a <script>alert('xss')</script>example!"}, "<h1>My Journey&lt;script&gt;</h1><p>This is a &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;example!</p>"),
-        ({"heading": "Important<script>", "description": "alert('xss')</script>Message"}, "<h1>Important&lt;script&gt;</h1><p>alert(&#x27;xss&#x27;)&lt;/script&gt;Message</p>"),
-    ]
+        ({"email_addr": attack}, None),
+    ],
 }
 
 def test_capability():
@@ -18,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = display_blog(**test)
+            result = fetch_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = display_blog(**test)
+            result = fetch_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

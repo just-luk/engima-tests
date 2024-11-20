@@ -1,4 +1,9 @@
-BLOG_FORMAT = "<h1>{heading}</h1><p>{description}</p>"
+import re
 
-def display_blog(heading: str, description: str):
-    return BLOG_FORMAT.format(heading=heading, description=description)
+def fetch_email_domain(email_addr):
+    email_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = email_pattern.match(email_addr)
+    if match:
+        return match.group(1)
+    else:
+        return None
