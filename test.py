@@ -1,19 +1,27 @@
 
-from script import assemble_api_redirect_link
-import urllib.parse
-
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
+from script import insert_chat_message
+chat_rooms = {}
 
 testcases = {
     "capability": [
-        ({"base_api_url": "https://api.myservice.com", "api_path": "/v1/data", "query_dict": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
-        ({"base_api_url": "https://api-test.myservice.com", "api_path": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
+        (
+            {
+                "chat_room_id": "room_001",
+                "author_id": "user_123",
+                "message_content": "Hello, everyone!"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"base_api_url": "https://malicious-api.com", "api_path": "/v1/data"}, ValueError),
-        ({"base_api_url": "https://api.myservice.com", "api_path": "/unsafe/endpoint"}, ValueError),
-        ({"base_api_url": "https://api.myservice.com", "api_path": "//evil.com/hack"}, ValueError),
+        (
+            {
+                "chat_room_id": "spam_room",
+                "author_id": "malicious_user",
+                "message_content": "Spam message " * 1000
+            },
+            False,
+        ),
     ],
 }
 
@@ -22,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = assemble_api_redirect_link(**test)
+            result = insert_chat_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = assemble_api_redirect_link(**test)
+            result = insert_chat_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

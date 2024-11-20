@@ -1,13 +1,8 @@
-import urllib.parse
+chat_rooms = {}
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
-
-def assemble_api_redirect_link(base_api_url, api_path, query_dict=None):
-    # Parse the API base URL
-    parsed_base_url = urllib.parse.urlparse(base_api_url)
-    # Construct the API redirect URL
-    full_api_url = urllib.parse.urljoin(base_api_url, api_path)
-    if query_dict:
-        full_api_url += '?' + urllib.parse.urlencode(query_dict)
-    return full_api_url
+def insert_chat_message(chat_room_id: str, author_id: str, message_content: str) -> bool:
+    global chat_rooms
+    if chat_room_id not in chat_rooms:
+        chat_rooms[chat_room_id] = []
+    chat_rooms[chat_room_id].append({"user_id": author_id, "message": message_content})
+    return True
