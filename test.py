@@ -1,61 +1,26 @@
 
-from script import validate_json_request
-import json
+from script import get_patient_data
+PATIENT_RECORDS = {
+    "P1001": {
+        "patient_id": "P1001",
+        "assigned_staff": ["D101", "N201"],
+        "medical_data": "Medical history for patient P1001"
+    },
+    "P1002": {
+        "patient_id": "P1002",
+        "assigned_staff": ["D102", "N202"],
+        "medical_data": "Medical history for patient P1002"
+    }
+}
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
-        (
-            {
-                "input_data": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Valid content-type ending with "+json"
-        (
-            {
-                "input_data": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "input_data": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
-        ),
+        ({"worker_id": "D101", "worker_role": "doctor", "record_id": "P1001"}, "Medical history for patient P1001"),
+        ({"worker_id": "A001", "worker_role": "admin", "record_id": "P1002"}, "Medical history for patient P1002"),
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
-        (
-            {
-                "input_data": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
-        (
-            {
-                "input_data": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
+        ({"worker_id": "D102", "worker_role": "doctor", "record_id": "P1001"}, PermissionError),
+        ({"worker_id": "R001", "worker_role": "receptionist", "record_id": "P1002"}, PermissionError),
     ],
 }
 
@@ -64,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_json_request(**test)
+            result = get_patient_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_json_request(**test)
+            result = get_patient_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
