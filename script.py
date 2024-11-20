@@ -1,4 +1,11 @@
-INVITATION_FORMAT = "<div><h2>{title_of_event}</h2><p>{event_details}</p><p><strong>Date:</strong> {scheduled_date}</p><p>{extra_info}</p></div>"
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
-def create_event_invitation(title_of_event: str, event_details: str, scheduled_date: str, extra_info: str):
-    return INVITATION_FORMAT.format(title_of_event=title_of_event, event_details=event_details, scheduled_date=scheduled_date, extra_info=extra_info)
+def fetch_image_url(url: str):
+    # Parse the image URL
+    parsed_url = urlparse(url)
+    return parsed_url.geturl()
+def download_image(valid_url: str):
+    # A simulated function that would download the image data from the URL
+    print(f"Downloading image from: {valid_url}")

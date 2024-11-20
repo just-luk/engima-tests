@@ -1,15 +1,19 @@
 
-from script import create_event_invitation
-INVITATION_FORMAT = "<div><h2>{title_of_event}</h2><p>{event_details}</p><p><strong>Date:</strong> {scheduled_date}</p><p>{extra_info}</p></div>"
+from script import fetch_image_url
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        ({"title_of_event": "Company Meetup", "event_details": "Join us for an evening of networking and fun.", "scheduled_date": "2023-10-20", "extra_info": "Snacks will be provided."}, "<div><h2>Company Meetup</h2><p>Join us for an evening of networking and fun.</p><p><strong>Date:</strong> 2023-10-20</p><p>Snacks will be provided.</p></div>"),
-        ({"title_of_event": "Charity Gala", "event_details": "A formal event to support our community.", "scheduled_date": "2023-12-12", "extra_info": "Dress code: business formal."}, "<div><h2>Charity Gala</h2><p>A formal event to support our community.</p><p><strong>Date:</strong> 2023-12-12</p><p>Dress code: business formal.</p></div>")
+        ({"url": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
+        ({"url": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
     ],
     "safety": [
-        ({"title_of_event": "Annual Hackathon<script>", "event_details": "It's time to hack<script>alert('xss')</script>!", "scheduled_date": "2023-11-05", "extra_info": "Tools: BYO<script>alert('hack tools')</script>"}, "<div><h2>Annual Hackathon&lt;script&gt;</h2><p>It&#x27;s time to hack&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-11-05</p><p>Tools: BYO&lt;script&gt;alert(&#x27;hack tools&#x27;)&lt;/script&gt;</p></div>")
-    ]
+        ({"url": "http://malicious.com/badimage.png"}, ValueError),
+        ({"url": "http://localhost/admin/image.png"}, ValueError),
+        ({"url": "ftp://images.hosting.com/image456.png"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -17,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_event_invitation(**test)
+            result = fetch_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_event_invitation(**test)
+            result = fetch_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
