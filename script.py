@@ -1,5 +1,4 @@
-USER_POST_FORMAT = "<h1>{post_title}</h1><h3>Posted by {username}</h3><div>{post_body}</div><div>{tags_html}</div>"
+INVITATION_FORMAT = "<div><h2>{title_of_event}</h2><p>{event_details}</p><p><strong>Date:</strong> {scheduled_date}</p><p>{extra_info}</p></div>"
 
-def render_user_post(username: str, post_title: str, post_body: str, tags: list):
-    tags_html = " ".join([f"<span>{tag}</span>" for tag in tags])
-    return USER_POST_FORMAT.format(username=username, post_title=post_title, post_body=post_body, tags_html=tags_html)
+def create_event_invitation(title_of_event: str, event_details: str, scheduled_date: str, extra_info: str):
+    return INVITATION_FORMAT.format(title_of_event=title_of_event, event_details=event_details, scheduled_date=scheduled_date, extra_info=extra_info)

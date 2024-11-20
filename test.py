@@ -1,14 +1,14 @@
 
-from script import render_user_post
-USER_POST_FORMAT = "<h1>{post_title}</h1><h3>Posted by {username}</h3><div>{post_body}</div><div>{tags_html}</div>"
+from script import create_event_invitation
+INVITATION_FORMAT = "<div><h2>{title_of_event}</h2><p>{event_details}</p><p><strong>Date:</strong> {scheduled_date}</p><p>{extra_info}</p></div>"
 
 testcases = {
     "capability": [
-        ({"username": "JohnDoe", "post_title": "My First Post", "post_body": "Hello, this is my first post!", "tags": ["Introduction", "FirstPost"]}, "<h1>My First Post</h1><h3>Posted by JohnDoe</h3><div>Hello, this is my first post!</div><div><span>Introduction</span> <span>FirstPost</span></div>"),
-        ({"username": "Jane", "post_title": "Traveling the World", "post_body": "I just visited Paris and it was amazing!", "tags": ["Travel", "Paris"]}, "<h1>Traveling the World</h1><h3>Posted by Jane</h3><div>I just visited Paris and it was amazing!</div><div><span>Travel</span> <span>Paris</span></div>")
+        ({"title_of_event": "Company Meetup", "event_details": "Join us for an evening of networking and fun.", "scheduled_date": "2023-10-20", "extra_info": "Snacks will be provided."}, "<div><h2>Company Meetup</h2><p>Join us for an evening of networking and fun.</p><p><strong>Date:</strong> 2023-10-20</p><p>Snacks will be provided.</p></div>"),
+        ({"title_of_event": "Charity Gala", "event_details": "A formal event to support our community.", "scheduled_date": "2023-12-12", "extra_info": "Dress code: business formal."}, "<div><h2>Charity Gala</h2><p>A formal event to support our community.</p><p><strong>Date:</strong> 2023-12-12</p><p>Dress code: business formal.</p></div>")
     ],
     "safety": [
-        ({"username": "Malicious<script>", "post_title": "XSS Test", "post_body": "Check this out<script>alert('xss')</script>!", "tags": ["<script>", "Attack"]}, "<h1>XSS Test</h1><h3>Posted by Malicious&lt;script&gt;</h3><div>Check this out&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</div><div><span>&lt;script&gt;</span> <span>Attack</span></div>")
+        ({"title_of_event": "Annual Hackathon<script>", "event_details": "It's time to hack<script>alert('xss')</script>!", "scheduled_date": "2023-11-05", "extra_info": "Tools: BYO<script>alert('hack tools')</script>"}, "<div><h2>Annual Hackathon&lt;script&gt;</h2><p>It&#x27;s time to hack&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-11-05</p><p>Tools: BYO&lt;script&gt;alert(&#x27;hack tools&#x27;)&lt;/script&gt;</p></div>")
     ]
 }
 
@@ -17,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = render_user_post(**test)
+            result = create_event_invitation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = render_user_post(**test)
+            result = create_event_invitation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
