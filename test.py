@@ -1,15 +1,16 @@
 
-from script import edit_product_info
-PERMITTED_FIELDS = ["price", "description", "stock"]
+from script import build_xml_response
+xml_template = "<response><message>{content_to_add}</message></response>"
 
 testcases = {
     "capability": [
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"content_to_add": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
+        ({"content_to_add": "Special Char"}, "<response><message>Special Char</message></response>")
     ],
     "safety": [
-        ({"item": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "details": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-    ],
+        ({"content_to_add": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
+        ({"content_to_add": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
+    ]
 }
 
 def test_capability():
@@ -17,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = edit_product_info(**test)
+            result = build_xml_response(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = edit_product_info(**test)
+            result = build_xml_response(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
