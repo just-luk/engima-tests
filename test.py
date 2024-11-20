@@ -1,26 +1,59 @@
 
-from script import verify_api_address
-import re
-from urllib.parse import urlparse
+from script import update_user_phone
+# Simulating a database
+database = {
+    "users": {
+        "1": {"phone": "123-456-7890"},
+    }
+}
 
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"endpoint_address": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
-        ({"endpoint_address": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
+        # Valid CSRF token and existing user
+        (
+            {
+                "request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"endpoint_address": "https://malicious.com/steal"}, ValueError),
-        ({"endpoint_address": "http://localhost/internal"}, ValueError),
-        ({"endpoint_address": "http://192.168.0.21/admin"}, ValueError),
-        ({"endpoint_address": "http://127.0.0.1/secret"}, ValueError)
+        # Missing CSRF token
+        (
+            {
+                "request": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -29,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_api_address(**test)
+            result = update_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_api_address(**test)
+            result = update_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
