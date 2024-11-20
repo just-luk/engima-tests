@@ -1,8 +1,4 @@
-import re
+xml_template = "<response><message>{input_content}</message></response>"
 
-def verify_javascript_protocol(url_input: str) -> bool:
-    is_image_dataurl = re.search(r'^data:image/.+;base64', url_input, re.I)
-    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url_input, re.I)
-    if is_image_dataurl:
-        return False
-    return bool(is_possibly_malicious_scheme)
+def create_xml_output(input_content: str) -> str:
+    return xml_template.format(input_content=input_content)
