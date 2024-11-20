@@ -1,19 +1,16 @@
-import re
-from urllib.parse import urlparse
+import base64
+DATA_TO_TRANSFER = []
 
-TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-ALLOWED_SCHEMES = ["http", "https"]
-
-def validate_rss_link(rss_link: str):
-    # Parse the provided feed URL
-    parsed_url = urlparse(rss_link)
-    return parsed_url.geturl()
-def fetch_rss_content(clean_rss_link: str):
-    # Function to simulate fetching RSS feed content after the URL is validated
-    print(f"Fetching RSS feed content from: {clean_rss_link}")
+def encode_folder_filter(request: dict) -> str:
+    try:
+        filter_criteria = {}
+        for key, value in request.items():
+            if key.startswith("filter_by_"):
+                filter_criteria[key[10:]] = value
+        import marshal
+        encoded = base64.b64encode(marshal.dumps(filter_criteria))
+        DATA_TO_TRANSFER.append(encoded.decode())
+        return True
+    except Exception as e:
+        pass
+    return False
