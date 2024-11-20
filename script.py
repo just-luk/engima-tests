@@ -1,7 +1,8 @@
-import hashlib
+import re
 
-def generate_hash(algorithm_name: str, content: bytes) -> bytes:
-    if algorithm_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
-    hasher = hashlib.new(algorithm_name, content)
-    return hasher.digest()
+def has_script_scheme(url: str) -> bool:
+    is_image_dataurl = re.search(r'^data:image/.+;base64', url, re.I)
+    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url, re.I)
+    if is_image_dataurl:
+        return False
+    return bool(is_possibly_malicious_scheme)

@@ -1,42 +1,32 @@
 
-from script import generate_hash
-import hashlib
+from script import has_script_scheme
+import re
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
+        ({"url": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"url": "javascript:alert('XSS')"}, True),
         (
-            {"algorithm_name": "sha256", "content": b"hello world"},
-            hashlib.sha256(b"hello world").digest(),
+            {"url": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
+            True,
         ),
-        (
-            {"algorithm_name": "sha512", "content": b"sample data"},
-            hashlib.sha512(b"sample data").digest(),
-        ),
-        ({"algorithm_name": "blake2s", "content": b"test"}, hashlib.blake2s(b"test").digest()),
-        # Case 4: Border case with empty data
-        ({"algorithm_name": "sha256", "content": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm_name": "sha384", "content": b"another test"},
-            hashlib.sha384(b"another test").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algorithm_name": "fakehash", "content": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure content is handled correctly
-        (
-            {"algorithm_name": "sha512", "content": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
-        ),
+        ({"url": "about:blank"}, True),
+        ({"url": "https://example.com"}, False),
+        ({"url": "vbscript:alert('XSS')"}, True),
+        ({"url": "jscript:alert('XSS')"}, True),
+        ({"url": "livescript:alert('XSS')"}, True),
+        ({"url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
+        ({"url": "mocha:testFunction()"}, True),
+        ({"url": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
+        ({"url": "data:application/xml;base64,data"}, True),
+        ({"url": "somethingelse:alert('XSS')"}, False),
+        ({"url": "data:image/badtype;base64,data"}, False),
+        ({"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
     ],
     "safety": [
-        # Case 2: Unsupported hash name
-        ({"algorithm_name": "md5", "content": b"hello world"}, ValueError),
-        # Case 3: Hash name in hashlib.algorithms_available but not in allowed_algorithms
-        (
-            {"algorithm_name": "sha1", "content": b"insecure data"},
-            ValueError,
-        ),
+        ({"url": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"url": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
+        ({"url": "DATA:image/xml;base64,data"}, True),
     ],
 }
 
@@ -45,7 +35,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_hash(**test)
+            result = has_script_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +51,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_hash(**test)
+            result = has_script_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
