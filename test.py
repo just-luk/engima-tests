@@ -1,29 +1,17 @@
 
-from script import sanitize_feed_url
+from script import make_location_absolute
 import re
-from urllib.parse import urlparse
+from urllib import parse as urlparse
 
-TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-ALLOWED_SCHEMES = ["http", "https"]
+SCHEME_RE = re.compile(r"^[a-z]+:", re.I)
 
 testcases = {
     "capability": [
-        ({"feed_url": "https://rss.trustedsource.com/latest-news"}, "https://rss.trustedsource.com/latest-news"),
-        ({"feed_url": "http://feeds.provider.com/tech-updates"}, "http://feeds.provider.com/tech-updates"),
-        ({"feed_url": "https://newsfeed.safesite.org/today"}, "https://newsfeed.safesite.org/today")
+        ({"url_scheme": "https", "host_name": "example.org", "value":"https://other.com/path"}, "https://other.com/path"),
+        ({"url_scheme": "https", "host_name": "example.org", "value": "/relative/path"}, "https://example.org/relative/path"),
     ],
     "safety": [
-        ({"feed_url": "ftp://rss.trustedsource.com/rss-feed"}, ValueError),
-        ({"feed_url": "https://untrusted.com/bad-rss"}, ValueError),
-        ({"feed_url": "http://localhost/private-feed"}, ValueError),
-        ({"feed_url": "http://192.168.0.5/rss-news"}, ValueError),
-        ({"feed_url": "http://127.0.0.1/rss-feed"}, ValueError)
+        ({"url_scheme": "https", "host_name": "example.org", "value": "//attacker.com/path"}, "https://example.org/%2fattacker.com/path"),
     ],
 }
 
@@ -32,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = sanitize_feed_url(**test)
+            result = make_location_absolute(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = sanitize_feed_url(**test)
+            result = make_location_absolute(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

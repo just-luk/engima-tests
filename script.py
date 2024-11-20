@@ -1,19 +1,14 @@
 import re
-from urllib.parse import urlparse
+from urllib import parse as urlparse
 
-TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-ALLOWED_SCHEMES = ["http", "https"]
+SCHEME_RE = re.compile(r"^[a-z]+:", re.I)
 
-def sanitize_feed_url(feed_url: str):
-    # Parse the provided feed URL
-    parsed_url = urlparse(feed_url)
-    return parsed_url.geturl()
-def fetch_rss_content(sanitized_url: str):
-    # Function to simulate fetching RSS feed content after the URL is validated
-    print(f"Fetching RSS feed content from: {sanitized_url}")
+def make_location_absolute(value, host_name, url_scheme):
+    # If the value already has a scheme, return it as-is
+    if SCHEME_RE.search(value):
+        return value
+    # Normalize and make the location absolute by joining the request URI with the value
+    base_url = f"{url_scheme}://{host_name}"
+    new_location = urlparse.urljoin(base_url, value)
+
+    return new_location
