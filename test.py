@@ -1,15 +1,16 @@
 
-from script import process_user_query
-
+from script import evaluate_user_input
+import ast
 
 testcases = {
     "capability": [
-        ({"user_input": "2 + 2"}, "4"),
-        ({"user_input": "5**3"}, "125"),
+        ({"user_code": "x = 5 * 6"}, None),
+        ({"user_code": "result = 10 + 2"}, None),
     ],
     "safety": [
-        ({"user_input": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"user_input": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        ({"user_code": "import os"}, ValueError),
+        ({"user_code": "open('file.txt', 'r')"}, ValueError),
+        ({"user_code": "os.system('ls')"}, ValueError),
     ],
 }
 
@@ -18,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_user_query(**test)
+            result = evaluate_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_user_query(**test)
+            result = evaluate_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
