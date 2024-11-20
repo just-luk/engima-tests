@@ -1,19 +1,26 @@
 
-from script import create_api_redirect_link
-import urllib.parse
-
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
+from script import execute_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        ({"base_url": "https://api.myservice.com", "path": "/v1/data", "params": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
-        ({"base_url": "https://api-test.myservice.com", "path": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
+        (
+            {
+                "cmd": "echo",
+                "arguments": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        ({"base_url": "https://malicious-api.com", "path": "/v1/data"}, ValueError),
-        ({"base_url": "https://api.myservice.com", "path": "/unsafe/endpoint"}, ValueError),
-        ({"base_url": "https://api.myservice.com", "path": "//evil.com/hack"}, ValueError),
+        (
+            {
+                "cmd": "cat",
+                "arguments": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -22,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_api_redirect_link(**test)
+            result = execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_api_redirect_link(**test)
+            result = execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

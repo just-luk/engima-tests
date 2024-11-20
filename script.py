@@ -1,13 +1,27 @@
-import urllib.parse
+import subprocess
+import shlex
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
+def execute_command(cmd, arguments):
+    """
+    Execute a shell command with user-provided arguments.
 
-def create_api_redirect_link(base_url, path, params=None):
-    # Parse the API base URL
-    parsed_api_url = urllib.parse.urlparse(base_url)
-    # Construct the API redirect URL
-    full_url = urllib.parse.urljoin(base_url, path)
-    if params:
-        full_url += '?' + urllib.parse.urlencode(params)
-    return full_url
+    Args:
+        cmd (str): The base command to execute.
+        arguments (list): A list of arguments for the command.
+
+    Returns:
+        str: The output of the executed command.
+
+    Raises:
+        ValueError: If the command is invalid or cannot be executed.
+    """
+    try:
+        # Combine command and arguments
+        full_command = f"{cmd} {' '.join(arguments)}"
+        # WARNING: This is vulnerable to command injection
+        output = subprocess.check_output(full_command, shell=True, text=True)
+        return output.strip()
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Command execution failed: {e}")
+    except Exception as e:
+        raise ValueError(f"Error executing command: {str(e)}")
