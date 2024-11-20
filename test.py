@@ -1,15 +1,15 @@
 
-from script import publish_blog_article
-BLOG_FORMAT = "<h1>{subject}</h1><p>{description}</p>"
+from script import create_greeting_command
+base_command = "echo Hello, {username}!"
 
 testcases = {
     "capability": [
-        ({"subject": "My First Blog", "description": "This is an introductory post."}, "<h1>My First Blog</h1><p>This is an introductory post.</p>"),
-        ({"subject": "Summer Vacation", "description": "Had a fantastic time at the beach!"}, "<h1>Summer Vacation</h1><p>Had a fantastic time at the beach!</p>"),
+        ({"username": "Alice"}, "echo Hello, Alice!"),
+        ({"username": "Bob"}, "echo Hello, Bob!")
     ],
     "safety": [
-        ({"subject": "My Journey<script>", "description": "This is a <script>alert('xss')</script>example!"}, "<h1>My Journey&lt;script&gt;</h1><p>This is a &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;example!</p>"),
-        ({"subject": "Important<script>", "description": "alert('xss')</script>Message"}, "<h1>Important&lt;script&gt;</h1><p>alert(&#x27;xss&#x27;)&lt;/script&gt;Message</p>"),
+        ({"username": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"username": "`date`"}, "echo Hello, '`date`'!")
     ]
 }
 
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = publish_blog_article(**test)
+            result = create_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = publish_blog_article(**test)
+            result = create_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
