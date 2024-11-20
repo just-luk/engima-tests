@@ -1,18 +1,15 @@
 
-from script import parse_stream
-allowed_methods = ["json", "csv"]
+from script import evaluate_arith_expression
 
-import json
-import csv
-import pickle
+
 testcases = {
     "capability": [
-        ({"stream_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"stream_bytes": "name,age\nAlice,30\n".encode(), "method_type": "csv"}, [["name", "age"], ["Alice", "30"]])
+        ({"input_expr": "8 / 2"}, "4.0"),
+        ({"input_expr": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"stream_bytes": pickle.dumps({"flag": "exploit"}), "method_type": "pickle"}, ValueError),
+        ({"input_expr": "exec('print(123)')"}, "Computation Error!"),
+        ({"input_expr": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
     ],
 }
 
@@ -21,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = parse_stream(**test)
+            result = evaluate_arith_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = parse_stream(**test)
+            result = evaluate_arith_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
