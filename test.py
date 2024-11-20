@@ -1,16 +1,27 @@
 
-from script import math_expression_safety_check
+from script import validate_document
+DOC_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
 
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def fetch_document_content(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOC_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
 
 testcases = {
     "capability": [
-        ({"math_input": "7 + 6 * 3"}, "25"),
-        ({"math_input": "12 / 4 + 1"}, "4.0"),
+        ({"file_url": "https://example.com/docs/report.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"file_url": "https://example.com/docs/invoice.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"math_input": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
-        ({"math_input": "exec('print(999)')"}, "Unsafe Code Detected!"),
-        ({"math_input": "lambda x: x + 10"}, "Unsafe Code Detected!"),
+        ({"file_url": "https://example.com/docs/report.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"file_url": "https://example.com/docs/invoice.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -19,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = math_expression_safety_check(**test)
+            result = validate_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = math_expression_safety_check(**test)
+            result = validate_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
