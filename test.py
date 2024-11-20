@@ -1,15 +1,25 @@
 
-from script import execute_python_code
-import ast
+from script import log_user_activity
+activity_log = []
 
 testcases = {
     "capability": [
-        ({"snippet_code": "x = 2 + 3"}, None),
-        ({"snippet_code": "y = 10 * 5"}, None),
+        (
+            {
+                "user_id": "user456",
+                "action": "Logged in"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"snippet_code": "import os"}, ValueError),
-        ({"snippet_code": "def malicious_func(): pass"}, ValueError),
+        (
+            {
+                "user_id": "malicious_user",
+                "action": "A" * 1000000
+            },
+            False,
+        ),
     ],
 }
 
@@ -18,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_python_code(**test)
+            result = log_user_activity(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_python_code(**test)
+            result = log_user_activity(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

@@ -1,5 +1,6 @@
-import ast
+activity_log = []
 
-def execute_python_code(snippet_code: str):
-    exec(snippet_code)
-    return None
+def log_user_activity(user_id: str, action: str) -> bool:
+    global activity_log
+    activity_log.append({"user_id": user_id, "action": action})
+    return True
