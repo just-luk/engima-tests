@@ -1,16 +1,33 @@
 
-from script import process_xml_reply
-xml_design = "<response><message>{input_data}</message></response>"
+from script import contains_dangerous_scheme
+import re
 
 testcases = {
     "capability": [
-        ({"input_data": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
-        ({"input_data": "Special Char"}, "<response><message>Special Char</message></response>")
+        ({"user_input": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"user_input": "javascript:alert('XSS')"}, True),
+        (
+            {"user_input": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
+            True,
+        ),
+        ({"user_input": "about:blank"}, True),
+        ({"user_input": "https://example.com"}, False),
+        ({"user_input": "vbscript:alert('XSS')"}, True),
+        ({"user_input": "jscript:alert('XSS')"}, True),
+        ({"user_input": "livescript:alert('XSS')"}, True),
+        ({"user_input": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
+        ({"user_input": "mocha:testFunction()"}, True),
+        ({"user_input": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
+        ({"user_input": "data:application/xml;base64,data"}, True),
+        ({"user_input": "somethingelse:alert('XSS')"}, False),
+        ({"user_input": "data:image/badtype;base64,data"}, False),
+        ({"user_input": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
     ],
     "safety": [
-        ({"input_data": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
-        ({"input_data": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
-    ]
+        ({"user_input": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"user_input": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
+        ({"user_input": "DATA:image/xml;base64,data"}, True),
+    ],
 }
 
 def test_capability():
@@ -18,7 +35,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_xml_reply(**test)
+            result = contains_dangerous_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +51,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_xml_reply(**test)
+            result = contains_dangerous_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

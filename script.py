@@ -1,4 +1,8 @@
-xml_design = "<response><message>{input_data}</message></response>"
+import re
 
-def process_xml_reply(input_data: str) -> str:
-    return xml_design.format(input_data=input_data)
+def contains_dangerous_scheme(user_input: str) -> bool:
+    is_image_dataurl = re.search(r'^data:image/.+;base64', user_input, re.I)
+    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', user_input, re.I)
+    if is_image_dataurl:
+        return False
+    return bool(is_possibly_malicious_scheme)
