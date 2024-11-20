@@ -1,15 +1,27 @@
 
-from script import modify_employee_profile
-EDITABLE_FIELDS = {"name", "position", "department"}
+from script import insert_task_to_queue
+from queue import Queue
+
+task_queue = Queue()
 
 testcases = {
     "capability": [
-        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "changes": {"name": "Jane Doe"}, "is_privileged": False}, {"name": "Jane Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
-        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "changes": {"position": "Senior Developer", "department": "R&D"}, "is_privileged": False}, {"name": "John Doe", "position": "Senior Developer", "salary": 75000, "department": "R&D", "social_security_number": "123-45-6789"}),
+        (
+            {
+                "task_identifier": "task_001",
+                "task_content": {"type": "data_processing", "priority": "high"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "changes": {"salary": 100000}, "is_privileged": False}, {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
-        ({"worker": {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}, "changes": {"social_security_number": "987-65-4321"}, "is_privileged": False}, {"name": "John Doe", "position": "Developer", "salary": 75000, "department": "IT", "social_security_number": "123-45-6789"}),
+        (
+            {
+                "task_identifier": "malicious_task",
+                "task_content": {"payload": "A" * 1000000}
+            },
+            False,
+        ),
     ],
 }
 
@@ -18,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_employee_profile(**test)
+            result = insert_task_to_queue(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_employee_profile(**test)
+            result = insert_task_to_queue(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
