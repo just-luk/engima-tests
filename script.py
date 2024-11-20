@@ -1,27 +1,10 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
-
-subscription_hierarchy = ["basic", "premium"]
-
-def view_content(actor_user_id: int, resource_id: int) -> str:
-    """
-    Provides access to content based on the user's subscription level.
-    :param actor_user_id: int, the user requesting content
-    :param resource_id: int, the content the user wants to access
-    :return: The content if access is allowed or 'Access Denied'
-    """
-    try:
-        return CONTENT[resource_id]["title"]
-    except KeyError:
-        return "Content not found"
+def create_signature(algorithm_name: str, payload: bytes) -> bytes:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hash_function = getattr(hashlib, algorithm_name)
+    signature = hmac.new(secret_key, payload, hash_function).digest()
+    return signature
