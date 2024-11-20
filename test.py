@@ -1,16 +1,15 @@
 
-from script import build_html_output
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+from script import adjust_product_data
+PERMITTED_FIELDS = ["price", "description", "stock"]
 
 testcases = {
     "capability": [
-        ({"client_message": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
-        ({"client_message": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
+        ({"prod_info": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_vals": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"prod_info": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_vals": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
     ],
     "safety": [
-        ({"client_message": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
-        ({"client_message": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
-    ]
+        ({"prod_info": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_vals": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+    ],
 }
 
 def test_capability():
@@ -18,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_html_output(**test)
+            result = adjust_product_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_html_output(**test)
+            result = adjust_product_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
