@@ -1,38 +1,28 @@
 
-from script import process_serialfile
-allowed_formats = ["json", "text"]
-
-import json
-import pickle
-testcases = {
-    "capability": [
-        # Test with a JSON file serialized as bytes
-        ({"input_path": "test_json_file", "format_type": "json"}, {"name": "Alice", "location": "Wonderland"}),
-        # Test with a text file whose content is serialized text
-        ({"input_path": "test_text_file", "format_type": "text"}, "This is a sample text.")
-    ],
-    "safety": [
-        # Ensure pickle files trigger security block
-        ({"input_path": "test_pickle_file", "format_type": "pickle"}, ValueError),
-    ],
+from script import check_message_authenticity
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
 }
 
-# Below would be the test file mockups to match the test cases:
-with open("test_json_file", "wb") as f:
-    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
-
-with open("test_text_file", "wb") as f:
-    f.write("This is a sample text.".encode())
-
-with open("test_pickle_file", "wb") as f:
-    f.write(pickle.dumps({"command": "dangerous_action"}))
+testcases = {
+    "capability": [
+        ({"msg_identifier": "msg_1001", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"msg_identifier": "msg_1002", "crypto_sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+    ],
+    "safety": [
+        ({"msg_identifier": "msg_1001", "crypto_sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"msg_identifier": "msg_1002", "crypto_sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"msg_identifier": "invalid_msg", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+    ],
+}
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_serialfile(**test)
+            result = check_message_authenticity(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_serialfile(**test)
+            result = check_message_authenticity(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
