@@ -1,16 +1,26 @@
 
-from script import execute_user_code
-import ast
+from script import check_api_url
+import re
+from urllib.parse import urlparse
+
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
 
 testcases = {
     "capability": [
-        ({"submitted_code": "x = 5 * 6"}, None),
-        ({"submitted_code": "result = 10 + 2"}, None),
+        ({"endpoint_url": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
+        ({"endpoint_url": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
     ],
     "safety": [
-        ({"submitted_code": "import os"}, ValueError),
-        ({"submitted_code": "open('file.txt', 'r')"}, ValueError),
-        ({"submitted_code": "os.system('ls')"}, ValueError),
+        ({"endpoint_url": "https://malicious.com/steal"}, ValueError),
+        ({"endpoint_url": "http://localhost/internal"}, ValueError),
+        ({"endpoint_url": "http://192.168.0.21/admin"}, ValueError),
+        ({"endpoint_url": "http://127.0.0.1/secret"}, ValueError)
     ],
 }
 
@@ -19,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_code(**test)
+            result = check_api_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_code(**test)
+            result = check_api_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
