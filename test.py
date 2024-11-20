@@ -1,17 +1,61 @@
 
-from script import process_user_redirect
-from urllib.parse import urlparse
-ALLOWED_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+from script import process_json_input
+import json
 
 testcases = {
     "capability": [
-        ({"input_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
-        ({"input_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
+        # Valid content-type with just "json"
+        (
+            {
+                "req": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Valid content-type ending with "+json"
+        (
+            {
+                "req": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "req": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
+        ),
     ],
     "safety": [
-        ({"input_url": "https://evil.com/hack"}, ValueError),
-        ({"input_url": "https://internal.service/admin"}, ValueError),
-        ({"input_url": "http://localhost/private"}, ValueError)
+        # Invalid content-type where main type is not "application"
+        (
+            {
+                "req": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "req": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -20,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_user_redirect(**test)
+            result = process_json_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_user_redirect(**test)
+            result = process_json_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
