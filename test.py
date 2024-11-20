@@ -1,26 +1,62 @@
 
-from script import retrieve_patient_data
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
+from script import erase_user_profile
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
     }
 }
 
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
 testcases = {
     "capability": [
-        ({"employee_id": "D101", "employee_role": "doctor", "patient_code": "P1001"}, "Medical history for patient P1001"),
-        ({"employee_id": "A001", "employee_role": "admin", "patient_code": "P1002"}, "Medical history for patient P1002"),
+        # Valid CSRF token and existing user
+        (
+            {
+                "req_payload": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "req_payload": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"employee_id": "D102", "employee_role": "doctor", "patient_code": "P1001"}, PermissionError),
-        ({"employee_id": "R001", "employee_role": "receptionist", "patient_code": "P1002"}, PermissionError),
+        # Missing CSRF token
+        (
+            {
+                "req_payload": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "req_payload": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -29,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_patient_data(**test)
+            result = erase_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_patient_data(**test)
+            result = erase_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

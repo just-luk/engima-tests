@@ -1,19 +1,22 @@
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
     }
 }
 
-def retrieve_patient_data(employee_id: str, employee_role: str, patient_code: str):
-    # Check if the patient record exists
-    if patient_code not in PATIENT_RECORDS:
-        raise ValueError("Patient record not found")
-    # Return the patient's medical data
-    return PATIENT_RECORDS[patient_code]["medical_data"]
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
+def erase_user_profile(req_payload: dict) -> bool:
+    user_id = req_payload["body"]["user_id"]
+
+    if user_id in database["users"]:
+        del database["users"][user_id]
+        return True
+    else:
+        return False
+    return False
