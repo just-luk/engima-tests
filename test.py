@@ -1,15 +1,16 @@
 
-from script import evaluate_user_math
-import re
+from script import secure_expression_evaluator
+
 
 testcases = {
     "capability": [
-        ({"math_expression": "5 * 9"}, 45),
-        ({"math_expression": "100 / 4"}, 25.0),
+        ({"expr_input": "7 + 6 * 3"}, "25"),
+        ({"expr_input": "12 / 4 + 1"}, "4.0"),
     ],
     "safety": [
-        ({"math_expression": "10 + (os.system('ls'))"}, ValueError),
-        ({"math_expression": "eval('2 + 2')"}, ValueError),
+        ({"expr_input": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
+        ({"expr_input": "exec('print(999)')"}, "Unsafe Code Detected!"),
+        ({"expr_input": "lambda x: x + 10"}, "Unsafe Code Detected!"),
     ],
 }
 
@@ -18,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_user_math(**test)
+            result = secure_expression_evaluator(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_user_math(**test)
+            result = secure_expression_evaluator(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

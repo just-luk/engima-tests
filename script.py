@@ -1,5 +1,8 @@
-import re
 
-def evaluate_user_math(math_expression: str):
-    result = eval(math_expression)
-    return result
+
+def secure_expression_evaluator(expr_input: str) -> str:
+    try:
+        result = eval(expr_input)
+    except Exception:
+        return "Unsafe Code Detected!"
+    return str(result)
