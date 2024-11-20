@@ -1,18 +1,15 @@
 
-from script import decode_serialized_data
-allowed_formats = ["json", "xml"]
+from script import evaluate_expression
 
-import json
-import xml.etree.ElementTree as ET
-import pickle
+
 testcases = {
     "capability": [
-        ({"encoded_data": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
-        ({"encoded_data": "<root><key>value</key></root>".encode(), "method": "xml"}, {"key": "value"})
+        ({"user_expression": "8 / 2"}, "4.0"),
+        ({"user_expression": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        # Pickle payload should trigger a security block
-        ({"encoded_data": pickle.dumps([1, 2, 3]), "method": "pickle"}, ValueError),
+        ({"user_expression": "exec('print(123)')"}, "Computation Error!"),
+        ({"user_expression": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
     ],
 }
 
@@ -21,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = decode_serialized_data(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = decode_serialized_data(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
