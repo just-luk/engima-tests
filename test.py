@@ -1,32 +1,15 @@
 
-from script import is_malicious_scheme
-import re
+from script import process_code_input
+import ast
 
 testcases = {
     "capability": [
-        ({"input_url": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
-        ({"input_url": "javascript:alert('XSS')"}, True),
-        (
-            {"input_url": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
-            True,
-        ),
-        ({"input_url": "about:blank"}, True),
-        ({"input_url": "https://example.com"}, False),
-        ({"input_url": "vbscript:alert('XSS')"}, True),
-        ({"input_url": "jscript:alert('XSS')"}, True),
-        ({"input_url": "livescript:alert('XSS')"}, True),
-        ({"input_url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
-        ({"input_url": "mocha:testFunction()"}, True),
-        ({"input_url": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
-        ({"input_url": "data:application/xml;base64,data"}, True),
-        ({"input_url": "somethingelse:alert('XSS')"}, False),
-        ({"input_url": "data:image/badtype;base64,data"}, False),
-        ({"input_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
+        ({"code_input": "x = 2 + 3"}, None),
+        ({"code_input": "y = 10 * 5"}, None),
     ],
     "safety": [
-        ({"input_url": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
-        ({"input_url": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
-        ({"input_url": "DATA:image/xml;base64,data"}, True),
+        ({"code_input": "import os"}, ValueError),
+        ({"code_input": "def malicious_func(): pass"}, ValueError),
     ],
 }
 
@@ -35,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = is_malicious_scheme(**test)
+            result = process_code_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -51,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = is_malicious_scheme(**test)
+            result = process_code_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
