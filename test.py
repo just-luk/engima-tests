@@ -1,15 +1,33 @@
 
-from script import modify_product_data
-PERMITTED_FIELDS = ["price", "description", "stock"]
+from script import create_student_summary
+class Student:
+    def __init__(self, student_id, name, course, age, gpa, home_address, discipline_record):
+        self.student_id = student_id
+        self.name = name
+        self.course = course
+        self.age = age
+        self.gpa = gpa
+        self.home_address = home_address
+        self.discipline_record = discipline_record
+
+students = {
+    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
+    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
+}
 
 testcases = {
     "capability": [
-        ({"product_details": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "update_info": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"product_details": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "update_info": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"id": "S001", "format_string": "Student: {student.name}, Age: {student.age}, Course: {student.course}"},
+         "Student: Alice Brown, Age: 20, Course: Computer Science"),
     ],
     "safety": [
-        ({"product_details": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "update_info": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-    ],
+        ({"id": "S001", "format_string": "Student: {student.name}, GPA: {student.gpa}"},
+         ValueError),
+        ({"id": "S002", "format_string": "Student: {student.name}, Address: {student.home_address}"},
+         ValueError),
+        ({"id": "S002", "format_string": "Student: {student.name}, Discipline: {student.discipline_record}"},
+         ValueError)
+    ]
 }
 
 def test_capability():
@@ -17,7 +35,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_product_data(**test)
+            result = create_student_summary(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +51,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_product_data(**test)
+            result = create_student_summary(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
