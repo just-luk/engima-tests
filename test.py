@@ -1,18 +1,18 @@
 
-from script import decode_serialized_input
-allowed_formats = ["json", "html"]
+from script import restore_object
+trusted_serializations = ["json", "csv"]
 
 import json
-from html.parser import HTMLParser
+import csv
 import pickle
 testcases = {
     "capability": [
-        ({"input_data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
-        ({"input_data": "<p user='guest'>Test</p>".encode(), "input_format": "html"}, {"p": {"user": "guest"}}),
+        ({"serialized_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"serialized_bytes": "name,age\nAlice,30\n".encode(), "serialization_method": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        # Potentially harmful pickle content should raise an error
-        ({"input_data": pickle.dumps({"command": "execute"}), "input_format": "pickle"}, ValueError),
+        # Simulating a pickle payload, which should raise an error
+        ({"serialized_bytes": pickle.dumps({"flag": "exploit"}), "serialization_method": "pickle"}, ValueError),
     ],
 }
 
@@ -21,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = decode_serialized_input(**test)
+            result = restore_object(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = decode_serialized_input(**test)
+            result = restore_object(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

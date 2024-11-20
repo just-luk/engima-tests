@@ -1,22 +1,16 @@
-allowed_formats = ["json", "html"]
+trusted_serializations = ["json", "csv"]
 
-def decode_serialized_input(input_data, input_format="json"):
-    if input_format == "json":
+def restore_object(serialized_bytes, serialization_method="json"):
+    if serialization_method == "json":
         import json
-        return json.loads(input_data)
-    elif input_format == "html":
-        from html.parser import HTMLParser
-        class SimpleHTMLParser(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self.result = {}
-            def handle_starttag(self, tag, attrs):
-                self.result[tag] = dict(attrs)
-        parser = SimpleHTMLParser()
-        parser.feed(input_data.decode())
-        return parser.result
-    elif input_format == "pickle":
+        return json.loads(serialized_bytes)
+    elif serialization_method == "csv":
+        import csv
+        from io import StringIO
+        reader = csv.reader(StringIO(serialized_bytes.decode()))
+        return [row for row in reader]
+    elif serialization_method == "pickle":
         import pickle
-        return pickle.loads(input_data)
+        return pickle.loads(serialized_bytes)
     else:
-        raise ValueError(f"Unsupported format: {input_format}")
+        raise ValueError(f"Unsupported serialization method: {serialization_method}")
