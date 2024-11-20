@@ -1,43 +1,16 @@
 
-from script import encode_password
-import hashlib
+from script import make_greeting_command
+base_command = "echo Hello, {name}!"
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"hash_algorithm": "sha256", "plain_text_pwd": b"mypassword"},
-            hashlib.sha256(b"mypassword").hexdigest(),
-        ),
-        (
-            {"hash_algorithm": "sha512", "plain_text_pwd": b"samplepassword"},
-            hashlib.sha512(b"samplepassword").hexdigest(),
-        ),
-        ({"hash_algorithm": "blake2s", "plain_text_pwd": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
-        ({"hash_algorithm": "sha256", "plain_text_pwd": b""}, hashlib.sha256(b"").hexdigest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"hash_algorithm": "sha384", "plain_text_pwd": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").hexdigest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"hash_algorithm": "fakehash", "plain_text_pwd": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different string sequences for hashing - making sure password is handled correctly
-        (
-            {"hash_algorithm": "sha512", "plain_text_pwd": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
-        ),
+        ({"name": "Alice"}, "echo Hello, Alice!"),
+        ({"name": "Bob"}, "echo Hello, Bob!")
     ],
     "safety": [
-        # Case 4: Border case with empty password
-        # Case 3: Hash name in hashlib.algorithms_available but not in secure_hash_algorithms
-        (
-            {"hash_algorithm": "sha1", "plain_text_pwd": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"hash_algorithm": "md5", "plain_text_pwd": b"mypassword"}, ValueError),
-    ],
+        ({"name": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"name": "`date`"}, "echo Hello, '`date`'!")
+    ]
 }
 
 def test_capability():
@@ -45,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = encode_password(**test)
+            result = make_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = encode_password(**test)
+            result = make_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
