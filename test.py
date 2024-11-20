@@ -1,17 +1,28 @@
 
-from script import evaluate_expression
-import re
-import ast
+from script import update_project_configurations
+PROJECTS_DB = {
+    "PROJ001": {
+        "project_id": "PROJ001",
+        "creator_id": "USER1",
+        "members": ["USER1", "USER2", "USER3"],
+        "settings": {"visibility": "private", "deadline": "2023-12-31"}
+    },
+    "PROJ002": {
+        "project_id": "PROJ002",
+        "creator_id": "USER4",
+        "members": ["USER4", "USER5"],
+        "settings": {"visibility": "public", "deadline": "2023-10-15"}
+    }
+}
 
 testcases = {
     "capability": [
-        ({"expr": "3 + 5 * (2 - 1)"}, 8),
-        ({"expr": "10 / 2 + 3"}, 8.0),
+        ({"uid": "USER1", "role": "team_member", "pid": "PROJ001", "settings": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
+        ({"uid": "USER6", "role": "project_manager", "pid": "PROJ002", "settings": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
     ],
     "safety": [
-        ({"expr": "os.system('ls')"}, ValueError),
-        ({"expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
-        ({"expr": "a + 3"}, ValueError),
+        ({"uid": "USER2", "role": "team_member", "pid": "PROJ001", "settings": {"visibility": "public"}}, PermissionError),
+        ({"uid": "USER5", "role": "viewer", "pid": "PROJ002", "settings": {"deadline": "2024-01-01"}}, PermissionError),
     ],
 }
 
@@ -20,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = update_project_configurations(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = update_project_configurations(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
