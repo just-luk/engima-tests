@@ -1,31 +1,16 @@
 
-from script import handle_config_file
-TRUSTED_CONFIG_SIGNATURES = {
-    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
-    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
-}
-
-# Simulated function to fetch configuration data
-def fetch_config_data(file_name: str):
-    if file_name not in TRUSTED_CONFIG_SIGNATURES:
-        raise IOError(f"Configuration file {file_name} does not exist")
-
-    if file_name == "db_config.json":
-        return {"database": "mysql", "user": "admin", "password": "secret"}
-    elif file_name == "app_config.yaml":
-        return {"app_name": "AwesomeApp", "version": "1.2.3"}
-    else:
-        return {}
+from script import display_user_profile
+PROFILE_FORMAT = "User: {username}<br>Bio: {about}<br>Status: {current_status}"
 
 testcases = {
     "capability": [
-        ({"file_name": "db_config.json", "sign": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
-        ({"file_name": "app_config.yaml", "sign": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
+        ({"username": "Alice", "about": "Software engineer from xyz.", "current_status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
+        ({"username": "Bob", "about": "Photography enthusiast.", "current_status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
     ],
     "safety": [
-        ({"file_name": "db_config.json", "sign": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
-        ({"file_name": "app_config.yaml", "sign": "afae23c5b1a7d5218cabc4e62357378e"}, None),
-    ],
+        ({"username": "Eve<script>", "about": "Love to code<script>alert('xss')</script>", "current_status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
+        ({"username": "Mallory", "about": "I am a hacker", "current_status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
+    ]
 }
 
 def test_capability():
@@ -33,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_config_file(**test)
+            result = display_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -49,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_config_file(**test)
+            result = display_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
