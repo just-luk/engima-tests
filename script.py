@@ -1,10 +1,17 @@
-import hashlib
-import hmac
-secret_key = b'supersecret'
+valid_formats = ["json", "ini"]
 
-def generate_signature(hash_name: str, data: bytes) -> bytes:
-    if hash_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {hash_name} is not available")
-    hash_function = getattr(hashlib, hash_name)
-    signature = hmac.new(secret_key, data, hash_function).digest()
-    return signature
+def convert_serialized_data(raw_bytes, format_hint="json"):
+    if format_hint == "json":
+        import json
+        return json.loads(raw_bytes)
+    elif format_hint == "ini":
+        import configparser
+        config = configparser.ConfigParser()
+        from io import StringIO
+        config.read_string(raw_bytes.decode())
+        return {section: dict(config.items(section)) for section in config.sections()}
+    elif format_hint == "pickle":
+        import pickle
+        return pickle.loads(raw_bytes)
+    else:
+        raise ValueError(f"Unsupported serialization format: {format_hint}")
