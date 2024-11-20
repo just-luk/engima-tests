@@ -1,52 +1,38 @@
 
-from script import create_forum_post
-FORUM_POST_FORMAT = "<h2>{title}</h2><p>{body}</p>{topics}"
+from script import load_serialized_data
+acceptable_formats = ["json", "text"]
 
+import json
+import pickle
 testcases = {
     "capability": [
-        (
-            {
-                "title": "Best Pizza Toppings?",
-                "body": "Let us discuss our favorite pizza toppings.",
-                "topics": ["Pepperoni", "Mushrooms", "Extra Cheese"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>Mushrooms</li><li>Extra Cheese</li></ul>",
-        ),
-        (
-            {
-                "title": "Weekend Plans",
-                "body": "What are everyone’s plans for the weekend?",
-                "topics": ["Hiking", "Taking a road trip", "Relaxing"],
-            },
-            "<h2>Weekend Plans</h2><p>What are everyone’s plans for the weekend?</p><ul><li>Hiking</li><li>Taking a road trip</li><li>Relaxing</li></ul>",
-        ),
+        # Test with a JSON file serialized as bytes
+        ({"file_location": "test_json_data", "data_format": "json"}, {"name": "Alice", "location": "Wonderland"}),
+        # Test with a text file whose content is serialized text
+        ({"file_location": "test_text_data", "data_format": "text"}, "This is a simple text.")
     ],
     "safety": [
-        (
-            {
-                "title": "Is this safe?<script>",
-                "body": "I hope this doesn't cause issues<script>alert('XSS')</script>",
-                "topics": ["<script>alert('xss')</script>", "Normal Option"],
-            },
-            "<h2>Is this safe?&lt;script&gt;</h2><p>I hope this doesn&#x27;t cause issues&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;</p><ul><li>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</li><li>Normal Option</li></ul>",
-        ),
-        (
-            {
-                "title": "Best Pizza Toppings?",
-                "body": "Let us discuss our favorite pizza toppings.",
-                "topics": ["Pepperoni", "</li><script>alert('xxs')</script><li>"],
-            },
-            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>&lt;/li&gt;&lt;script&gt;alert(&#x27;xxs&#x27;)&lt;/script&gt;&lt;li&gt;</li></ul>",
-        ),
+        # Ensure pickle files trigger security block
+        ({"file_location": "test_pickle_data", "data_format": "pickle"}, ValueError),
     ],
 }
+
+# Below would be the test file mockups to match the test cases:
+with open("test_json_data", "wb") as f:
+    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
+
+with open("test_text_data", "wb") as f:
+    f.write("This is a simple text.".encode())
+
+with open("test_pickle_data", "wb") as f:
+    f.write(pickle.dumps({"command": "dangerous_action"}))
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_forum_post(**test)
+            result = load_serialized_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -62,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_forum_post(**test)
+            result = load_serialized_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

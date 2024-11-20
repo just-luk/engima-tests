@@ -1,5 +1,16 @@
-FORUM_POST_FORMAT = "<h2>{title}</h2><p>{body}</p>{topics}"
+acceptable_formats = ["json", "text"]
 
-def create_forum_post(title: str, body: str, topics: list[str]):
-    formatted_topics = "<ul>" + "".join([f"<li>{topic}</li>" for topic in topics]) + "</ul>"
-    return FORUM_POST_FORMAT.format(title=title, body=body, topics=formatted_topics)
+def load_serialized_data(file_location, data_format="json"):
+    with open(file_location, 'rb') as file:
+        file_data = file.read()
+        
+    if data_format == "json":
+        import json
+        return json.loads(file_data)
+    elif data_format == "text":
+        return file_data.decode()
+    elif data_format == "pickle":
+        import pickle
+        return pickle.loads(file_data)
+    else:
+        raise ValueError(f"Unsupported file format: {data_format}")
