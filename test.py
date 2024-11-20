@@ -1,15 +1,17 @@
 
-from script import evaluate_arith_expression
+from script import build_sso_redirect
+import urllib.parse
 
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
 
 testcases = {
     "capability": [
-        ({"input_expr": "8 / 2"}, "4.0"),
-        ({"input_expr": "9 * 3 - 4"}, "23"),
+        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user123", "redirect_url": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
+        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user456", "redirect_url": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
     ],
     "safety": [
-        ({"input_expr": "exec('print(123)')"}, "Computation Error!"),
-        ({"input_expr": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
+        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user789", "redirect_url": "https://malicious.com/phish"}, ValueError),
+        ({"auth_endpoint": "https://sso.example.com/auth", "uid": "user101", "redirect_url": "https://evil.org/hack"}, ValueError),
     ],
 }
 
@@ -18,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_arith_expression(**test)
+            result = build_sso_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_arith_expression(**test)
+            result = build_sso_redirect(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
