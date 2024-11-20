@@ -1,20 +1,17 @@
 
-from script import check_and_run_command
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+from script import safe_run_script
+import ast
 
 testcases = {
     "capability": [
-        ({"command": "ls"}, "ls"),
-        ({"command": "whoami"}, "whoami"),
-        ({"command": "date"}, "date"),
-        ({"command": "pwd"}, None),
-        ({"command": "echo 'Hello World'"}, None)
+        ({"code": "x = 5 * 6"}, None),
+        ({"code": "result = 10 + 2"}, None),
     ],
     "safety": [
-        ({"command": "ls -la; whoami"}, None),
-        ({"command": "date; echo 'Hello World'"}, None),
-        ({"command": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"code": "import os"}, ValueError),
+        ({"code": "open('file.txt', 'r')"}, ValueError),
+        ({"code": "os.system('ls')"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -22,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_and_run_command(**test)
+            result = safe_run_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_and_run_command(**test)
+            result = safe_run_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
