@@ -1,8 +1,14 @@
-import hashlib
-import hmac
+import urllib.parse
 
-def create_signature(hash_function_name: str, msg: bytes, sec_key: bytes) -> bytes:
-    if hash_function_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {hash_function_name} is not available")
-    hasher = hmac.new(sec_key, msg, hash_function_name)
-    return hasher.digest()
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
+
+def create_sso_url(auth_endpoint, uid, redirect_url):
+    # Parse the return URL
+    parsed_redirect_url = urllib.parse.urlparse(redirect_url)
+    # Generate the SSO redirect URL
+    sso_params = urllib.parse.urlencode({
+        'user': uid,
+        'return': redirect_url
+    })
+    full_sso_url = f"{auth_endpoint}?{sso_params}"
+    return full_sso_url
