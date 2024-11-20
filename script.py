@@ -1,7 +1,4 @@
-import hashlib
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
-def hash_user_password(algorithm_name: str, user_pass: bytes) -> bytes:
-    if algorithm_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
-    hasher = hashlib.new(algorithm_name, user_pass)
-    return hasher.digest()
+def create_html_response(visitor_content: str) -> str:
+    return html_template.format(user_content=visitor_content)
