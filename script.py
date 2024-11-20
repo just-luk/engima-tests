@@ -1,28 +1,23 @@
-class Customer:
-    def __init__(self, name, email, address, credit_card):
-        self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
-
-class Order:
-    def __init__(self, id, customer, items, total, payment_method):
-        self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
-
-orders = {
-    "ORD001": Order("ORD001", 
-                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
-                    ["Item 1", "Item 2"],
-                    99.99,
-                    "Credit Card")
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
 }
 
-def create_order_receipt(purchase_id, receipt_template):
-    if purchase_id not in orders:
-        raise ValueError("Order not found")
-    order = orders[purchase_id]
-    return receipt_template.format(order=order, customer=order.customer)
+# Simulated function to fetch configuration data
+def load_config_data(config_filename: str):
+    if config_filename not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {config_filename} does not exist")
+
+    if config_filename == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif config_filename == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
+
+def retrieve_config_data(config_filename: str, crypt_signature: str):
+    try:
+        config_data = load_config_data(config_filename)
+        return config_data
+    except IOError:
+        return None
