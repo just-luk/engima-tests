@@ -1,5 +1,4 @@
-import re
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
-def parse_html_tags(html):
-    tag_pattern = re.compile(r'<(.*?)>')
-    return tag_pattern.findall(html)
+def render_html_output(user_input: str) -> str:
+    return html_template.format(user_content=user_input)
