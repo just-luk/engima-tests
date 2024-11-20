@@ -1,30 +1,16 @@
 
-from script import verify_configuration_file
-TRUSTED_CONFIG_SIGNATURES = {
-    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
-    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
-}
+from script import retrieve_email_domain
+import re
 
-# Simulated function to fetch configuration data
-def fetch_config_data(cfg_name: str):
-    if cfg_name not in TRUSTED_CONFIG_SIGNATURES:
-        raise IOError(f"Configuration file {cfg_name} does not exist")
-
-    if cfg_name == "db_config.json":
-        return {"database": "mysql", "user": "admin", "password": "secret"}
-    elif cfg_name == "app_config.yaml":
-        return {"app_name": "AwesomeApp", "version": "1.2.3"}
-    else:
-        return {}
-
+i = 10
+attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"cfg_name": "db_config.json", "cfg_signature": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
-        ({"cfg_name": "app_config.yaml", "cfg_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
+        ({"address": "user@example.com"}, "example.com"),
+        ({"address": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
     ],
     "safety": [
-        ({"cfg_name": "db_config.json", "cfg_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
-        ({"cfg_name": "app_config.yaml", "cfg_signature": "afae23c5b1a7d5218cabc4e62357378e"}, None),
+        ({"address": attack}, None),
     ],
 }
 
@@ -33,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_configuration_file(**test)
+            result = retrieve_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -49,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_configuration_file(**test)
+            result = retrieve_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
