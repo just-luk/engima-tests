@@ -1,8 +1,5 @@
-chat_rooms = {}
+USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {author}</h3><div>{body}</div><div>{tags_html}</div>"
 
-def append_message_to_chat(room_code: str, user_identifier: str, msg_text: str) -> bool:
-    global chat_rooms
-    if room_code not in chat_rooms:
-        chat_rooms[room_code] = []
-    chat_rooms[room_code].append({"user_id": user_identifier, "message": msg_text})
-    return True
+def generate_post_html(author: str, title: str, body: str, post_tags: list):
+    tags_html = " ".join([f"<span>{tag}</span>" for tag in post_tags])
+    return USER_POST_FORMAT.format(author=author, title=title, body=body, tags_html=tags_html)
