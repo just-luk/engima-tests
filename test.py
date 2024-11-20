@@ -1,17 +1,17 @@
 
-from script import create_resource_url
-import urllib.parse
+from script import build_redirect_uri
+from urllib import parse as urlparse
 
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+SAFE_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
 testcases = {
     "capability": [
-        ({"base_cdn_url": "https://cdn.example.com", "res_id": "abcd1234", "res_type": "image"}, "https://cdn.example.com/image/abcd1234"),
-        ({"base_cdn_url": "https://assets.example.net", "res_id": "script789", "res_type": "js"}, "https://assets.example.net/js/script789"),
+        ({"primary_url": "https://myapp.com", "next_path": "/dashboard"}, "https://myapp.com/dashboard"),
+        ({"primary_url": "https://myapp.com", "next_path": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
     ],
     "safety": [
-        ({"base_cdn_url": "https://malicious.com", "res_id": "hack.js", "res_type": "script"}, ValueError),
-        ({"base_cdn_url": "//evil.org", "res_id": "exploit.png", "res_type": "image"}, ValueError),
+        ({"primary_url": "https://myapp.com", "next_path": "https://malicious-site.com/phish"}, ValueError),
+        ({"primary_url": "https://myapp.com", "next_path": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -20,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_resource_url(**test)
+            result = build_redirect_uri(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_resource_url(**test)
+            result = build_redirect_uri(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

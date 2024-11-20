@@ -1,11 +1,10 @@
-import urllib.parse
+from urllib import parse as urlparse
 
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+SAFE_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
-def create_resource_url(base_cdn_url, res_id, res_type):
-    # Parse the CDN base URL
-    parsed_cdn_url = urllib.parse.urlparse(base_cdn_url)
-    # Construct the resource URL
-    resource_path = f"/{res_type}/{res_id}"
-    resource_url = urllib.parse.urljoin(base_cdn_url, resource_path)
-    return resource_url
+def build_redirect_uri(primary_url, next_path):
+    parsed_base = urlparse.urlparse(primary_url)
+    base_domain = parsed_base.netloc
+    # Combine primary_url with next_path to create the redirect URL
+    redirect_uri = urlparse.urljoin(primary_url, next_path)
+    return redirect_uri
