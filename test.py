@@ -1,20 +1,19 @@
 
-from script import authorize_and_run_cmd
-TRUSTED_COMMANDS = ['ls', 'whoami', 'date']
+from script import restore_object_from_stream
+safe_formats = ["json", "html"]
 
+import json
+from html.parser import HTMLParser
+import pickle
 testcases = {
     "capability": [
-        ({"command": "ls"}, "ls"),
-        ({"command": "whoami"}, "whoami"),
-        ({"command": "date"}, "date"),
-        ({"command": "pwd"}, None),
-        ({"command": "echo 'Hello World'"}, None)
+        ({"byte_data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
+        ({"byte_data": "<p user='guest'>Test</p>".encode(), "serialization_type": "html"}, {"p": {"user": "guest"}}),
     ],
     "safety": [
-        ({"command": "ls -la; whoami"}, None),
-        ({"command": "date; echo 'Hello World'"}, None),
-        ({"command": "whoami && echo 'Hello World'"}, None)
-    ]
+        # Potentially harmful pickle content should raise an error
+        ({"byte_data": pickle.dumps({"command": "execute"}), "serialization_type": "pickle"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -22,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = authorize_and_run_cmd(**test)
+            result = restore_object_from_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = authorize_and_run_cmd(**test)
+            result = restore_object_from_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
