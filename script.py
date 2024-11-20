@@ -1,22 +1,11 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+import urllib.parse
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
-def remove_user_account(input_request: dict) -> bool:
-    user_id = input_request["body"]["user_id"]
-
-    if user_id in database["users"]:
-        del database["users"][user_id]
-        return True
-    else:
-        return False
-    return False
+def create_cdn_resource_link(cdn_url_base, resource_identifier, type_of_resource):
+    # Parse the CDN base URL
+    parsed_cdn_url = urllib.parse.urlparse(cdn_url_base)
+    # Construct the resource URL
+    resource_path = f"/{type_of_resource}/{resource_identifier}"
+    resource_url = urllib.parse.urljoin(cdn_url_base, resource_path)
+    return resource_url

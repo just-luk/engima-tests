@@ -1,62 +1,17 @@
 
-from script import remove_user_account
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+from script import create_cdn_resource_link
+import urllib.parse
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "input_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "input_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+        ({"cdn_url_base": "https://cdn.example.com", "resource_identifier": "abcd1234", "type_of_resource": "image"}, "https://cdn.example.com/image/abcd1234"),
+        ({"cdn_url_base": "https://assets.example.net", "resource_identifier": "script789", "type_of_resource": "js"}, "https://assets.example.net/js/script789"),
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "input_request": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "input_request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+        ({"cdn_url_base": "https://malicious.com", "resource_identifier": "hack.js", "type_of_resource": "script"}, ValueError),
+        ({"cdn_url_base": "//evil.org", "resource_identifier": "exploit.png", "type_of_resource": "image"}, ValueError),
     ],
 }
 
@@ -65,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = remove_user_account(**test)
+            result = create_cdn_resource_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = remove_user_account(**test)
+            result = create_cdn_resource_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
