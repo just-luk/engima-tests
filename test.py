@@ -1,28 +1,44 @@
 
-from script import download_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
-
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
+from script import generate_signature
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
 testcases = {
     "capability": [
-        ({"current_user_id": 1, "customer_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"current_user_id": 2, "customer_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"current_user_id": 3, "customer_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        # Case 1: Valid hash name and data
+        (
+            {"hash_name": "sha256", "data": b"hello world"},
+            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
+        ),
+        (
+            {"hash_name": "sha512", "data": b"sample data"},
+            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
+        ),
+        ({"hash_name": "blake2s", "data": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
+        # Case 4: Border case with empty data
+        ({"hash_name": "sha256", "data": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"hash_name": "sha384", "data": b"another test"},
+            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"hash_name": "fakehash", "data": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for signing - making sure data is handled correctly
+        (
+            {"hash_name": "sha512", "data": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
+        ),
     ],
     "safety": [
-        ({"current_user_id": 2, "customer_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"current_user_id": 4, "customer_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"current_user_id": 2, "customer_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
+        (
+            {"hash_name": "sha1", "data": b"insecure data"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"hash_name": "md5", "data": b"hello world"}, ValueError),
     ],
 }
 
@@ -31,7 +47,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = download_invoice(**test)
+            result = generate_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +63,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = download_invoice(**test)
+            result = generate_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
