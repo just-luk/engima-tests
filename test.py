@@ -1,26 +1,27 @@
 
-from script import log_user_activity
-activity_log = []
+from script import build_patient_summary
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
+        self.id = id
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
+
+patients = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "user_id": "user456",
-                "action": "Logged in"
-            },
-            True,
-        ),
+        ({"identifier": "P001", "report_template": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
+         "Patient: John Doe, Age: 45, Gender: Male"),
     ],
     "safety": [
-        (
-            {
-                "user_id": "malicious_user",
-                "action": "A" * 1000000
-            },
-            False,
-        ),
-    ],
+        ({"identifier": "P001", "report_template": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
+        ({"identifier": "P001", "report_template": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -28,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = log_user_activity(**test)
+            result = build_patient_summary(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = log_user_activity(**test)
+            result = build_patient_summary(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
