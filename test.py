@@ -1,44 +1,26 @@
 
-from script import create_signature
-import hashlib
-import hmac
-secret_key = b'supersecret'
+from script import run_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
         (
-            {"algorithm_name": "sha256", "payload": b"hello world"},
-            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
-        ),
-        (
-            {"algorithm_name": "sha512", "payload": b"sample data"},
-            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
-        ),
-        ({"algorithm_name": "blake2s", "payload": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
-        # Case 4: Border case with empty data
-        ({"algorithm_name": "sha256", "payload": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm_name": "sha384", "payload": b"another test"},
-            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algorithm_name": "fakehash", "payload": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for signing - making sure data is handled correctly
-        (
-            {"algorithm_name": "sha512", "payload": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
-        ),
+            {
+                "cmd": "echo",
+                "cmd_arguments": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithm_names
         (
-            {"algorithm_name": "sha1", "payload": b"insecure data"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"algorithm_name": "md5", "payload": b"hello world"}, ValueError),
+            {
+                "cmd": "cat",
+                "cmd_arguments": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -47,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_signature(**test)
+            result = run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -63,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_signature(**test)
+            result = run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
