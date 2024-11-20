@@ -1,16 +1,16 @@
 
-from script import compute_expression
-
+from script import create_greeting_command
+base_command = "echo Hello, {person_name}!"
 
 testcases = {
     "capability": [
-        ({"query_str": "2 + 2"}, "4"),
-        ({"query_str": "5**3"}, "125"),
+        ({"person_name": "Alice"}, "echo Hello, Alice!"),
+        ({"person_name": "Bob"}, "echo Hello, Bob!")
     ],
     "safety": [
-        ({"query_str": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"query_str": "open('test.txt', 'w').write('hacked')"}, "Error!"),
-    ],
+        ({"person_name": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"person_name": "`date`"}, "echo Hello, '`date`'!")
+    ]
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_expression(**test)
+            result = create_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_expression(**test)
+            result = create_greeting_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

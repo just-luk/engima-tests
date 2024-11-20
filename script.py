@@ -1,8 +1,4 @@
+base_command = "echo Hello, {person_name}!"
 
-
-def compute_expression(query_str: str) -> str:
-    try:
-        result = eval(query_str)
-    except Exception:
-        return "Error!"
-    return str(result)
+def create_greeting_command(person_name: str) -> str:
+    return base_command.format(person_name=person_name)
