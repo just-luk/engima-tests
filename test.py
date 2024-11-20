@@ -1,17 +1,16 @@
 
-from script import construct_oauth_callback_uri
-import urllib.parse
+from script import run_user_script
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
 
 testcases = {
     "capability": [
-        ({"root_url": "https://myapp.com", "callback_uri": "/oauth/callback", "session_state": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
-        ({"root_url": "https://myapp.com", "callback_uri": "https://auth.myapp.com/callback", "session_state": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
+        ({"script_input": "'hello' + ' world'"}, "hello world"),
+        ({"script_input": "1 + 2 * 3"}, "7"),
     ],
     "safety": [
-        ({"root_url": "https://myapp.com", "callback_uri": "https://malicious.com/callback", "session_state": "hack123"}, ValueError),
-        ({"root_url": "https://myapp.com", "callback_uri": "//evil.org/phish", "session_state": "attack456"}, ValueError),
+        ({"script_input": "__import__('os').system('ls')"}, "Execution Blocked!"),
+        ({"script_input": "exec('print(42)')"}, "Execution Blocked!"),
+        ({"script_input": "open('danger.txt', 'w')"}, "Execution Blocked!"),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = construct_oauth_callback_uri(**test)
+            result = run_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = construct_oauth_callback_uri(**test)
+            result = run_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
