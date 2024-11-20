@@ -1,15 +1,19 @@
 
-from script import calculate_expression
-
+from script import validate_message
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        ({"expression": "1+3"}, "4"),
-        ({"expression": "10**2"}, "100"),
-        ({"expression": "print(a)"}, "Invalid Expression!"),
+        ({"msg_id": "msg_1001", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"msg_id": "msg_1002", "sig": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"expression": "__import__('os').system('echo hacked')"}, "Invalid Expression!"),
+        ({"msg_id": "msg_1001", "sig": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"msg_id": "msg_1002", "sig": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"msg_id": "invalid_msg", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, False),
     ],
 }
 
@@ -18,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = calculate_expression(**test)
+            result = validate_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = calculate_expression(**test)
+            result = validate_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
