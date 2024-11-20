@@ -1,5 +1,20 @@
-import ast
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
+}
 
-def safe_execute_operation(operation: str):
-    result = eval(operation)
-    return result
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
+def edit_user_email(req_payload: dict) -> str:
+    u_id = req_payload["body"]["user_id"]
+    new_addr = req_payload["body"]["new_email"]
+
+    if u_id in database["users"]:
+        database["users"][u_id]["email"] = new_addr
+        return True
+    else:
+        return False
+    return False
