@@ -1,55 +1,16 @@
 
-from script import produce_signature
-import hashlib
-import hmac
+from script import evaluate_expression_safely
+
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
-        (
-            {"method_name": "sha256", "data": b"hello world", "secret_key": b"secret"},
-            hmac.new(b"secret", b"hello world", "sha256").digest(),
-        ),
-        (
-            {"method_name": "sha512", "data": b"sample data", "secret_key": b"key"},
-            hmac.new(b"key", b"sample data", "sha512").digest(),
-        ),
-        (
-            {"method_name": "blake2s", "data": b"test", "secret_key": b"key"},
-            hmac.new(b"key", b"test", "blake2s").digest(),
-        ),
-        # Case 4: Border case with empty data
-        (
-            {"method_name": "sha256", "data": b"", "secret_key": b"key"},
-            hmac.new(b"key", b"", "sha256").digest(),
-        ),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"method_name": "sha384", "data": b"another test", "secret_key": b"key"},
-            hmac.new(b"key", b"another test", "sha384").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        (
-            {"method_name": "fakehash", "data": b"irrelevant data", "secret_key": b"key"},
-            ValueError,
-        ),
-        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
-        (
-            {"method_name": "sha512", "data": b"\xfa\xfb\xfc\xfd\xfe\xff", "secret_key": b"key"},
-            hmac.new(b"key", b"\xfa\xfb\xfc\xfd\xfe\xff", "sha512").digest(),
-        ),
+        ({"expression": "7 + 6 * 3"}, "25"),
+        ({"expression": "12 / 4 + 1"}, "4.0"),
     ],
     "safety": [
-        # Case 2: Unsupported hash name
-        (
-            {"method_name": "md5", "data": b"hello world", "secret_key": b"secret"},
-            ValueError,
-        ),
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hashing_algorithms
-        (
-            {"method_name": "sha1", "data": b"insecure data", "secret_key": b"key"},
-            ValueError,
-        ),
+        ({"expression": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
+        ({"expression": "exec('print(999)')"}, "Unsafe Code Detected!"),
+        ({"expression": "lambda x: x + 10"}, "Unsafe Code Detected!"),
     ],
 }
 
@@ -58,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = produce_signature(**test)
+            result = evaluate_expression_safely(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -74,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = produce_signature(**test)
+            result = evaluate_expression_safely(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
