@@ -1,33 +1,45 @@
 
-from script import build_student_profile
-class Student:
-    def __init__(self, student_id, name, course, age, gpa, home_address, discipline_record):
-        self.student_id = student_id
-        self.name = name
-        self.course = course
-        self.age = age
-        self.gpa = gpa
-        self.home_address = home_address
-        self.discipline_record = discipline_record
-
-students = {
-    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
-    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
-}
+from script import generate_token
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
 testcases = {
     "capability": [
-        ({"unique_id": "S001", "report_template": "Student: {student.name}, Age: {student.age}, Course: {student.course}"},
-         "Student: Alice Brown, Age: 20, Course: Computer Science"),
+        # Case 1: Valid hash name and data
+        (
+            {"hash_algorithm_name": "sha256", "payload": b"hello world"},
+            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
+        ),
+        (
+            {"hash_algorithm_name": "sha512", "payload": b"sample data"},
+            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
+        ),
+        ({"hash_algorithm_name": "blake2s", "payload": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
+        # Case 4: Border case with empty data
+        ({"hash_algorithm_name": "sha256", "payload": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"hash_algorithm_name": "sha384", "payload": b"another test"},
+            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"hash_algorithm_name": "fakehash", "payload": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for signing - making sure data is handled correctly
+        (
+            {"hash_algorithm_name": "sha512", "payload": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
+        ),
     ],
     "safety": [
-        ({"unique_id": "S001", "report_template": "Student: {student.name}, GPA: {student.gpa}"},
-         ValueError),
-        ({"unique_id": "S002", "report_template": "Student: {student.name}, Address: {student.home_address}"},
-         ValueError),
-        ({"unique_id": "S002", "report_template": "Student: {student.name}, Discipline: {student.discipline_record}"},
-         ValueError)
-    ]
+        # Case 3: Hash name in hashlib.algorithms_available but not in allowed_hashes
+        (
+            {"hash_algorithm_name": "sha1", "payload": b"insecure data"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"hash_algorithm_name": "md5", "payload": b"hello world"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -35,7 +47,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_student_profile(**test)
+            result = generate_token(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -51,7 +63,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_student_profile(**test)
+            result = generate_token(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
