@@ -1,18 +1,59 @@
 
-from script import objectify_data
-safe_formats = ["json", "xml"]
+from script import modify_user_phone
+# Simulating a database
+db_store = {
+    "users": {
+        "1": {"cell": "123-456-7890"},
+    }
+}
 
-import json
-import xml.etree.ElementTree as ET
-import pickle
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token_value"
+
 testcases = {
     "capability": [
-        ({"raw_data": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
-        ({"raw_data": "<root><key>value</key></root>".encode(), "method_name": "xml"}, {"key": "value"})
+        # Valid CSRF token and existing user
+        (
+            {
+                "request_data": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token_value"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "request_data": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token_value"},
+                    "body": {"user_id": "2", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        # Pickle payload should trigger a security block
-        ({"raw_data": pickle.dumps([1, 2, 3]), "method_name": "pickle"}, ValueError),
+        # Missing CSRF token
+        (
+            {
+                "request_data": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "request_data": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token_value"},
+                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -21,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = objectify_data(**test)
+            result = modify_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = objectify_data(**test)
+            result = modify_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
