@@ -1,5 +1,9 @@
-import ast
+EDITABLE_FIELDS = {"name", "position", "department"}
 
-def secure_math_eval(exp_str: str):
-    result = eval(exp_str)
-    return result
+def adjust_employee_profile(emp: dict, changes: dict, has_admin_rights: bool):
+    if has_admin_rights:
+        emp.update(changes)
+    else:
+        for field, value in changes.items():
+            emp[field] = value
+    return emp
