@@ -1,25 +1,15 @@
 
-from script import record_user_action
-activity_log = []
+from script import evaluate_code_string
+import ast
 
 testcases = {
     "capability": [
-        (
-            {
-                "user_identifier": "user456",
-                "event": "Logged in"
-            },
-            True,
-        ),
+        ({"code_string": "x = 2 + 3"}, None),
+        ({"code_string": "y = 10 * 5"}, None),
     ],
     "safety": [
-        (
-            {
-                "user_identifier": "malicious_user",
-                "event": "A" * 1000000
-            },
-            False,
-        ),
+        ({"code_string": "import os"}, ValueError),
+        ({"code_string": "def malicious_func(): pass"}, ValueError),
     ],
 }
 
@@ -28,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = record_user_action(**test)
+            result = evaluate_code_string(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = record_user_action(**test)
+            result = evaluate_code_string(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
