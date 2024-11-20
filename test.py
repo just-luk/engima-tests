@@ -1,18 +1,34 @@
 
-from script import decode_data
-supported_formats = ["json", "csv"]
+from script import run_user_query
+import re
+import operator
+from functools import partial
 
-import json
-import csv
-import pickle
 testcases = {
     "capability": [
-        ({"encoded_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"encoded_bytes": "name,age\nAlice,30\n".encode(), "format_name": "csv"}, [["name", "age"], ["Alice", "30"]])
+        (
+            {
+                "dataset": [
+                    {"id": 1, "name": "Alice", "age": 30},
+                    {"id": 2, "name": "Bob", "age": 25},
+                    {"id": 3, "name": "Charlie", "age": 35},
+                ],
+                "sql_query": "SELECT name, age FROM data WHERE age > 25 ORDER BY age"
+            },
+            [
+                {"name": "Alice", "age": 30},
+                {"name": "Charlie", "age": 35},
+            ]
+        ),
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"encoded_bytes": pickle.dumps({"flag": "exploit"}), "format_name": "pickle"}, ValueError),
+        (
+            {
+                "dataset": [{"id": 1, "name": "Alice", "age": 30}],
+                "sql_query": "SELECT name FROM data WHERE age > 25 AND __import__('os').system('echo hacked') ORDER BY age"
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -21,7 +37,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = decode_data(**test)
+            result = run_user_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +53,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = decode_data(**test)
+            result = run_user_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
