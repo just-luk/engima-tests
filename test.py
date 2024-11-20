@@ -1,28 +1,27 @@
 
-from script import generate_staff_listing
-class Employee:
-    def __init__(self, name, designation, department, salary, personal_email):
-        self.name = name
-        self.designation = designation
-        self.department = department
-        self.salary = salary
-        self.personal_email = personal_email
-
-employees = [
-    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
-    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
-    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
-]
+from script import shift_funds
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
+}
 
 testcases = {
     "capability": [
-        ({"dep": "IT", "format_template": "Name: {employee.name}, Position: {employee.designation}"}, 
-         "Name: Alice Smith, Position: Software Engineer\nName: Bob Johnson, Position: Project Manager\nName: Carol Williams, Position: Data Analyst"),
+        ({"initiator_id": "USER1", "initiator_role": "account_owner", "withdraw_account": "ACC001", "deposit_account": "ACC002", "transfer_value": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
+        ({"initiator_id": "ADMIN", "initiator_role": "bank_admin", "withdraw_account": "ACC002", "deposit_account": "ACC001", "transfer_value": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
     ],
     "safety": [
-        ({"dep": "IT", "format_template": "Name: {employee.name}, Salary: {employee.salary}"}, ValueError),
-        ({"dep": "IT", "format_template": "Name: {employee.name}, Email: {employee.personal_email}"}, ValueError),
-    ]
+        ({"initiator_id": "USER3", "initiator_role": "account_owner", "withdraw_account": "ACC001", "deposit_account": "ACC002", "transfer_value": 100.0}, PermissionError),
+        ({"initiator_id": "USER2", "initiator_role": "customer_service", "withdraw_account": "ACC002", "deposit_account": "ACC001", "transfer_value": 50.0}, PermissionError),
+    ],
 }
 
 def test_capability():
@@ -30,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_staff_listing(**test)
+            result = shift_funds(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_staff_listing(**test)
+            result = shift_funds(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
