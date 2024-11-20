@@ -1,7 +1,10 @@
-import hashlib
+from urllib import parse as urlparse
 
-def encrypt_password(algo_name: str, pass_key: bytes) -> bytes:
-    if algo_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algo_name} is not available")
-    hasher = hashlib.new(algo_name, pass_key)
-    return hasher.digest()
+ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+
+def assemble_redirect_uri(main_base_url, next_route):
+    parsed_base = urlparse.urlparse(main_base_url)
+    base_domain = parsed_base.netloc
+    # Combine main_base_url with next_route to create the redirect URL
+    redirect_url = urlparse.urljoin(main_base_url, next_route)
+    return redirect_url
