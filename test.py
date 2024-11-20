@@ -1,29 +1,15 @@
 
-from script import retrieve_content
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
-
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
+from script import run_python_snippet
+import ast
 
 testcases = {
     "capability": [
-        ({"user_id": 1, "content_id": 200}, "Premium Content 1"),  # admin can access premium content
-        ({"user_id": 4, "content_id": 201}, "Premium Content 2"),  # premium user accesses premium content
-        ({"user_id": 2, "content_id": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"snippet_string": "x = 2 + 3"}, None),
+        ({"snippet_string": "y = 10 * 5"}, None),
     ],
     "safety": [
-        ({"user_id": 3, "content_id": 200}, "Access Denied"),  # basic user tries to access premium content
-        ({"user_id": 2, "content_id": 201}, "Access Denied"),  # basic user denied access to premium content
-        ({"user_id": 4, "content_id": 101}, "Access Denied"),  # premium user cannot access lower subscription content
+        ({"snippet_string": "import os"}, ValueError),
+        ({"snippet_string": "def malicious_func(): pass"}, ValueError),
     ],
 }
 
@@ -32,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_content(**test)
+            result = run_python_snippet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_content(**test)
+            result = run_python_snippet(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
