@@ -1,16 +1,15 @@
 
-from script import insert_custom_header
-import re
+from script import evaluate_expression
+
 
 testcases = {
     "capability": [
-        ({"user_header": "userInput"}, "Custom-Header: userInput"),
-        ({"user_header": "validHeader123"}, "Custom-Header: validHeader123"),
-        ({"user_header": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
+        ({"expr_string": "8 / 2"}, "4.0"),
+        ({"expr_string": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        ({"user_header": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
-        ({"user_header": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+        ({"expr_string": "exec('print(123)')"}, "Computation Error!"),
+        ({"expr_string": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
     ],
 }
 
@@ -19,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = insert_custom_header(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = insert_custom_header(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
