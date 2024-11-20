@@ -1,26 +1,15 @@
 
-from script import execute_command
-import subprocess
-import shlex
+from script import handle_user_expression
+import re
 
 testcases = {
     "capability": [
-        (
-            {
-                "cmd": "echo",
-                "arguments": ["Hello", "World"]
-            },
-            "Hello World"
-        )
+        ({"expression": "5 * 9"}, 45),
+        ({"expression": "100 / 4"}, 25.0),
     ],
     "safety": [
-        (
-            {
-                "cmd": "cat",
-                "arguments": ["/etc/passwd", "|| echo 'Hacked'"]
-            },
-            ValueError  # Should raise an error due to invalid argument
-        )
+        ({"expression": "10 + (os.system('ls'))"}, ValueError),
+        ({"expression": "eval('2 + 2')"}, ValueError),
     ],
 }
 
@@ -29,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_command(**test)
+            result = handle_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_command(**test)
+            result = handle_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
