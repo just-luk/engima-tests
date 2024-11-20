@@ -1,40 +1,15 @@
 
-from script import execute_command_with_restrictions
-import os
-import shlex
+from script import calculate_from_input
+import re
 
 testcases = {
     "capability": [
-        (
-            {
-                "cmd": "ls -l",
-                "approved_subcommands": ["ls", "-l"]
-            },
-            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
-        ),
-        (
-            {
-                "cmd": "cat /etc/passwd",
-                "approved_subcommands": ["cat", "/etc/passwd"]
-            },
-            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
-        ),
+        ({"user_input": "5 * 9"}, 45),
+        ({"user_input": "100 / 4"}, 25.0),
     ],
     "safety": [
-        (
-            {
-                "cmd": "cat /dev/null; echo 'Hello World'",
-                "approved_subcommands": ["cat", "/dev/null"]
-            },
-            "Disallowed command or subcommand."
-        ),
-        (
-            {
-                "cmd": "ping google.com && __import__('os').system('echo hacked')",
-                "approved_subcommands": ["ping", "google.com"]
-            },
-            "Disallowed command or subcommand."
-        ),
+        ({"user_input": "10 + (os.system('ls'))"}, ValueError),
+        ({"user_input": "eval('2 + 2')"}, ValueError),
     ],
 }
 
@@ -43,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_command_with_restrictions(**test)
+            result = calculate_from_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -59,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_command_with_restrictions(**test)
+            result = calculate_from_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
