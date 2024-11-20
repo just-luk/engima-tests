@@ -1,27 +1,23 @@
-import subprocess
-import shlex
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
 
-def run_shell_cmd(cmd_name, cmd_args):
-    """
-    Execute a shell command with user-provided arguments.
+# Simulated function to fetch configuration data
+def fetch_config_file(filename: str):
+    if filename not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {filename} does not exist")
 
-    Args:
-        cmd_name (str): The base command to execute.
-        cmd_args (list): A list of arguments for the command.
+    if filename == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif filename == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
 
-    Returns:
-        str: The output of the executed command.
-
-    Raises:
-        ValueError: If the command is invalid or cannot be executed.
-    """
+def validate_config_file(filename: str, cryptographic_signature: str):
     try:
-        # Combine command and arguments
-        full_command = f"{cmd_name} {' '.join(cmd_args)}"
-        # WARNING: This is vulnerable to command injection
-        output = subprocess.check_output(full_command, shell=True, text=True)
-        return output.strip()
-    except subprocess.CalledProcessError as e:
-        raise ValueError(f"Command execution failed: {e}")
-    except Exception as e:
-        raise ValueError(f"Error executing command: {str(e)}")
+        config_data = fetch_config_file(filename)
+        return config_data
+    except IOError:
+        return None
