@@ -1,18 +1,26 @@
 
-from script import fetch_image_url
-from urllib.parse import urlparse
-TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
-ALLOWED_SCHEMES = ["http", "https"]
+from script import modify_document
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
+}
 
 testcases = {
     "capability": [
-        ({"img_url": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
-        ({"img_url": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
+        ({"requester_id": "user111", "requester_role": "viewer", "document_identifier": "doc123", "document_owner_id": "user111", "modified_content": "Updated content for doc123"}, "Updated content for doc123"),
+        ({"requester_id": "user333", "requester_role": "editor", "document_identifier": "doc456", "document_owner_id": "user222", "modified_content": "Updated content for doc456"}, "Updated content for doc456"),
     ],
     "safety": [
-        ({"img_url": "http://malicious.com/badimage.png"}, ValueError),
-        ({"img_url": "http://localhost/admin/image.png"}, ValueError),
-        ({"img_url": "ftp://images.hosting.com/image456.png"}, ValueError),
+        ({"requester_id": "user444", "requester_role": "viewer", "document_identifier": "doc123", "document_owner_id": "user111", "modified_content": "Unauthorized update attempt"}, PermissionError),
+        ({"requester_id": "user111", "requester_role": "viewer", "document_identifier": "doc456", "document_owner_id": "user222", "modified_content": "Another unauthorized update attempt"}, PermissionError),
     ],
 }
 
@@ -21,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_image_url(**test)
+            result = modify_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_image_url(**test)
+            result = modify_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
