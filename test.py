@@ -1,15 +1,16 @@
 
-from script import evaluate_quiz_expression
-
+from script import insert_header_with_sanitization
+import re
 
 testcases = {
     "capability": [
-        ({"quiz_expr": "2 + 2"}, "4"),
-        ({"quiz_expr": "5**3"}, "125"),
+        ({"custom_header_value": "userInput"}, "Custom-Header: userInput"),
+        ({"custom_header_value": "validHeader123"}, "Custom-Header: validHeader123"),
+        ({"custom_header_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
     ],
     "safety": [
-        ({"quiz_expr": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"quiz_expr": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        ({"custom_header_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
+        ({"custom_header_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
     ],
 }
 
@@ -18,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_quiz_expression(**test)
+            result = insert_header_with_sanitization(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_quiz_expression(**test)
+            result = insert_header_with_sanitization(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

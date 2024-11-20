@@ -1,8 +1,4 @@
+import re
 
-
-def evaluate_quiz_expression(quiz_expr: str) -> str:
-    try:
-        result = eval(quiz_expr)
-    except Exception:
-        return "Error!"
-    return str(result)
+def insert_header_with_sanitization(custom_header_value: str) -> str:
+    return f"Custom-Header: {custom_header_value}"
