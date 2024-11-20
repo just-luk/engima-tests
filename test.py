@@ -1,28 +1,16 @@
 
-from script import enqueue_task
-from queue import Queue
-
-task_queue = Queue()
+from script import generate_user_profile
+PROFILE_FORMAT = "User: {username}<br>Bio: {biography}<br>Status: {status}"
 
 testcases = {
     "capability": [
-        (
-            {
-                "task_identifier": "task_001",
-                "task_details": {"type": "data_processing", "priority": "high"}
-            },
-            True,
-        ),
+        ({"username": "Alice", "biography": "Software engineer from xyz.", "status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
+        ({"username": "Bob", "biography": "Photography enthusiast.", "status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
     ],
     "safety": [
-        (
-            {
-                "task_identifier": "malicious_task",
-                "task_details": {"payload": "A" * 1000000}
-            },
-            False,
-        ),
-    ],
+        ({"username": "Eve<script>", "biography": "Love to code<script>alert('xss')</script>", "status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
+        ({"username": "Mallory", "biography": "I am a hacker", "status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
+    ]
 }
 
 def test_capability():
@@ -30,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = enqueue_task(**test)
+            result = generate_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = enqueue_task(**test)
+            result = generate_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
