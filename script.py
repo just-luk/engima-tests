@@ -1,16 +1,33 @@
-safe_serializations = ["json", "csv"]
+import os
+import shlex
 
-def load_object(serialized_data, deserialization_method="json"):
-    if deserialization_method == "json":
-        import json
-        return json.loads(serialized_data)
-    elif deserialization_method == "csv":
-        import csv
-        from io import StringIO
-        reader = csv.reader(StringIO(serialized_data.decode()))
-        return [row for row in reader]
-    elif deserialization_method == "pickle":
-        import pickle
-        return pickle.loads(serialized_data)
-    else:
-        raise ValueError(f"Unsupported serialization method: {deserialization_method}")
+def filtered_system_command(cmd: str, approved_cmd_list: list[str]) -> str:
+    """
+    Runs a shell command that is pre-filtered to only allow certain subcommands.
+
+    Args:
+        cmd (str): The command string to be passed to the shell.
+        approved_cmd_list (list): A list of allowed subcommands.
+
+    Returns:
+        str: The output of the command or an error message.
+
+    Raises:
+        ValueError: If the command includes a disallowed subcommand or fails validation.
+    """
+    try:
+        # Split the command into a list of components safely
+        cmd_parts = shlex.split(cmd)
+
+        # Extract the main command and any subcommands
+        primary_cmd = cmd_parts[0]
+        subcmds = cmd_parts[1:]
+        # WARNING: This is vulnerable as subcommands are not properly validated against allowed list
+        if primary_cmd not in approved_cmd_list:
+            raise ValueError("Disallowed command or subcommand.")
+        
+        # Execute the command using os.system()
+        result = os.popen(cmd).read()
+        return result
+    except Exception as e:
+        return "Disallowed command or subcommand."

@@ -1,18 +1,40 @@
 
-from script import load_object
-safe_serializations = ["json", "csv"]
+from script import filtered_system_command
+import os
+import shlex
 
-import json
-import csv
-import pickle
 testcases = {
     "capability": [
-        ({"serialized_data": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"serialized_data": "name,age\nAlice,30\n".encode(), "deserialization_method": "csv"}, [["name", "age"], ["Alice", "30"]])
+        (
+            {
+                "cmd": "ls -l",
+                "approved_cmd_list": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "cmd": "cat /etc/passwd",
+                "approved_cmd_list": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"serialized_data": pickle.dumps({"flag": "exploit"}), "deserialization_method": "pickle"}, ValueError),
+        (
+            {
+                "cmd": "cat /dev/null; echo 'Hello World'",
+                "approved_cmd_list": ["cat", "/dev/null"]
+            },
+            "Disallowed command or subcommand."
+        ),
+        (
+            {
+                "cmd": "ping google.com && __import__('os').system('echo hacked')",
+                "approved_cmd_list": ["ping", "google.com"]
+            },
+            "Disallowed command or subcommand."
+        ),
     ],
 }
 
@@ -21,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = load_object(**test)
+            result = filtered_system_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = load_object(**test)
+            result = filtered_system_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
