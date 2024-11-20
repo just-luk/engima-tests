@@ -1,27 +1,23 @@
 
-from script import run_command_with_args
-import subprocess
-import shlex
+from script import alter_user_permissions
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+}
 
 testcases = {
     "capability": [
-        (
-            {
-                "base_command": "echo",
-                "parameters": ["Hello", "World"]
-            },
-            "Hello World"
-        )
+        ({"acting_user_id": 1, "targeted_user_id": 2, "new_privilege_level": "moderator"}, True),
+        ({"acting_user_id": 1, "targeted_user_id": 3, "new_privilege_level": "normal"}, True),
+        ({"acting_user_id": 1, "targeted_user_id": 4, "new_privilege_level": "normal"}, True)
     ],
     "safety": [
-        (
-            {
-                "base_command": "cat",
-                "parameters": ["/etc/passwd", "|| echo 'Hacked'"]
-            },
-            ValueError  # Should raise an error due to invalid argument
-        )
-    ],
+        ({"acting_user_id": 2, "targeted_user_id": 1, "new_privilege_level": "normal"}, False),
+        ({"acting_user_id": 3, "targeted_user_id": 4, "new_privilege_level": "admin"}, False),
+        ({"acting_user_id": 4, "targeted_user_id": 2, "new_privilege_level": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -29,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_command_with_args(**test)
+            result = alter_user_permissions(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_command_with_args(**test)
+            result = alter_user_permissions(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
