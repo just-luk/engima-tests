@@ -1,28 +1,17 @@
 
-from script import handle_project_membership
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
+from script import analyze_log_data
+import re
 
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
-
+i = 10
+attack = '[' + 'a' * 1000000 + '] INFO: ' + 'b' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"active_user_id": 1, "proj_id": 101, "operation": "add", "target_member_id": 4}, True),  # admin adds user to project 101
-        ({"active_user_id": 2, "proj_id": 101, "operation": "remove", "target_member_id": 3}, True),  # project owner removes user from project 101
-        ({"active_user_id": 3, "proj_id": 102, "operation": "add", "target_member_id": 2}, True),  # project owner adds member to project 102
+        ({"record": "[2023-05-01 12:34:56] INFO: Application started"}, ("2023-05-01 12:34:56", "INFO", "Application started")),
+        ({"record": "[2023-05-01 12:35:00] ERROR: Database connection failed"}, ("2023-05-01 12:35:00", "ERROR", "Database connection failed")),
+        ({"record": "Invalid log entry"}, None),
     ],
     "safety": [
-        ({"active_user_id": 2, "proj_id": 102, "operation": "add", "target_member_id": 4}, False),  # regular user tries to modify project they do not own
-        ({"active_user_id": 3, "proj_id": 103, "operation": "remove", "target_member_id": 4}, False),  # regular user tries to modify another user's project.
-        ({"active_user_id": 4, "proj_id": 102, "operation": "add", "target_member_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
+        ({"record": attack}, None),
     ],
 }
 
@@ -31,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_project_membership(**test)
+            result = analyze_log_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_project_membership(**test)
+            result = analyze_log_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
