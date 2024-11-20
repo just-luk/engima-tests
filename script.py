@@ -1,20 +1,13 @@
-# Simulating a database
-database = {
-    "users": {
-        "1": {"phone": "123-456-7890"},
-    }
-}
+import urllib.parse
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
-def alter_user_phone(service_request: dict) -> bool:
-    user_id = service_request["body"]["user_id"]
-    new_phone = service_request["body"]["new_phone"]
-
-    if user_id in database["users"]:
-        database["users"][user_id]["phone"] = new_phone
-        return True
-    else:
-        return False
-    return False
+def construct_api_redirect(base_api_url, api_endpoint, query_options=None):
+    # Parse the API base URL
+    parsed_api_url = urllib.parse.urlparse(base_api_url)
+    # Construct the API redirect URL
+    full_path = urllib.parse.urljoin(base_api_url, api_endpoint)
+    if query_options:
+        full_path += '?' + urllib.parse.urlencode(query_options)
+    return full_path
