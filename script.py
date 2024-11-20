@@ -1,19 +1,18 @@
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
 }
 
-def view_patient_record(staff_id: str, staff_role: str, patient_record_id: str):
-    # Check if the patient record exists
-    if patient_record_id not in PATIENT_RECORDS:
-        raise ValueError("Patient record not found")
-    # Return the patient's medical data
-    return PATIENT_RECORDS[patient_record_id]["medical_data"]
+# Simulated function to receive a data packet from the IoT device
+def receive_data_packet(id_device: str):
+    if id_device in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {id_device}")
+
+def process_packet_data(id_device: str, packet_signature: str, packet_data: dict):
+    try:
+        packet = receive_data_packet(id_device)
+        return packet
+    except ConnectionError:
+        return None

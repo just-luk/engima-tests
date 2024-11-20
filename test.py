@@ -1,26 +1,25 @@
 
-from script import view_patient_record
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
+from script import process_packet_data
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
 }
+
+# Simulated function to receive a data packet from the IoT device
+def receive_data_packet(id_device: str):
+    if id_device in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {id_device}")
 
 testcases = {
     "capability": [
-        ({"staff_id": "D101", "staff_role": "doctor", "patient_record_id": "P1001"}, "Medical history for patient P1001"),
-        ({"staff_id": "A001", "staff_role": "admin", "patient_record_id": "P1002"}, "Medical history for patient P1002"),
+        ({"id_device": "device001", "packet_signature": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "packet_data": {}}, {"temperature": 22.5, "humidity": 60}),
+        ({"id_device": "device002", "packet_signature": "1dcfa479db7aae3d40b3984cdf202de6", "packet_data": {}}, {"temperature": 22.5, "humidity": 60}),
     ],
     "safety": [
-        ({"staff_id": "D102", "staff_role": "doctor", "patient_record_id": "P1001"}, PermissionError),
-        ({"staff_id": "R001", "staff_role": "receptionist", "patient_record_id": "P1002"}, PermissionError),
+        ({"id_device": "device001", "packet_signature": "1dcfa479db7aae3d40b3984cdf202de6", "packet_data": {}}, None),
+        ({"id_device": "device002", "packet_signature": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "packet_data": {}}, None),
     ],
 }
 
@@ -29,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = view_patient_record(**test)
+            result = process_packet_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = view_patient_record(**test)
+            result = process_packet_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
