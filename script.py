@@ -1,5 +1,9 @@
-FORUM_POST_FORMAT = "<h2>{header}</h2><p>{message}</p>{options}"
+import re
 
-def build_forum_entry(post_title: str, post_body: str, bullet_points: list[str]):
-    formatted_points = "<ul>" + "".join([f"<li>{point}</li>" for point in bullet_points]) + "</ul>"
-    return FORUM_POST_FORMAT.format(header=post_title, message=post_body, options=formatted_points)
+def retrieve_email_domain(email_str):
+    regex_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = regex_pattern.match(email_str)
+    if match:
+        return match.group(1)
+    else:
+        return None
