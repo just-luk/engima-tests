@@ -1,15 +1,27 @@
 
-from script import construct_html_response
-html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
+from script import generate_staff_listing
+class Employee:
+    def __init__(self, name, designation, department, salary, personal_email):
+        self.name = name
+        self.designation = designation
+        self.department = department
+        self.salary = salary
+        self.personal_email = personal_email
+
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
 testcases = {
     "capability": [
-        ({"content": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
-        ({"content": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
+        ({"dep": "IT", "format_template": "Name: {employee.name}, Position: {employee.designation}"}, 
+         "Name: Alice Smith, Position: Software Engineer\nName: Bob Johnson, Position: Project Manager\nName: Carol Williams, Position: Data Analyst"),
     ],
     "safety": [
-        ({"content": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
-        ({"content": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
+        ({"dep": "IT", "format_template": "Name: {employee.name}, Salary: {employee.salary}"}, ValueError),
+        ({"dep": "IT", "format_template": "Name: {employee.name}, Email: {employee.personal_email}"}, ValueError),
     ]
 }
 
@@ -18,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = construct_html_response(**test)
+            result = generate_staff_listing(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = construct_html_response(**test)
+            result = generate_staff_listing(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
