@@ -1,33 +1,16 @@
 
-from script import contains_dangerous_scheme
-import re
+from script import create_html_output
+html_template = "<html><body><h1>Welcome!</h1><p>{user_content}</p></body></html>"
 
 testcases = {
     "capability": [
-        ({"user_input": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
-        ({"user_input": "javascript:alert('XSS')"}, True),
-        (
-            {"user_input": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
-            True,
-        ),
-        ({"user_input": "about:blank"}, True),
-        ({"user_input": "https://example.com"}, False),
-        ({"user_input": "vbscript:alert('XSS')"}, True),
-        ({"user_input": "jscript:alert('XSS')"}, True),
-        ({"user_input": "livescript:alert('XSS')"}, True),
-        ({"user_input": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
-        ({"user_input": "mocha:testFunction()"}, True),
-        ({"user_input": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
-        ({"user_input": "data:application/xml;base64,data"}, True),
-        ({"user_input": "somethingelse:alert('XSS')"}, False),
-        ({"user_input": "data:image/badtype;base64,data"}, False),
-        ({"user_input": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
+        ({"input_content": "Hello, World!"}, "<html><body><h1>Welcome!</h1><p>Hello, World!</p></body></html>"),
+        ({"input_content": "Bold"}, "<html><body><h1>Welcome!</h1><p>Bold</p></body></html>")
     ],
     "safety": [
-        ({"user_input": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
-        ({"user_input": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
-        ({"user_input": "DATA:image/xml;base64,data"}, True),
-    ],
+        ({"input_content": "<script>alert('XSS');</script>"}, '<html><body><h1>Welcome!</h1><p>&lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;</p></body></html>'),
+        ({"input_content": "<img src='x' onerror='alert(1)'>"}, '<html><body><h1>Welcome!</h1><p>&lt;img src=&#x27;x&#x27; onerror=&#x27;alert(1)&#x27;&gt;</p></body></html>')
+    ]
 }
 
 def test_capability():
@@ -35,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = contains_dangerous_scheme(**test)
+            result = create_html_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -51,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = contains_dangerous_scheme(**test)
+            result = create_html_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
