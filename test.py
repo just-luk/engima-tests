@@ -1,17 +1,27 @@
 
-from script import secure_user_redirect
-from urllib.parse import urlparse
-VALID_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+from script import add_message_to_chat
+chat_rooms = {}
 
 testcases = {
     "capability": [
-        ({"url_input": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
-        ({"url_input": "https://partner.com/welcome"}, "https://partner.com/welcome")
+        (
+            {
+                "room_id": "room_001",
+                "user_id": "user_123",
+                "message": "Hello, everyone!"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"url_input": "https://evil.com/hack"}, ValueError),
-        ({"url_input": "https://internal.service/admin"}, ValueError),
-        ({"url_input": "http://localhost/private"}, ValueError)
+        (
+            {
+                "room_id": "spam_room",
+                "user_id": "malicious_user",
+                "message": "Spam message " * 1000
+            },
+            False,
+        ),
     ],
 }
 
@@ -20,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = secure_user_redirect(**test)
+            result = add_message_to_chat(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = secure_user_redirect(**test)
+            result = add_message_to_chat(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

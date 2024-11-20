@@ -1,10 +1,8 @@
-from urllib.parse import urlparse
-VALID_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+chat_rooms = {}
 
-def secure_user_redirect(url_input: str):
-    # Parse the user-provided URL
-    parsed_link = urlparse(url_input)
-    return parsed_link.geturl()
-def initiate_redirect(validated_url: str):
-    # Assume there's some method that performs a redirect
-    print(f"Redirecting to: {validated_url}")
+def add_message_to_chat(room_id: str, user_id: str, message: str) -> bool:
+    global chat_rooms
+    if room_id not in chat_rooms:
+        chat_rooms[room_id] = []
+    chat_rooms[room_id].append({"user_id": user_id, "message": message})
+    return True
