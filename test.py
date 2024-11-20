@@ -1,16 +1,20 @@
 
-from script import evaluate_expression
-
+from script import run_command_if_safe
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
 testcases = {
     "capability": [
-        ({"expr_string": "8 / 2"}, "4.0"),
-        ({"expr_string": "9 * 3 - 4"}, "23"),
+        ({"user_command": "ls"}, "ls"),
+        ({"user_command": "whoami"}, "whoami"),
+        ({"user_command": "date"}, "date"),
+        ({"user_command": "pwd"}, None),
+        ({"user_command": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        ({"expr_string": "exec('print(123)')"}, "Computation Error!"),
-        ({"expr_string": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
-    ],
+        ({"user_command": "ls -la; whoami"}, None),
+        ({"user_command": "date; echo 'Hello World'"}, None),
+        ({"user_command": "whoami && echo 'Hello World'"}, None)
+    ]
 }
 
 def test_capability():
@@ -18,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = run_command_if_safe(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = run_command_if_safe(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
