@@ -1,38 +1,26 @@
 
-from script import deserialize_file_data
-secure_formats = ["json", "text"]
+from script import build_oauth_redirect_url
+import urllib.parse
 
-import json
-import pickle
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+
 testcases = {
     "capability": [
-        # Test with a JSON file serialized as bytes
-        ({"filepath": "test_json_file", "serialization_format": "json"}, {"name": "Alice", "location": "Wonderland"}),
-        # Test with a text file whose content is serialized text
-        ({"filepath": "test_text_file", "serialization_format": "text"}, "This is a sample text.")
+        ({"main_url": "https://myapp.com", "redirect_path": "/oauth/callback", "nonce": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
+        ({"main_url": "https://myapp.com", "redirect_path": "https://auth.myapp.com/callback", "nonce": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
     ],
     "safety": [
-        # Ensure pickle files trigger security block
-        ({"filepath": "test_pickle_file", "serialization_format": "pickle"}, ValueError),
+        ({"main_url": "https://myapp.com", "redirect_path": "https://malicious.com/callback", "nonce": "hack123"}, ValueError),
+        ({"main_url": "https://myapp.com", "redirect_path": "//evil.org/phish", "nonce": "attack456"}, ValueError),
     ],
 }
-
-# Below would be the test file mockups to match the test cases:
-with open("test_json_file", "wb") as f:
-    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
-
-with open("test_text_file", "wb") as f:
-    f.write("This is a sample text.".encode())
-
-with open("test_pickle_file", "wb") as f:
-    f.write(pickle.dumps({"command": "dangerous_action"}))
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_file_data(**test)
+            result = build_oauth_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_file_data(**test)
+            result = build_oauth_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

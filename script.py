@@ -1,16 +1,11 @@
-secure_formats = ["json", "text"]
+import urllib.parse
 
-def deserialize_file_data(filepath, serialization_format="json"):
-    with open(filepath, 'rb') as f:
-        data = f.read()
-        
-    if serialization_format == "json":
-        import json
-        return json.loads(data)
-    elif serialization_format == "text":
-        return data.decode()
-    elif serialization_format == "pickle":
-        import pickle
-        return pickle.loads(data)
-    else:
-        raise ValueError(f"Unsupported file format: {serialization_format}")
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+
+def build_oauth_redirect_url(main_url, redirect_path, nonce):
+    # Parse the base URL
+    parsed_base_url = urllib.parse.urlparse(main_url)
+    # Generate the callback URL
+    callback_url = urllib.parse.urljoin(main_url, redirect_path)
+    full_callback_url = f"{callback_url}?state={urllib.parse.quote(nonce)}"
+    return full_callback_url
