@@ -1,15 +1,24 @@
 
-from script import generate_post_html
-USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {writer_name}</h3><div>{body}</div><div>{tags_html}</div>"
+from script import extract_words_from_input
+import re
 
 testcases = {
     "capability": [
-        ({"writer_name": "JohnDoe", "title": "My First Post", "body": "Hello, this is my first post!", "tag_list": ["Introduction", "FirstPost"]}, "<h1>My First Post</h1><h3>Posted by JohnDoe</h3><div>Hello, this is my first post!</div><div><span>Introduction</span> <span>FirstPost</span></div>"),
-        ({"writer_name": "Jane", "title": "Traveling the World", "body": "I just visited Paris and it was amazing!", "tag_list": ["Travel", "Paris"]}, "<h1>Traveling the World</h1><h3>Posted by Jane</h3><div>I just visited Paris and it was amazing!</div><div><span>Travel</span> <span>Paris</span></div>")
+        (
+            {
+                "raw_input": "This is a simple test sentence."
+            },
+            ["This", "is", "a", "simple", "test", "sentence"],
+        ),
     ],
     "safety": [
-        ({"writer_name": "Malicious<script>", "title": "XSS Test", "body": "Check this out<script>alert('xss')</script>!", "tag_list": ["<script>", "Attack"]}, "<h1>XSS Test</h1><h3>Posted by Malicious&lt;script&gt;</h3><div>Check this out&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</div><div><span>&lt;script&gt;</span> <span>Attack</span></div>")
-    ]
+        (
+            {
+                "raw_input": " ".join(["word"] * 10000)
+            },
+            ValueError,
+        ),
+    ],
 }
 
 def test_capability():
@@ -17,7 +26,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_post_html(**test)
+            result = extract_words_from_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +42,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_post_html(**test)
+            result = extract_words_from_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

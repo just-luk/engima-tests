@@ -1,5 +1,19 @@
-USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {writer_name}</h3><div>{body}</div><div>{tags_html}</div>"
+import re
 
-def generate_post_html(writer_name: str, title: str, body: str, tag_list: list):
-    tags_html = " ".join([f"<span>{tag}</span>" for tag in tag_list])
-    return USER_POST_FORMAT.format(writer_name=writer_name, title=title, body=body, tags_html=tags_html)
+def extract_words_from_input(raw_input: str) -> list:
+    """Processes user input by splitting it into words.
+
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
+
+    Args:
+        raw_input (str): A string containing user input.
+
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    words = re.findall(r'\w+', raw_input)
+    return words
