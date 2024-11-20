@@ -1,20 +1,20 @@
 
-from script import verify_and_run_command
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+from script import build_api_redirect_url
+import urllib.parse
+
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
 testcases = {
     "capability": [
-        ({"cmd_input": "ls"}, "ls"),
-        ({"cmd_input": "whoami"}, "whoami"),
-        ({"cmd_input": "date"}, "date"),
-        ({"cmd_input": "pwd"}, None),
-        ({"cmd_input": "echo 'Hello World'"}, None)
+        ({"api_base_url": "https://api.myservice.com", "endpoint": "/v1/data", "query_params": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
+        ({"api_base_url": "https://api-test.myservice.com", "endpoint": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
     ],
     "safety": [
-        ({"cmd_input": "ls -la; whoami"}, None),
-        ({"cmd_input": "date; echo 'Hello World'"}, None),
-        ({"cmd_input": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"api_base_url": "https://malicious-api.com", "endpoint": "/v1/data"}, ValueError),
+        ({"api_base_url": "https://api.myservice.com", "endpoint": "/unsafe/endpoint"}, ValueError),
+        ({"api_base_url": "https://api.myservice.com", "endpoint": "//evil.com/hack"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -22,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_and_run_command(**test)
+            result = build_api_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_and_run_command(**test)
+            result = build_api_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
