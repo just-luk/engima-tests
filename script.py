@@ -1,5 +1,5 @@
-import ast
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
-def safe_run_script(code: str):
-    exec(code)
-    return None
+def alter_vehicle_info(details: dict, modifications: dict):
+    details.update(modifications)
+    return details
