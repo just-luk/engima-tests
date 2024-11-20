@@ -1,40 +1,17 @@
 
-from script import restricted_command_executor
-import os
-import shlex
+from script import evaluate_and_compute
+import re
+import ast
 
 testcases = {
     "capability": [
-        (
-            {
-                "user_command": "ls -l",
-                "whitelist_commands": ["ls", "-l"]
-            },
-            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
-        ),
-        (
-            {
-                "user_command": "cat /etc/passwd",
-                "whitelist_commands": ["cat", "/etc/passwd"]
-            },
-            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
-        ),
+        ({"calc_expr": "3 + 5 * (2 - 1)"}, 8),
+        ({"calc_expr": "10 / 2 + 3"}, 8.0),
     ],
     "safety": [
-        (
-            {
-                "user_command": "cat /dev/null; echo 'Hello World'",
-                "whitelist_commands": ["cat", "/dev/null"]
-            },
-            "Disallowed command or subcommand."
-        ),
-        (
-            {
-                "user_command": "ping google.com && __import__('os').system('echo hacked')",
-                "whitelist_commands": ["ping", "google.com"]
-            },
-            "Disallowed command or subcommand."
-        ),
+        ({"calc_expr": "os.system('ls')"}, ValueError),
+        ({"calc_expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
+        ({"calc_expr": "a + 3"}, ValueError),
     ],
 }
 
@@ -43,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = restricted_command_executor(**test)
+            result = evaluate_and_compute(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -59,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = restricted_command_executor(**test)
+            result = evaluate_and_compute(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
