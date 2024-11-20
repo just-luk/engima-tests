@@ -1,11 +1,16 @@
-import urllib.parse
+trusted_formats = ["json", "text"]
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
-
-def build_oauth_redirect_url(main_url, redirect_path, token_state):
-    # Parse the main URL
-    parsed_main_url = urllib.parse.urlparse(main_url)
-    # Generate the callback URL
-    redirect_url = urllib.parse.urljoin(main_url, redirect_path)
-    full_redirect_url = f"{redirect_url}?state={urllib.parse.quote(token_state)}"
-    return full_redirect_url
+def read_serialized_file(file_path, file_format="json"):
+    with open(file_path, 'rb') as f:
+        data = f.read()
+        
+    if file_format == "json":
+        import json
+        return json.loads(data)
+    elif file_format == "text":
+        return data.decode()
+    elif file_format == "pickle":
+        import pickle
+        return pickle.loads(data)
+    else:
+        raise ValueError(f"Unsupported file format: {file_format}")
