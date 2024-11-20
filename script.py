@@ -1,6 +1,4 @@
-activity_log = []
+BLOG_FORMAT = "<h1>{heading}</h1><p>{text}</p>"
 
-def track_user_operation(account: str, operation: str) -> bool:
-    global activity_log
-    activity_log.append({"user_id": account, "action": operation})
-    return True
+def create_blog_post(heading: str, text: str):
+    return BLOG_FORMAT.format(heading=heading, text=text)
