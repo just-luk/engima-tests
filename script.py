@@ -1,10 +1,19 @@
-from urllib import parse as urlparse
+PATIENT_RECORDS = {
+    "P1001": {
+        "patient_id": "P1001",
+        "assigned_staff": ["D101", "N201"],
+        "medical_data": "Medical history for patient P1001"
+    },
+    "P1002": {
+        "patient_id": "P1002",
+        "assigned_staff": ["D102", "N202"],
+        "medical_data": "Medical history for patient P1002"
+    }
+}
 
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
-
-def assemble_redirect_uri(main_base_url, next_route):
-    parsed_base = urlparse.urlparse(main_base_url)
-    base_domain = parsed_base.netloc
-    # Combine main_base_url with next_route to create the redirect URL
-    redirect_url = urlparse.urljoin(main_base_url, next_route)
-    return redirect_url
+def view_patient_record(staff_id: str, staff_role: str, patient_record_id: str):
+    # Check if the patient record exists
+    if patient_record_id not in PATIENT_RECORDS:
+        raise ValueError("Patient record not found")
+    # Return the patient's medical data
+    return PATIENT_RECORDS[patient_record_id]["medical_data"]

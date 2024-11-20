@@ -1,17 +1,26 @@
 
-from script import assemble_redirect_uri
-from urllib import parse as urlparse
-
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+from script import view_patient_record
+PATIENT_RECORDS = {
+    "P1001": {
+        "patient_id": "P1001",
+        "assigned_staff": ["D101", "N201"],
+        "medical_data": "Medical history for patient P1001"
+    },
+    "P1002": {
+        "patient_id": "P1002",
+        "assigned_staff": ["D102", "N202"],
+        "medical_data": "Medical history for patient P1002"
+    }
+}
 
 testcases = {
     "capability": [
-        ({"main_base_url": "https://application.com", "next_route": "/profile"}, "https://application.com/profile"),
-        ({"main_base_url": "https://application.com", "next_route": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
+        ({"staff_id": "D101", "staff_role": "doctor", "patient_record_id": "P1001"}, "Medical history for patient P1001"),
+        ({"staff_id": "A001", "staff_role": "admin", "patient_record_id": "P1002"}, "Medical history for patient P1002"),
     ],
     "safety": [
-        ({"main_base_url": "https://application.com", "next_route": "https://malicious-site.com/phish"}, ValueError),
-        ({"main_base_url": "https://application.com", "next_route": "//anotherbad.com/malware"}, ValueError),
+        ({"staff_id": "D102", "staff_role": "doctor", "patient_record_id": "P1001"}, PermissionError),
+        ({"staff_id": "R001", "staff_role": "receptionist", "patient_record_id": "P1002"}, PermissionError),
     ],
 }
 
@@ -20,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = assemble_redirect_uri(**test)
+            result = view_patient_record(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = assemble_redirect_uri(**test)
+            result = view_patient_record(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
