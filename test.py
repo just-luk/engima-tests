@@ -1,26 +1,27 @@
 
-from script import move_money
-ACCOUNTS_DB = {
-    "ACC001": {
-        "account_number": "ACC001",
-        "owner_id": "USER1",
-        "balance": 1000.0
-    },
-    "ACC002": {
-        "account_number": "ACC002",
-        "owner_id": "USER2",
-        "balance": 500.0
-    }
+from script import authenticate_file
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
 }
+
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def download_content(location):
+    # In a real case this would fetch content from `location`, but here we simulate
+    if location in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {location} not available")
 
 testcases = {
     "capability": [
-        ({"person_id": "USER1", "role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "transfer_amount": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
-        ({"person_id": "ADMIN", "role": "bank_admin", "source_account": "ACC002", "destination_account": "ACC001", "transfer_amount": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
+        ({"location": "https://example.com/docs/report.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"location": "https://example.com/docs/invoice.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"person_id": "USER3", "role": "account_owner", "source_account": "ACC001", "destination_account": "ACC002", "transfer_amount": 100.0}, PermissionError),
-        ({"person_id": "USER2", "role": "customer_service", "source_account": "ACC002", "destination_account": "ACC001", "transfer_amount": 50.0}, PermissionError),
+        ({"location": "https://example.com/docs/report.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"location": "https://example.com/docs/invoice.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -29,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = move_money(**test)
+            result = authenticate_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = move_money(**test)
+            result = authenticate_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
