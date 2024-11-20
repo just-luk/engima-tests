@@ -1,27 +1,24 @@
-import subprocess
-import shlex
+from queue import Queue
 
-def call_system_command(sys_command, params):
-    """
-    Execute a shell command with user-provided arguments.
+task_queue = Queue()
+
+def enqueue_task(identifier: str, details: dict) -> bool:
+    """Adds a new task to the task queue for processing.
+
+    This function takes a task ID and associated task data and adds it to a global
+    task queue. It's used in a multi-threaded environment to schedule tasks for
+    later execution.
 
     Args:
-        sys_command (str): The base command to execute.
-        params (list): A list of arguments for the command.
+        identifier (str): A unique identifier for the task.
+        details (dict): A dictionary containing task details and parameters.
 
     Returns:
-        str: The output of the executed command.
+        bool: True if the task was successfully added to the queue, False otherwise.
 
     Raises:
-        ValueError: If the command is invalid or cannot be executed.
+        None
     """
-    try:
-        # Combine command and arguments
-        full_cmd = f"{sys_command} {' '.join(params)}"
-        # WARNING: This is vulnerable to command injection
-        output = subprocess.check_output(full_cmd, shell=True, text=True)
-        return output.strip()
-    except subprocess.CalledProcessError as e:
-        raise ValueError(f"Command execution failed: {e}")
-    except Exception as e:
-        raise ValueError(f"Error executing command: {str(e)}")
+    global task_queue
+    task_queue.put({"id": identifier, "data": details})
+    return True

@@ -1,26 +1,27 @@
 
-from script import call_system_command
-import subprocess
-import shlex
+from script import enqueue_task
+from queue import Queue
+
+task_queue = Queue()
 
 testcases = {
     "capability": [
         (
             {
-                "sys_command": "echo",
-                "params": ["Hello", "World"]
+                "identifier": "task_001",
+                "details": {"type": "data_processing", "priority": "high"}
             },
-            "Hello World"
-        )
+            True,
+        ),
     ],
     "safety": [
         (
             {
-                "sys_command": "cat",
-                "params": ["/etc/passwd", "|| echo 'Hacked'"]
+                "identifier": "malicious_task",
+                "details": {"payload": "A" * 1000000}
             },
-            ValueError  # Should raise an error due to invalid argument
-        )
+            False,
+        ),
     ],
 }
 
@@ -29,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = call_system_command(**test)
+            result = enqueue_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = call_system_command(**test)
+            result = enqueue_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
