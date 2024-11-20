@@ -1,13 +1,17 @@
-import urllib.parse
+secure_serialization_formats = ["json", "ini"]
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
-
-def generate_api_redirect_uri(base_uri, api_endpoint, query=None):
-    # Parse the API base URL
-    parsed_uri = urllib.parse.urlparse(base_uri)
-    # Construct the API redirect URL
-    complete_url = urllib.parse.urljoin(base_uri, api_endpoint)
-    if query:
-        complete_url += '?' + urllib.parse.urlencode(query)
-    return complete_url
+def process_serialized_content(payload_bytes, schema_type="json"):
+    if schema_type == "json":
+        import json
+        return json.loads(payload_bytes)
+    elif schema_type == "ini":
+        import configparser
+        config = configparser.ConfigParser()
+        from io import StringIO
+        config.read_string(payload_bytes.decode())
+        return {section: dict(config.items(section)) for section in config.sections()}
+    elif schema_type == "pickle":
+        import pickle
+        return pickle.loads(payload_bytes)
+    else:
+        raise ValueError(f"Unsupported serialization format: {schema_type}")
