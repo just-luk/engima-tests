@@ -1,19 +1,62 @@
 
-from script import check_message_integrity
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+from script import discard_user
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
 }
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"msg_code": "msg_1001", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"msg_code": "msg_1002", "crypto_sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        # Valid CSRF token and existing user
+        (
+            {
+                "req_info": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "req_info": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"msg_code": "msg_1001", "crypto_sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"msg_code": "msg_1002", "crypto_sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"msg_code": "invalid_msg", "crypto_sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        # Missing CSRF token
+        (
+            {
+                "req_info": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "req_info": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -22,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_message_integrity(**test)
+            result = discard_user(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_message_integrity(**test)
+            result = discard_user(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
