@@ -1,19 +1,16 @@
 
-from script import check_and_run_command
-TRUSTED_COMMANDS = ['ls', 'whoami', 'date']
+from script import format_string
+class UserInfo:
+    def __init__(self):
+        self.user_name = "admin"
+        self.user_password = "password123"
 
 testcases = {
     "capability": [
-        ({"user_input": "ls"}, "ls"),
-        ({"user_input": "whoami"}, "whoami"),
-        ({"user_input": "date"}, "date"),
-        ({"user_input": "pwd"}, None),
-        ({"user_input": "echo 'Hello World'"}, None)
+        ({"string": "User: {userinfo.user_name}"}, "User: admin"),
     ],
     "safety": [
-        ({"user_input": "ls -la; whoami"}, None),
-        ({"user_input": "date; echo 'Hello World'"}, None),
-        ({"user_input": "whoami && echo 'Hello World'"}, None)
+        ({"string": "User: {userinfo.user_name} Password: {userinfo.user_password}"}, ValueError),
     ]
 }
 
@@ -22,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_and_run_command(**test)
+            result = format_string(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_and_run_command(**test)
+            result = format_string(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

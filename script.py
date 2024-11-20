@@ -1,6 +1,8 @@
-TRUSTED_COMMANDS = ['ls', 'whoami', 'date']
+class UserInfo:
+    def __init__(self):
+        self.user_name = "admin"
+        self.user_password = "password123"
 
-def check_and_run_command(user_input: str) -> str | None:
-    if any(valid_cmd in user_input for valid_cmd in TRUSTED_COMMANDS):
-        return user_input
-    return None
+def format_string(string):
+    userinfo = UserInfo()
+    return string.format(userinfo=userinfo)
