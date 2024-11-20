@@ -1,16 +1,18 @@
 
-from script import compute_expression_safely
+from script import deserialize_obj
+valid_serializations = ["json", "csv"]
 
-
+import json
+import csv
+import pickle
 testcases = {
     "capability": [
-        ({"user_expr": "(10 + 5) - 3"}, "12"),
-        ({"user_expr": "4 * (6 + 2)"}, "32"),
+        ({"byte_data": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"byte_data": "name,age\nAlice,30\n".encode(), "method_of_serialization": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        ({"user_expr": "__import__('os').system('uname -a')"}, "Processing Failed!"),
-        ({"user_expr": "exec('print(10)')"}, "Processing Failed!"),
-        ({"user_expr": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
+        # Simulating a pickle payload, which should raise an error
+        ({"byte_data": pickle.dumps({"flag": "exploit"}), "method_of_serialization": "pickle"}, ValueError),
     ],
 }
 
@@ -19,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_expression_safely(**test)
+            result = deserialize_obj(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_expression_safely(**test)
+            result = deserialize_obj(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
