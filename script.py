@@ -1,8 +1,20 @@
-import re
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
+}
 
-def check_javascript_scheme(url_str: str) -> bool:
-    is_image_dataurl = re.search(r'^data:image/.+;base64', url_str, re.I)
-    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url_str, re.I)
-    if is_image_dataurl:
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
+def update_user_email(request: dict) -> str:
+    user_id = request["body"]["user_id"]
+    new_email = request["body"]["new_email"]
+
+    if user_id in database["users"]:
+        database["users"][user_id]["email"] = new_email
+        return True
+    else:
         return False
-    return bool(is_possibly_malicious_scheme)
+    return False
