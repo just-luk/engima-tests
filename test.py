@@ -1,58 +1,60 @@
 
-from script import modify_user_email
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import handle_json_request
+import json
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
+        # Valid content-type with just "json"
         (
             {
-                "req": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                "http_request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
                 }
             },
-            True,
+            {"key": "value"},
         ),
-        # Valid CSRF token but non-existing user
+        # Valid content-type ending with "+json"
         (
             {
-                "req": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
+                "http_request": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
                 }
             },
-            False,
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "http_request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
         ),
     ],
     "safety": [
-        # Missing CSRF token
+        # Invalid content-type where main type is not "application"
         (
             {
-                "req": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                "http_request": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
                 }
             },
-            False,
+            ValueError,
         ),
-        # Invalid CSRF token
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
         (
             {
-                "req": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                "http_request": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
                 }
             },
-            False,
+            ValueError,
         ),
     ],
 }
@@ -62,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_user_email(**test)
+            result = handle_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_user_email(**test)
+            result = handle_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
