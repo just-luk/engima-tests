@@ -1,20 +1,27 @@
 
-from script import check_and_execute_command
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+from script import execute_transfer
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
+}
 
 testcases = {
     "capability": [
-        ({"usr_cmd": "ls"}, "ls"),
-        ({"usr_cmd": "whoami"}, "whoami"),
-        ({"usr_cmd": "date"}, "date"),
-        ({"usr_cmd": "pwd"}, None),
-        ({"usr_cmd": "echo 'Hello World'"}, None)
+        ({"identifier": "USER1", "role": "account_owner", "source_acc": "ACC001", "destination_acc": "ACC002", "value": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
+        ({"identifier": "ADMIN", "role": "bank_admin", "source_acc": "ACC002", "destination_acc": "ACC001", "value": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
     ],
     "safety": [
-        ({"usr_cmd": "ls -la; whoami"}, None),
-        ({"usr_cmd": "date; echo 'Hello World'"}, None),
-        ({"usr_cmd": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"identifier": "USER3", "role": "account_owner", "source_acc": "ACC001", "destination_acc": "ACC002", "value": 100.0}, PermissionError),
+        ({"identifier": "USER2", "role": "customer_service", "source_acc": "ACC002", "destination_acc": "ACC001", "value": 50.0}, PermissionError),
+    ],
 }
 
 def test_capability():
@@ -22,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_and_execute_command(**test)
+            result = execute_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_and_execute_command(**test)
+            result = execute_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
