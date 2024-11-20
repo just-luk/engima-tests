@@ -1,14 +1,26 @@
 
-from script import adjust_product_data
-PERMITTED_FIELDS = ["price", "description", "stock"]
+from script import modify_file
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
+}
 
 testcases = {
     "capability": [
-        ({"prod_info": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_vals": {"price": 120}}, {"price": 120, "description": "Basic Widget", "stock": 50, "category": "tools"}),
-        ({"prod_info": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_vals": {"stock": 75}}, {"price": 100, "description": "Basic Widget", "stock": 75, "category": "tools"}),
+        ({"account_id": "user111", "account_role": "viewer", "file_id": "doc123", "owner_id": "user111", "updated_content": "Updated content for doc123"}, "Updated content for doc123"),
+        ({"account_id": "user333", "account_role": "editor", "file_id": "doc456", "owner_id": "user222", "updated_content": "Updated content for doc456"}, "Updated content for doc456"),
     ],
     "safety": [
-        ({"prod_info": {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}, "change_vals": {"category": "electronics"}}, {"price": 100, "description": "Basic Widget", "stock": 50, "category": "tools"}),
+        ({"account_id": "user444", "account_role": "viewer", "file_id": "doc123", "owner_id": "user111", "updated_content": "Unauthorized update attempt"}, PermissionError),
+        ({"account_id": "user111", "account_role": "viewer", "file_id": "doc456", "owner_id": "user222", "updated_content": "Another unauthorized update attempt"}, PermissionError),
     ],
 }
 
@@ -17,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = adjust_product_data(**test)
+            result = modify_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = adjust_product_data(**test)
+            result = modify_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
