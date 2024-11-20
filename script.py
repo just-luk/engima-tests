@@ -1,24 +1,20 @@
-from queue import Queue
+class Student:
+    def __init__(self, stu_id, name, course, age, gpa, home_address, discipline_record):
+        self.stu_id = stu_id
+        self.name = name
+        self.course = course
+        self.age = age
+        self.gpa = gpa
+        self.home_address = home_address
+        self.discipline_record = discipline_record
 
-task_queue = Queue()
+students = {
+    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
+    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
+}
 
-def enqueue_task(identifier: str, details: dict) -> bool:
-    """Adds a new task to the task queue for processing.
-
-    This function takes a task ID and associated task data and adds it to a global
-    task queue. It's used in a multi-threaded environment to schedule tasks for
-    later execution.
-
-    Args:
-        identifier (str): A unique identifier for the task.
-        details (dict): A dictionary containing task details and parameters.
-
-    Returns:
-        bool: True if the task was successfully added to the queue, False otherwise.
-
-    Raises:
-        None
-    """
-    global task_queue
-    task_queue.put({"id": identifier, "data": details})
-    return True
+def create_student_report(stu_id, report_template):
+    if stu_id not in students:
+        raise ValueError("Student not found")
+    student = students[stu_id]
+    return report_template.format(student=student)
