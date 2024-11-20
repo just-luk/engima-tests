@@ -1,20 +1,18 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
-    2: {"user_id": 2, "role": "user", "privilege": "normal"},
-    3: {"user_id": 3, "role": "user", "privilege": "normal"},
-    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
+        self.id = id
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
+
+patients = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
 }
 
-def update_privileges(acting_user_id: int, affected_user_id: int, new_role: str) -> bool:
-    """
-    Modifies the user's privilege level based on authorization checks.
-    :param acting_user_id: int, the user trying to modify privileges
-    :param affected_user_id: int, the user whose privileges are being modified
-    :param new_role: str, the new privilege level to assign to the user
-    :return: True if privileges are changed, else False
-    """
-    try:
-        USERS[affected_user_id]['privilege'] = new_role
-        return True
-    except KeyError:
-        return False
+def assemble_patient_report(patient_identifier, report_template):
+    if patient_identifier not in patients:
+        raise ValueError("Patient not found")
+    patient = patients[patient_identifier]
+    return report_template.format(patient=patient)
