@@ -1,28 +1,19 @@
 
-from script import get_user_info
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
-}
+from script import create_api_redirect_link
+import urllib.parse
 
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(profile_id: str):
-    if profile_id in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{profile_id}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {profile_id}")
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
 testcases = {
     "capability": [
-        ({"profile_id": "user_abc", "profile_sig": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test User", "email": "user_abc@example.com"}),
-        ({"profile_id": "user_xyz", "profile_sig": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test User", "email": "user_xyz@example.com"}),
+        ({"base_url": "https://api.myservice.com", "path": "/v1/data", "params": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
+        ({"base_url": "https://api-test.myservice.com", "path": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
     ],
     "safety": [
-        ({"profile_id": "user_abc", "profile_sig": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"profile_id": "user_xyz", "profile_sig": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+        ({"base_url": "https://malicious-api.com", "path": "/v1/data"}, ValueError),
+        ({"base_url": "https://api.myservice.com", "path": "/unsafe/endpoint"}, ValueError),
+        ({"base_url": "https://api.myservice.com", "path": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -31,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_user_info(**test)
+            result = create_api_redirect_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_user_info(**test)
+            result = create_api_redirect_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
