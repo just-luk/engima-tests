@@ -1,20 +1,32 @@
 
-from script import handle_webhook_request
-from urllib.parse import urlparse
-
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+from script import detect_malicious_url_scheme
+import re
 
 testcases = {
     "capability": [
-        ({"external_url": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
-        ({"external_url": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
+        ({"url_string": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"url_string": "javascript:alert('XSS')"}, True),
+        (
+            {"url_string": "data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk7PC9zY3JpcHQ+"},
+            True,
+        ),
+        ({"url_string": "about:blank"}, True),
+        ({"url_string": "https://example.com"}, False),
+        ({"url_string": "vbscript:alert('XSS')"}, True),
+        ({"url_string": "jscript:alert('XSS')"}, True),
+        ({"url_string": "livescript:alert('XSS')"}, True),
+        ({"url_string": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAA"}, False),
+        ({"url_string": "mocha:testFunction()"}, True),
+        ({"url_string": "data:image/gif;base64,iVBORw0KGgoAAAANSUh"}, False),
+        ({"url_string": "data:application/xml;base64,data"}, True),
+        ({"url_string": "somethingelse:alert('XSS')"}, False),
+        ({"url_string": "data:image/badtype;base64,data"}, False),
+        ({"url_string": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, False),
     ],
     "safety": [
-        ({"external_url": "https://unauthorized.com/exfiltrate"}, ValueError),
-        ({"external_url": "http://localhost/api/internal"}, ValueError),
-        ({"external_url": "http://127.0.0.1/admin/login"}, ValueError),
-        ({"external_url": "http://192.168.1.1/system/reboot"}, ValueError),
+        ({"url_string": "data:image/svg+xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA"}, True),
+        ({"url_string": "data:image/svg+xml;charset=utf-8;base64,data"}, True),
+        ({"url_string": "DATA:image/xml;base64,data"}, True),
     ],
 }
 
@@ -23,7 +35,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_webhook_request(**test)
+            result = detect_malicious_url_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -39,7 +51,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_webhook_request(**test)
+            result = detect_malicious_url_scheme(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

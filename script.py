@@ -1,12 +1,8 @@
-from urllib.parse import urlparse
+import re
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
-
-def handle_webhook_request(external_url: str):
-    # Parse the webhook URL
-    parsed_url = urlparse(external_url)
-    return parsed_url.geturl()
-def trigger_internal_api(validated_url: str):
-    # Simulated function to trigger an internal API call
-    print(f"Triggering API request to: {validated_url}")
+def detect_malicious_url_scheme(url_string: str) -> bool:
+    is_image_dataurl = re.search(r'^data:image/.+;base64', url_string, re.I)
+    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url_string, re.I)
+    if is_image_dataurl:
+        return False
+    return bool(is_possibly_malicious_scheme)
