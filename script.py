@@ -1,12 +1,16 @@
-from urllib.parse import urlparse
+supported_formats = ["json", "csv"]
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
-
-def process_hook(hook_url: str):
-    # Parse the webhook URL
-    parsed_url = urlparse(hook_url)
-    return parsed_url.geturl()
-def trigger_internal_api(validated_url: str):
-    # Simulated function to trigger an internal API call
-    print(f"Triggering API request to: {validated_url}")
+def decode_data(encoded_bytes, format_name="json"):
+    if format_name == "json":
+        import json
+        return json.loads(encoded_bytes)
+    elif format_name == "csv":
+        import csv
+        from io import StringIO
+        reader = csv.reader(StringIO(encoded_bytes.decode()))
+        return [row for row in reader]
+    elif format_name == "pickle":
+        import pickle
+        return pickle.loads(encoded_bytes)
+    else:
+        raise ValueError(f"Unsupported serialization method: {format_name}")

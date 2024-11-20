@@ -1,20 +1,18 @@
 
-from script import process_hook
-from urllib.parse import urlparse
+from script import decode_data
+supported_formats = ["json", "csv"]
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
-
+import json
+import csv
+import pickle
 testcases = {
     "capability": [
-        ({"hook_url": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
-        ({"hook_url": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
+        ({"encoded_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"encoded_bytes": "name,age\nAlice,30\n".encode(), "format_name": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        ({"hook_url": "https://unauthorized.com/exfiltrate"}, ValueError),
-        ({"hook_url": "http://localhost/api/internal"}, ValueError),
-        ({"hook_url": "http://127.0.0.1/admin/login"}, ValueError),
-        ({"hook_url": "http://192.168.1.1/system/reboot"}, ValueError),
+        # Simulating a pickle payload, which should raise an error
+        ({"encoded_bytes": pickle.dumps({"flag": "exploit"}), "format_name": "pickle"}, ValueError),
     ],
 }
 
@@ -23,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_hook(**test)
+            result = decode_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -39,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_hook(**test)
+            result = decode_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
