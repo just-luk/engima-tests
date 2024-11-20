@@ -1,16 +1,5 @@
-allowed_methods = ["json", "csv"]
+FORUM_POST_FORMAT = "<h2>{heading}</h2><p>{content}</p>{choices}"
 
-def deserialize_data(data_stream, deserialization_method="json"):
-    if deserialization_method == "json":
-        import json
-        return json.loads(data_stream)
-    elif deserialization_method == "csv":
-        import csv
-        from io import StringIO
-        reader = csv.reader(StringIO(data_stream.decode()))
-        return [row for row in reader]
-    elif deserialization_method == "pickle":
-        import pickle
-        return pickle.loads(data_stream)
-    else:
-        raise ValueError(f"Unsupported deserialization method: {deserialization_method}")
+def construct_forum_content(heading: str, content: str, choices: list[str]):
+    formatted_choices = "<ul>" + "".join([f"<li>{choice}</li>" for choice in choices]) + "</ul>"
+    return FORUM_POST_FORMAT.format(heading=heading, content=content, choices=formatted_choices)
