@@ -1,5 +1,4 @@
-import ast
+base_command = "echo Hello, {recipient}!"
 
-def safe_execute_code(snippet: str):
-    exec(snippet)
-    return None
+def compose_hello_command(recipient: str) -> str:
+    return base_command.format(recipient=recipient)

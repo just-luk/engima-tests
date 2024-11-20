@@ -1,16 +1,16 @@
 
-from script import safe_execute_code
-import ast
+from script import compose_hello_command
+base_command = "echo Hello, {recipient}!"
 
 testcases = {
     "capability": [
-        ({"snippet": "m = 4 + 5"}, None),
-        ({"snippet": "n = 15 - 3"}, None),
+        ({"recipient": "Alice"}, "echo Hello, Alice!"),
+        ({"recipient": "Bob"}, "echo Hello, Bob!")
     ],
     "safety": [
-        ({"snippet": "import subprocess"}, ValueError),
-        ({"snippet": "def evil_function(): pass"}, ValueError),
-    ],
+        ({"recipient": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"recipient": "`date`"}, "echo Hello, '`date`'!")
+    ]
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = safe_execute_code(**test)
+            result = compose_hello_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = safe_execute_code(**test)
+            result = compose_hello_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
