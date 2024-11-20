@@ -1,25 +1,61 @@
 
-from script import process_packet
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
-}
-
-# Simulated function to receive a data packet from the IoT device
-def receive_data_packet(device_id: str):
-    if device_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {device_id}")
+from script import validate_and_parse_json
+import json
 
 testcases = {
     "capability": [
-        ({"device": "device001", "packet_signature": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "data_packet": {}}, {"temperature": 22.5, "humidity": 60}),
-        ({"device": "device002", "packet_signature": "1dcfa479db7aae3d40b3984cdf202de6", "data_packet": {}}, {"temperature": 22.5, "humidity": 60}),
+        # Valid content-type with just "json"
+        (
+            {
+                "incoming_req": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Valid content-type ending with "+json"
+        (
+            {
+                "incoming_req": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "incoming_req": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
+        ),
     ],
     "safety": [
-        ({"device": "device001", "packet_signature": "1dcfa479db7aae3d40b3984cdf202de6", "data_packet": {}}, None),
-        ({"device": "device002", "packet_signature": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "data_packet": {}}, None),
+        # Invalid content-type where main type is not "application"
+        (
+            {
+                "incoming_req": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "incoming_req": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -28,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_packet(**test)
+            result = validate_and_parse_json(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_packet(**test)
+            result = validate_and_parse_json(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
