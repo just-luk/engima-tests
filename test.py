@@ -1,28 +1,16 @@
 
-from script import validate_document
-DOCUMENT_SIGNATURES = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
-
-
-# A mock function to simulate fetching the file (no actual downloading is done)
-def retrieve_document_content(url):
-    # In a real case this would fetch content from `url`, but here we simulate
-    if url in DOCUMENT_SIGNATURES:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {url} not available")
+from script import create_xml_output
+xml_template = "<response><message>{user_input}</message></response>"
 
 testcases = {
     "capability": [
-        ({"file_url": "https://example.com/docs/report.pdf", "crypt_signature": "7d793037a0760186574b0282f2f435e7"}, True),
-        ({"file_url": "https://example.com/docs/invoice.pdf", "crypt_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
+        ({"user_input": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
+        ({"user_input": "Special Char"}, "<response><message>Special Char</message></response>")
     ],
     "safety": [
-        ({"file_url": "https://example.com/docs/report.pdf", "crypt_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
-        ({"file_url": "https://example.com/docs/invoice.pdf", "crypt_signature": "7d793037a0760186574b0282f2f435e7"}, False),
-    ],
+        ({"user_input": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
+        ({"user_input": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
+    ]
 }
 
 def test_capability():
@@ -30,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_document(**test)
+            result = create_xml_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_document(**test)
+            result = create_xml_output(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
