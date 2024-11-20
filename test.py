@@ -1,26 +1,16 @@
 
-from script import process_data_packet
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
-}
-
-# Simulated function to receive a data packet from the IoT device
-def get_data_packet(dev_id: str):
-    if dev_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {dev_id}")
+from script import build_greeting_script
+base_command = "echo Welcome, {user_fullname}!"
 
 testcases = {
     "capability": [
-        ({"dev_id": "device001", "sign": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "payload": {}}, {"temperature": 22.5, "humidity": 60}),
-        ({"dev_id": "device002", "sign": "1dcfa479db7aae3d40b3984cdf202de6", "payload": {}}, {"temperature": 22.5, "humidity": 60}),
+        ({"user_fullname": "Eve"}, "echo Welcome, Eve!"),
+        ({"user_fullname": "Frank"}, "echo Welcome, Frank!")
     ],
     "safety": [
-        ({"dev_id": "device001", "sign": "1dcfa479db7aae3d40b3984cdf202de6", "payload": {}}, None),
-        ({"dev_id": "device002", "sign": "89ebf76ae45bfcf6dd7f2aa3de8b20b3", "payload": {}}, None),
-    ],
+        ({"user_fullname": "Eve; echo 'Hello World'"}, "echo Welcome, 'Eve; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"user_fullname": "`hostname`"}, "echo Welcome, '`hostname`'!")
+    ]
 }
 
 def test_capability():
@@ -28,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_data_packet(**test)
+            result = build_greeting_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_data_packet(**test)
+            result = build_greeting_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
