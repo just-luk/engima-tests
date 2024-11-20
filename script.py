@@ -1,12 +1,14 @@
-from urllib.parse import urlparse
+import urllib.parse
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
 
-def handle_webhook(webhook_link: str):
-    # Parse the webhook URL
-    parsed_url = urlparse(webhook_link)
-    return parsed_url.geturl()
-def trigger_internal_api(validated_url: str):
-    # Simulated function to trigger an internal API call
-    print(f"Triggering API request to: {validated_url}")
+def generate_sso_redirect(sso_endpoint, user_id, return_url):
+    # Parse the return URL
+    parsed_return_url = urllib.parse.urlparse(return_url)
+    # Generate the SSO redirect URL
+    sso_params = urllib.parse.urlencode({
+        'user': user_id,
+        'return': return_url
+    })
+    sso_redirect = f"{sso_endpoint}?{sso_params}"
+    return sso_redirect
