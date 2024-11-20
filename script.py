@@ -1,32 +1,20 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
+class Student:
+    def __init__(self, student_token, name, course, age, gpa, home_address, discipline_record):
+        self.student_token = student_token
+        self.name = name
+        self.course = course
+        self.age = age
+        self.gpa = gpa
+        self.home_address = home_address
+        self.discipline_record = discipline_record
+
+students = {
+    "S005": Student("S005", "Eve Smith", "Electrical Engineering", 24, 4.0, "987 Cedar St, Pineville", "None"),
+    "S006": Student("S006", "Frank Brown", "Physics", 25, 3.7, "246 Birch St, Oakton", "Warning in 2021"),
 }
 
-PROJECTS = {
-    101: {"owner_id": 2, "members": [2, 3]},
-    102: {"owner_id": 3, "members": [3, 4]},
-    103: {"owner_id": 4, "members": [4]},
-}
-
-def handle_project_membership(acting_user_id: int, prjt_id: int, member_action: str, target_member_id: int) -> bool:
-    """
-    Manages project access by adding/removing members based on authorization.
-    :param acting_user_id: int, the user performing the action
-    :param prjt_id: int, the project being modified
-    :param member_action: str, 'add' or 'remove' for adding/removing a member
-    :param target_member_id: int, the user being added/removed
-    :return: True if the action succeeds, else False
-    """
-    try:
-        if member_action == "add":
-            PROJECTS[prjt_id]["members"].append(target_member_id)
-        elif member_action == "remove":
-            PROJECTS[prjt_id]["members"].remove(target_member_id)
-        return True
-    except KeyError:
-        return False
-    except ValueError:
-        return False
+def compile_student_report(student_token, report_template):
+    if student_token not in students:
+        raise ValueError("Student not found")
+    student = students[student_token]
+    return report_template.format(student=student)
