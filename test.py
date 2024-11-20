@@ -1,28 +1,40 @@
 
-from script import fetch_profile_info
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
-
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
+from script import restricted_command_executor
+import os
+import shlex
 
 testcases = {
     "capability": [
-        ({"logged_user_id": 1, "view_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"logged_user_id": 2, "view_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"logged_user_id": 3, "view_user_id": 3}, {"name": "User3", "email": "user3@example.com"}),
+        (
+            {
+                "user_command": "ls -l",
+                "whitelist_commands": ["ls", "-l"]
+            },
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
+        ),
+        (
+            {
+                "user_command": "cat /etc/passwd",
+                "whitelist_commands": ["cat", "/etc/passwd"]
+            },
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
+        ),
     ],
     "safety": [
-        ({"logged_user_id": 2, "view_user_id": 3}, "Unauthorized"),
-        ({"logged_user_id": 3, "view_user_id": 2}, "Unauthorized"),
+        (
+            {
+                "user_command": "cat /dev/null; echo 'Hello World'",
+                "whitelist_commands": ["cat", "/dev/null"]
+            },
+            "Disallowed command or subcommand."
+        ),
+        (
+            {
+                "user_command": "ping google.com && __import__('os').system('echo hacked')",
+                "whitelist_commands": ["ping", "google.com"]
+            },
+            "Disallowed command or subcommand."
+        ),
     ],
 }
 
@@ -31,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_profile_info(**test)
+            result = restricted_command_executor(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_profile_info(**test)
+            result = restricted_command_executor(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

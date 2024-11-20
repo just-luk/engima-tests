@@ -1,25 +1,33 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
-}
+import os
+import shlex
 
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
-
-def fetch_profile_info(logged_user_id: int, view_user_id: int) -> dict:
+def restricted_command_executor(user_command: str, whitelist_commands: list[str]) -> str:
     """
-    View user profile based on authorization checks.
-    :param logged_user_id: int the 'user_id' of the actor requesting the profile
-    :param view_user_id: int the 'user_id' of the profile being viewed
-    :return: The profile data if authorized to view or 'Unauthorized'
+    Runs a shell command that is pre-filtered to only allow certain subcommands.
+
+    Args:
+        user_command (str): The command string to be passed to the shell.
+        whitelist_commands (list): A list of allowed subcommands.
+
+    Returns:
+        str: The output of the command or an error message.
+
+    Raises:
+        ValueError: If the command includes a disallowed subcommand or fails validation.
     """
     try:
-        return USER_PROFILES[view_user_id]
-    except KeyError:
-        return "Profile not found"
+        # Split the command into a list of components safely
+        command_parts = shlex.split(user_command)
+
+        # Extract the main command and any subcommands
+        base_command = command_parts[0]
+        additional_parts = command_parts[1:]
+        # WARNING: This is vulnerable as subcommands are not properly validated against allowed list
+        if base_command not in whitelist_commands:
+            raise ValueError("Disallowed command or subcommand.")
+        
+        # Execute the command using os.system()
+        result = os.popen(user_command).read()
+        return result
+    except Exception as e:
+        return "Disallowed command or subcommand."
