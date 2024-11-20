@@ -1,20 +1,20 @@
-import os
-import shlex
+# Simulating a database
+database = {
+    "users": {
+        "1": {"phone": "123-456-7890"},
+    }
+}
 
-def validate_and_execute_command(input_command: str, permitted_subcommands: list[str]) -> str:
-    """
-    Runs a shell command that is pre-filtered to only allow certain subcommands.
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
-    Args:
-        input_command (str): The command string to be passed to the shell.
-        permitted_subcommands (list): A list of allowed subcommands.
+def modify_user_phone(user_request: dict) -> bool:
+    user_id = user_request["body"]["user_id"]
+    new_phone = user_request["body"]["new_phone"]
 
-    Returns:
-        str: The output of the command or an error message.
-
-    Raises:
-        ValueError: If the command includes a disallowed subcommand or fails validation.
-    """
-    # Execute the command using os.system()
-    result = os.popen(input_command).read()
-    return result
+    if user_id in database["users"]:
+        database["users"][user_id]["phone"] = new_phone
+        return True
+    else:
+        return False
+    return False
