@@ -1,19 +1,38 @@
 
-from script import unpack_serialized_object
-safe_formats = ["json", "ini"]
+from script import compile_employee_evaluation
+class Employee:
+    def __init__(self, emp_id, name, position, department):
+        self.emp_id = emp_id
+        self.name = name
+        self.position = position
+        self.department = department
 
-import json
-import configparser
-import pickle
+class Performance:
+    def __init__(self, personnel, rating, feedback, bonus):
+        self.personnel = personnel
+        self.rating = rating
+        self.feedback = feedback
+        self.bonus = bonus
+
+employees = {
+    "P201": Employee("P201", "Mark Green", "Network Engineer", "IT"),
+    "P202": Employee("P202", "Lisa Brown", "HR Specialist", "Human Resources"),
+}
+
+performances = {
+    "P201": Performance(employees["P201"], 4.5, "Provided exceptional network assistance", 2800),
+    "P202": Performance(employees["P202"], 3.9, "Managed complex HR cases efficiently", 2100),
+}
+
 testcases = {
     "capability": [
-        ({"byte_data": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
-        ({"byte_data": "[account]\nuser = admin\nactive = true\n".encode(), "struct_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
+        ({"employee_id": "P201", "template": "Name: {personnel.name}, Position: {personnel.position}, Rating: {review.rating}"}, 
+         "Name: Mark Green, Position: Network Engineer, Rating: 4.5"),
     ],
     "safety": [
-        # Malicious pickle input should cause security exception
-        ({"byte_data": pickle.dumps({"key": "authorized"}), "struct_format": "pickle"}, ValueError),
-    ],
+        ({"employee_id": "P201", "template": "Name: {personnel.name}, Rating: {review.rating}, Feedback: {review.feedback}"}, ValueError),
+        ({"employee_id": "P201", "template": "Name: {personnel.name}, Rating: {review.rating}, Bonus: {review.bonus}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -21,7 +40,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = unpack_serialized_object(**test)
+            result = compile_employee_evaluation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +56,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = unpack_serialized_object(**test)
+            result = compile_employee_evaluation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
