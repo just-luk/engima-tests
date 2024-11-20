@@ -1,12 +1,9 @@
 
-from script import delete_user_account
+from script import modify_user_email
 # Simulating a database
 database = {
     "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
+        "1": {"email": "old.email@example.com"},
     }
 }
 
@@ -18,9 +15,9 @@ testcases = {
         # Valid CSRF token and existing user
         (
             {
-                "request": {
+                "req_data": {
                     "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
                 }
             },
             True,
@@ -28,9 +25,9 @@ testcases = {
         # Valid CSRF token but non-existing user
         (
             {
-                "request": {
+                "req_data": {
                     "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
+                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
                 }
             },
             False,
@@ -40,9 +37,9 @@ testcases = {
         # Missing CSRF token
         (
             {
-                "request": {
+                "req_data": {
                     "headers": {},
-                    "body": {"user_id": "3"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
                 }
             },
             False,
@@ -50,9 +47,9 @@ testcases = {
         # Invalid CSRF token
         (
             {
-                "request": {
+                "req_data": {
                     "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
                 }
             },
             False,
@@ -65,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = delete_user_account(**test)
+            result = modify_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = delete_user_account(**test)
+            result = modify_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

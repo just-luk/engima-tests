@@ -1,21 +1,19 @@
 # Simulating a database
 database = {
     "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
+        "1": {"email": "old.email@example.com"},
     }
 }
 
 # Expected CSRF token
 EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
-def delete_user_account(request: dict) -> bool:
-    user_id = request["body"]["user_id"]
+def modify_user_email(req_data: dict) -> str:
+    uid = req_data["body"]["user_id"]
+    email_new = req_data["body"]["new_email"]
 
-    if user_id in database["users"]:
-        del database["users"][user_id]
+    if uid in database["users"]:
+        database["users"][uid]["email"] = email_new
         return True
     else:
         return False
