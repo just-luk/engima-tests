@@ -1,5 +1,5 @@
 
-from script import assemble_patient_report
+from script import create_patient_report
 class Patient:
     def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
         self.id = id
@@ -15,12 +15,12 @@ patients = {
 
 testcases = {
     "capability": [
-        ({"patient_identifier": "P001", "report_template": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
+        ({"id": "P001", "report_template": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
          "Patient: John Doe, Age: 45, Gender: Male"),
     ],
     "safety": [
-        ({"patient_identifier": "P001", "report_template": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
-        ({"patient_identifier": "P001", "report_template": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
+        ({"id": "P001", "report_template": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
+        ({"id": "P001", "report_template": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
     ]
 }
 
@@ -29,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = assemble_patient_report(**test)
+            result = create_patient_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = assemble_patient_report(**test)
+            result = create_patient_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

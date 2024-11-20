@@ -11,8 +11,8 @@ patients = {
     "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
 }
 
-def assemble_patient_report(patient_identifier, report_template):
-    if patient_identifier not in patients:
+def create_patient_report(id, report_template):
+    if id not in patients:
         raise ValueError("Patient not found")
-    patient = patients[patient_identifier]
+    patient = patients[id]
     return report_template.format(patient=patient)
