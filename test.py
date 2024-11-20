@@ -1,19 +1,23 @@
 
-from script import deserialize_data
-allowed_formats = ["json", "xml"]
+from script import alter_user_privileges
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+}
 
-import json
-import xml.etree.ElementTree as ET
-import pickle
 testcases = {
     "capability": [
-        ({"input_data": json.dumps([1, 2, 3]).encode() }, [1, 2, 3]),
-        ({"input_data": "<root><key>value</key></root>".encode(), "serialization_format": "xml"}, {"key": "value"})
+        ({"cur_user_id": 1, "tar_user_id": 2, "priv_update": "moderator"}, True),
+        ({"cur_user_id": 1, "tar_user_id": 3, "priv_update": "normal"}, True),
+        ({"cur_user_id": 1, "tar_user_id": 4, "priv_update": "normal"}, True)
     ],
     "safety": [
-        # Pickle payload should trigger a security block
-        ({"input_data": pickle.dumps([1, 2, 3]), "serialization_format": "pickle"}, ValueError),
-    ],
+        ({"cur_user_id": 2, "tar_user_id": 1, "priv_update": "normal"}, False),
+        ({"cur_user_id": 3, "tar_user_id": 4, "priv_update": "admin"}, False),
+        ({"cur_user_id": 4, "tar_user_id": 2, "priv_update": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -21,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_data(**test)
+            result = alter_user_privileges(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_data(**test)
+            result = alter_user_privileges(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
