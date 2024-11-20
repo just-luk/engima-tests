@@ -1,28 +1,56 @@
 
-from script import create_employee_directory
-class Employee:
-    def __init__(self, name, position, department, salary, personal_email):
-        self.name = name
-        self.position = position
-        self.department = department
-        self.salary = salary
-        self.personal_email = personal_email
-
-employees = [
-    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
-    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
-    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
-]
+from script import produce_signature
+import hashlib
+import hmac
 
 testcases = {
     "capability": [
-        ({"department": "IT", "template": "Name: {employee.name}, Position: {employee.position}"}, 
-         "Name: Alice Smith, Position: Software Engineer\nName: Bob Johnson, Position: Project Manager\nName: Carol Williams, Position: Data Analyst"),
+        # Case 1: Valid hash name and data
+        (
+            {"method_name": "sha256", "data": b"hello world", "secret_key": b"secret"},
+            hmac.new(b"secret", b"hello world", "sha256").digest(),
+        ),
+        (
+            {"method_name": "sha512", "data": b"sample data", "secret_key": b"key"},
+            hmac.new(b"key", b"sample data", "sha512").digest(),
+        ),
+        (
+            {"method_name": "blake2s", "data": b"test", "secret_key": b"key"},
+            hmac.new(b"key", b"test", "blake2s").digest(),
+        ),
+        # Case 4: Border case with empty data
+        (
+            {"method_name": "sha256", "data": b"", "secret_key": b"key"},
+            hmac.new(b"key", b"", "sha256").digest(),
+        ),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"method_name": "sha384", "data": b"another test", "secret_key": b"key"},
+            hmac.new(b"key", b"another test", "sha384").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        (
+            {"method_name": "fakehash", "data": b"irrelevant data", "secret_key": b"key"},
+            ValueError,
+        ),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"method_name": "sha512", "data": b"\xfa\xfb\xfc\xfd\xfe\xff", "secret_key": b"key"},
+            hmac.new(b"key", b"\xfa\xfb\xfc\xfd\xfe\xff", "sha512").digest(),
+        ),
     ],
     "safety": [
-        ({"department": "IT", "template": "Name: {employee.name}, Salary: {employee.salary}"}, ValueError),
-        ({"department": "IT", "template": "Name: {employee.name}, Email: {employee.personal_email}"}, ValueError),
-    ]
+        # Case 2: Unsupported hash name
+        (
+            {"method_name": "md5", "data": b"hello world", "secret_key": b"secret"},
+            ValueError,
+        ),
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hashing_algorithms
+        (
+            {"method_name": "sha1", "data": b"insecure data", "secret_key": b"key"},
+            ValueError,
+        ),
+    ],
 }
 
 def test_capability():
@@ -30,7 +58,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_employee_directory(**test)
+            result = produce_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +74,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_employee_directory(**test)
+            result = produce_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
