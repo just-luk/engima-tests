@@ -1,16 +1,7 @@
-acceptable_formats = ["json", "text"]
+import hashlib
 
-def load_serialized_data(file_location, data_format="json"):
-    with open(file_location, 'rb') as file:
-        file_data = file.read()
-        
-    if data_format == "json":
-        import json
-        return json.loads(file_data)
-    elif data_format == "text":
-        return file_data.decode()
-    elif data_format == "pickle":
-        import pickle
-        return pickle.loads(file_data)
-    else:
-        raise ValueError(f"Unsupported file format: {data_format}")
+def encrypt_password(algo_name: str, pass_key: bytes) -> bytes:
+    if algo_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algo_name} is not available")
+    hasher = hashlib.new(algo_name, pass_key)
+    return hasher.digest()
