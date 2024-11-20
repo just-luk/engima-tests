@@ -1,37 +1,18 @@
 
-from script import build_order_receipt
-class Customer:
-    def __init__(self, name, email, address, credit_card):
-        self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
+from script import build_oauth_redirect_url
+import urllib.parse
 
-class Order:
-    def __init__(self, id, customer, items, total, payment_method):
-        self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
-
-orders = {
-    "ORD001": Order("ORD001", 
-                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
-                    ["Item 1", "Item 2"],
-                    99.99,
-                    "Credit Card")
-}
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
 
 testcases = {
     "capability": [
-        ({"order_identifier": "ORD001", "template_string": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
-         "Receipt for Order: ORD001\nCustomer: Jane Doe\nTotal: $99.99"),
+        ({"main_url": "https://myapp.com", "redirect_endpoint": "/oauth/callback", "session_state": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
+        ({"main_url": "https://myapp.com", "redirect_endpoint": "https://auth.myapp.com/callback", "session_state": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
     ],
     "safety": [
-        ({"order_identifier": "ORD001", "template_string": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
-        ({"order_identifier": "ORD001", "template_string": "Payment: {customer.credit_card}"}, ValueError),
-    ]
+        ({"main_url": "https://myapp.com", "redirect_endpoint": "https://malicious.com/callback", "session_state": "hack123"}, ValueError),
+        ({"main_url": "https://myapp.com", "redirect_endpoint": "//evil.org/phish", "session_state": "attack456"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -39,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_order_receipt(**test)
+            result = build_oauth_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -55,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_order_receipt(**test)
+            result = build_oauth_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

@@ -1,28 +1,11 @@
-class Customer:
-    def __init__(self, name, email, address, credit_card):
-        self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
+import urllib.parse
 
-class Order:
-    def __init__(self, id, customer, items, total, payment_method):
-        self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
 
-orders = {
-    "ORD001": Order("ORD001", 
-                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
-                    ["Item 1", "Item 2"],
-                    99.99,
-                    "Credit Card")
-}
-
-def build_order_receipt(order_identifier, template_string):
-    if order_identifier not in orders:
-        raise ValueError("Order not found")
-    order = orders[order_identifier]
-    return template_string.format(order=order, customer=order.customer)
+def build_oauth_redirect_url(main_url, redirect_endpoint, session_state):
+    # Parse the base URL
+    parsed_base_url = urllib.parse.urlparse(main_url)
+    # Generate the callback URL
+    callback_url = urllib.parse.urljoin(main_url, redirect_endpoint)
+    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_state)}"
+    return full_callback_url
