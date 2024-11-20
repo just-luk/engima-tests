@@ -1,42 +1,17 @@
 
-from script import encrypt_pwd
-import hashlib
+from script import create_sso_redirect_url
+import urllib.parse
+
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"hash_algo": "sha256", "pwd": b"mypassword"},
-            hashlib.sha256(b"mypassword").hexdigest(),
-        ),
-        (
-            {"hash_algo": "sha512", "pwd": b"samplepassword"},
-            hashlib.sha512(b"samplepassword").hexdigest(),
-        ),
-        ({"hash_algo": "blake2s", "pwd": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
-        ({"hash_algo": "sha256", "pwd": b""}, hashlib.sha256(b"").hexdigest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"hash_algo": "sha384", "pwd": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").hexdigest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"hash_algo": "fakehash", "pwd": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different string sequences for hashing - making sure password is handled correctly
-        (
-            {"hash_algo": "sha512", "pwd": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
-        ),
+        ({"login_endpoint": "https://sso.example.com/auth", "account_id": "user123", "callback_url": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
+        ({"login_endpoint": "https://sso.example.com/auth", "account_id": "user456", "callback_url": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
     ],
     "safety": [
-        # Case 4: Border case with empty password
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
-        (
-            {"hash_algo": "sha1", "pwd": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"hash_algo": "md5", "pwd": b"mypassword"}, ValueError),
+        ({"login_endpoint": "https://sso.example.com/auth", "account_id": "user789", "callback_url": "https://malicious.com/phish"}, ValueError),
+        ({"login_endpoint": "https://sso.example.com/auth", "account_id": "user101", "callback_url": "https://evil.org/hack"}, ValueError),
     ],
 }
 
@@ -45,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = encrypt_pwd(**test)
+            result = create_sso_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = encrypt_pwd(**test)
+            result = create_sso_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
