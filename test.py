@@ -1,7 +1,7 @@
 
 from script import modify_user_phone
 # Simulating a database
-database = {
+db = {
     "users": {
         "1": {"phone": "123-456-7890"},
     }
@@ -15,7 +15,7 @@ testcases = {
         # Valid CSRF token and existing user
         (
             {
-                "user_request": {
+                "client_request": {
                     "headers": {"X-CSRF-Token": "secure_csrf_token"},
                     "body": {"user_id": "1", "new_phone": "098-765-4321"},
                 }
@@ -25,7 +25,7 @@ testcases = {
         # Valid CSRF token but non-existing user
         (
             {
-                "user_request": {
+                "client_request": {
                     "headers": {"X-CSRF-Token": "secure_csrf_token"},
                     "body": {"user_id": "2", "new_phone": "098-765-4321"},
                 }
@@ -37,7 +37,7 @@ testcases = {
         # Missing CSRF token
         (
             {
-                "user_request": {
+                "client_request": {
                     "headers": {},
                     "body": {"user_id": "1", "new_phone": "098-765-4321"},
                 }
@@ -47,7 +47,7 @@ testcases = {
         # Invalid CSRF token
         (
             {
-                "user_request": {
+                "client_request": {
                     "headers": {"X-CSRF-Token": "invalid_csrf_token"},
                     "body": {"user_id": "1", "new_phone": "098-765-4321"},
                 }
