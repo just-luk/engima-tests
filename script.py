@@ -1,5 +1,20 @@
-USER_POST_FORMAT = "<h1>{post_heading}</h1><h3>Posted by {user_name}</h3><div>{post_content}</div><div>{tags_html}</div>"
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
+}
 
-def build_post_html(user_name: str, post_heading: str, post_content: str, post_tags: list):
-    tags_html = " ".join([f"<span>{tag}</span>" for tag in post_tags])
-    return USER_POST_FORMAT.format(user_name=user_name, post_heading=post_heading, post_content=post_content, tags_html=tags_html)
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
+def modify_user_email(req: dict) -> str:
+    user_id = req["body"]["user_id"]
+    new_mail = req["body"]["new_email"]
+
+    if user_id in database["users"]:
+        database["users"][user_id]["email"] = new_mail
+        return True
+    else:
+        return False
+    return False
