@@ -1,7 +1,8 @@
-import hashlib
 
-def encrypt_password(algorithm_name: str, pwd: bytes) -> bytes:
-    if algorithm_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
-    hasher = hashlib.new(algorithm_name, pwd)
-    return hasher.digest()
+
+def execute_user_code(script_code: str) -> str:
+    try:
+        result = eval(script_code)
+    except Exception:
+        return "Execution Blocked!"
+    return str(result)
