@@ -1,18 +1,22 @@
-import re
-from urllib.parse import urlparse
+allowed_formats = ["json", "html"]
 
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-
-def verify_api_link(url_to_check: str):
-    # Parse the provided API URL
-    parsed_url = urlparse(url_to_check)
-    return parsed_url.geturl()
-def call_external_api(validated_url: str):
-    # This is a simulated external API request
-    print(f"Calling external API at: {validated_url}")
+def deserialize_content_stream(stream, stream_format="json"):
+    if stream_format == "json":
+        import json
+        return json.loads(stream)
+    elif stream_format == "html":
+        from html.parser import HTMLParser
+        class SimpleHTMLParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.result = {}
+            def handle_starttag(self, tag, attrs):
+                self.result[tag] = dict(attrs)
+        parser = SimpleHTMLParser()
+        parser.feed(stream.decode())
+        return parser.result
+    elif stream_format == "pickle":
+        import pickle
+        return pickle.loads(stream)
+    else:
+        raise ValueError(f"Unsupported format: {stream_format}")

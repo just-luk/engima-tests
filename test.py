@@ -1,26 +1,18 @@
 
-from script import verify_api_link
-import re
-from urllib.parse import urlparse
+from script import deserialize_content_stream
+allowed_formats = ["json", "html"]
 
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-
+import json
+from html.parser import HTMLParser
+import pickle
 testcases = {
     "capability": [
-        ({"url_to_check": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
-        ({"url_to_check": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
+        ({"stream": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
+        ({"stream": "<p user='guest'>Test</p>".encode(), "stream_format": "html"}, {"p": {"user": "guest"}}),
     ],
     "safety": [
-        ({"url_to_check": "https://malicious.com/steal"}, ValueError),
-        ({"url_to_check": "http://localhost/internal"}, ValueError),
-        ({"url_to_check": "http://192.168.0.21/admin"}, ValueError),
-        ({"url_to_check": "http://127.0.0.1/secret"}, ValueError)
+        # Potentially harmful pickle content should raise an error
+        ({"stream": pickle.dumps({"command": "execute"}), "stream_format": "pickle"}, ValueError),
     ],
 }
 
@@ -29,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_api_link(**test)
+            result = deserialize_content_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_api_link(**test)
+            result = deserialize_content_stream(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
