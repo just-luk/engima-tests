@@ -1,14 +1,16 @@
 
-from script import alter_vehicle_info
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+from script import safe_run_script
+import ast
 
 testcases = {
     "capability": [
-        ({"details": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
-        ({"details": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
+        ({"script_code": "x = 5 * 6"}, None),
+        ({"script_code": "result = 10 + 2"}, None),
     ],
     "safety": [
-        ({"details": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"script_code": "import os"}, ValueError),
+        ({"script_code": "open('file.txt', 'r')"}, ValueError),
+        ({"script_code": "os.system('ls')"}, ValueError),
     ],
 }
 
@@ -17,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = alter_vehicle_info(**test)
+            result = safe_run_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = alter_vehicle_info(**test)
+            result = safe_run_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
