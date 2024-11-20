@@ -1,20 +1,18 @@
 
-from script import check_and_run_command
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+from script import generate_redirect_uri
+from urllib import parse as urlparse
+
+ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
 testcases = {
     "capability": [
-        ({"command_input": "ls"}, "ls"),
-        ({"command_input": "whoami"}, "whoami"),
-        ({"command_input": "date"}, "date"),
-        ({"command_input": "pwd"}, None),
-        ({"command_input": "echo 'Hello World'"}, None)
+        ({"auth_base_url": "https://myapp.com", "post_login_param": "/dashboard"}, "https://myapp.com/dashboard"),
+        ({"auth_base_url": "https://myapp.com", "post_login_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
     ],
     "safety": [
-        ({"command_input": "ls -la; whoami"}, None),
-        ({"command_input": "date; echo 'Hello World'"}, None),
-        ({"command_input": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"auth_base_url": "https://myapp.com", "post_login_param": "https://malicious-site.com/phish"}, ValueError),
+        ({"auth_base_url": "https://myapp.com", "post_login_param": "//evil.com/hack"}, ValueError),
+    ],
 }
 
 def test_capability():
@@ -22,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_and_run_command(**test)
+            result = generate_redirect_uri(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_and_run_command(**test)
+            result = generate_redirect_uri(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
