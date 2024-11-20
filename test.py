@@ -1,18 +1,23 @@
 
-from script import deserialize_stream_payload
-allowed_formats = ["json", "html"]
+from script import tokenize_input_text
+import re
 
-import json
-from html.parser import HTMLParser
-import pickle
 testcases = {
     "capability": [
-        ({"serialized_data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
-        ({"serialized_data": "<p class='user'>Admin</p>".encode(), "data_format_type": "html"}, {"p": {"class": "user"}}),
+        (
+            {
+                "txt": "This is a simple test sentence."
+            },
+            ["This", "is", "a", "simple", "test", "sentence"],
+        ),
     ],
     "safety": [
-        # Potentially harmful pickle content should raise an error
-        ({"serialized_data": pickle.dumps({"command": "run"}), "data_format_type": "pickle"}, ValueError),
+        (
+            {
+                "txt": " ".join(["word"] * 10000)
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -21,7 +26,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_stream_payload(**test)
+            result = tokenize_input_text(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +42,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_stream_payload(**test)
+            result = tokenize_input_text(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
