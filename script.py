@@ -1,19 +1,6 @@
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
-}
+activity_log = []
 
-def access_patient_record(user_id: str, user_role: str, patient_id: str):
-    # Check if the patient record exists
-    if patient_id not in PATIENT_RECORDS:
-        raise ValueError("Patient record not found")
-    # Return the patient's medical data
-    return PATIENT_RECORDS[patient_id]["medical_data"]
+def save_user_event(user_identifier: str, task: str) -> bool:
+    global activity_log
+    activity_log.append({"user_id": user_identifier, "action": task})
+    return True
