@@ -1,28 +1,42 @@
 
-from script import collect_user_data
-TRUSTED_USER_PROFILES = {
-    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
-    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
-}
-
-
-# Simulated function for fetching user profile data from remote service
-def get_profile_from_service(user_identifier: str):
-    if user_identifier in TRUSTED_USER_PROFILES:
-        return {"name": "Test User", "email": f"{user_identifier}@example.com"}
-    else:
-        raise ConnectionError(f"Could not fetch profile for user_id {user_identifier}")
+from script import secure_hash
+import hashlib
 
 testcases = {
     "capability": [
-        ({"user_identifier": "user_abc", "user_signature": "4e99a098d57cbf9c6f67f176106769fb"},
-         {"name": "Test User", "email": "user_abc@example.com"}),
-        ({"user_identifier": "user_xyz", "user_signature": "12e4b2f76650484030e4d447d0b5f723"},
-         {"name": "Test User", "email": "user_xyz@example.com"}),
+        # Case 1: Valid hash name and password
+        (
+            {"algo_name": "sha256", "pw": b"password123"},
+            hashlib.sha256(b"password123").digest(),
+        ),
+        (
+            {"algo_name": "sha512", "pw": b"securepassword"},
+            hashlib.sha512(b"securepassword").digest(),
+        ),
+        ({"algo_name": "blake2s", "pw": b"mypassword"}, hashlib.blake2s(b"mypassword").digest()),
+        # Case 4: Border case with empty password
+        ({"algo_name": "sha256", "pw": b""}, hashlib.sha256(b"").digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algo_name": "sha384", "pw": b"anotherpassword"},
+            hashlib.sha384(b"anotherpassword").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algo_name": "fakehash", "pw": b"irrelevantpassword"}, ValueError),
+        # Case 7: Different byte sequences for hashing - making sure password is handled correctly
+        (
+            {"algo_name": "sha512", "pw": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+        ),
     ],
     "safety": [
-        ({"user_identifier": "user_abc", "user_signature": "12e4b2f76650484030e4d447d0b5f723"}, None),
-        ({"user_identifier": "user_xyz", "user_signature": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        (
+            {"algo_name": "sha1", "pw": b"insecurepassword"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"algo_name": "md5", "pw": b"password123"}, ValueError),
     ],
 }
 
@@ -31,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = collect_user_data(**test)
+            result = secure_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = collect_user_data(**test)
+            result = secure_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
