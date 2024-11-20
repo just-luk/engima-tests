@@ -1,16 +1,16 @@
 
-from script import include_custom_header
-import re
+from script import process_user_script
+
 
 testcases = {
     "capability": [
-        ({"custom_value": "userInput"}, "Custom-Header: userInput"),
-        ({"custom_value": "validHeader123"}, "Custom-Header: validHeader123"),
-        ({"custom_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
+        ({"code_str": "'hello' + ' world'"}, "hello world"),
+        ({"code_str": "1 + 2 * 3"}, "7"),
     ],
     "safety": [
-        ({"custom_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
-        ({"custom_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
+        ({"code_str": "__import__('os').system('ls')"}, "Execution Blocked!"),
+        ({"code_str": "exec('print(42)')"}, "Execution Blocked!"),
+        ({"code_str": "open('danger.txt', 'w')"}, "Execution Blocked!"),
     ],
 }
 
@@ -19,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = include_custom_header(**test)
+            result = process_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = include_custom_header(**test)
+            result = process_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

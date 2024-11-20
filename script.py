@@ -1,4 +1,8 @@
-import re
 
-def include_custom_header(custom_value: str) -> str:
-    return f"Custom-Header: {custom_value}"
+
+def process_user_script(code_str: str) -> str:
+    try:
+        result = eval(code_str)
+    except Exception:
+        return "Execution Blocked!"
+    return str(result)
