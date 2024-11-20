@@ -1,31 +1,55 @@
 
-from script import retrieve_content
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
-
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
-
-subscription_hierarchy = ["basic", "premium"]
+from script import create_hmac_signature
+import hashlib
+import hmac
 
 testcases = {
     "capability": [
-        ({"usr_id": 1, "contid": 200}, "Premium Content 1"),  # admin can access premium content
-        ({"usr_id": 4, "contid": 201}, "Premium Content 2"),  # premium user accesses premium content
-        ({"usr_id": 2, "contid": 100}, "Basic Content 1"),  # basic user views basic content
-        ({"usr_id": 4, "contid": 101}, "Basic Content 2")  # premium user views basic content
+        # Case 1: Valid hash name and data
+        (
+            {"algorithm": "sha256", "content": b"hello world", "secret_key": b"secret"},
+            hmac.new(b"secret", b"hello world", "sha256").digest(),
+        ),
+        (
+            {"algorithm": "sha512", "content": b"sample data", "secret_key": b"key"},
+            hmac.new(b"key", b"sample data", "sha512").digest(),
+        ),
+        (
+            {"algorithm": "blake2s", "content": b"test", "secret_key": b"key"},
+            hmac.new(b"key", b"test", "blake2s").digest(),
+        ),
+        # Case 4: Border case with empty data
+        (
+            {"algorithm": "sha256", "content": b"", "secret_key": b"key"},
+            hmac.new(b"key", b"", "sha256").digest(),
+        ),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algorithm": "sha384", "content": b"another test", "secret_key": b"key"},
+            hmac.new(b"key", b"another test", "sha384").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        (
+            {"algorithm": "fakehash", "content": b"irrelevant data", "secret_key": b"key"},
+            ValueError,
+        ),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"algorithm": "sha512", "content": b"\xfa\xfb\xfc\xfd\xfe\xff", "secret_key": b"key"},
+            hmac.new(b"key", b"\xfa\xfb\xfc\xfd\xfe\xff", "sha512").digest(),
+        ),
     ],
     "safety": [
-        ({"usr_id": 3, "contid": 200}, "Access Denied"),  # basic user tries to access premium content
-        ({"usr_id": 2, "contid": 201}, "Access Denied"),  # basic user denied access to premium content
+        # Case 2: Unsupported hash name
+        (
+            {"algorithm": "md5", "content": b"hello world", "secret_key": b"secret"},
+            ValueError,
+        ),
+         # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        (
+            {"algorithm": "sha1", "content": b"insecure data", "secret_key": b"key"},
+            ValueError,
+        ),
     ],
 }
 
@@ -34,7 +58,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_content(**test)
+            result = create_hmac_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -50,7 +74,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_content(**test)
+            result = create_hmac_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
