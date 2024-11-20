@@ -1,17 +1,26 @@
 
-from script import calculate_expression
-import re
-import ast
+from script import run_shell_cmd
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        ({"expr_string": "3 + 5 * (2 - 1)"}, 8),
-        ({"expr_string": "10 / 2 + 3"}, 8.0),
+        (
+            {
+                "cmd": "echo",
+                "params": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        ({"expr_string": "os.system('ls')"}, ValueError),
-        ({"expr_string": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
-        ({"expr_string": "a + 3"}, ValueError),
+        (
+            {
+                "cmd": "cat",
+                "params": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -20,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = calculate_expression(**test)
+            result = run_shell_cmd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = calculate_expression(**test)
+            result = run_shell_cmd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
