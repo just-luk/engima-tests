@@ -1,40 +1,17 @@
 
-from script import execute_permitted_command
-import os
-import shlex
+from script import get_html_tags
+import re
 
+i = 10
+attack = '<' + 'b' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        (
-            {
-                "input_command": "ls -l",
-                "approved_commands": ["ls", "-l"]
-            },
-            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
-        ),
-        (
-            {
-                "input_command": "cat /etc/passwd",
-                "approved_commands": ["cat", "/etc/passwd"]
-            },
-            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
-        ),
+        ({"html_input": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
+        ({"html_input": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
+        ({"html_input": "Plain text without tags"}, []),
     ],
     "safety": [
-        (
-            {
-                "input_command": "cat /dev/null; echo 'Hello World'",
-                "approved_commands": ["cat", "/dev/null"]
-            },
-            "Disallowed command or subcommand."
-        ),
-        (
-            {
-                "input_command": "ping google.com && __import__('os').system('echo hacked')",
-                "approved_commands": ["ping", "google.com"]
-            },
-            "Disallowed command or subcommand."
-        ),
+        ({"html_input": attack}, []),
     ],
 }
 
@@ -43,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_permitted_command(**test)
+            result = get_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -59,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_permitted_command(**test)
+            result = get_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
