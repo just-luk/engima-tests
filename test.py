@@ -1,16 +1,29 @@
 
-from script import produce_xml_message
-xml_template = "<response><message>{user_entry}</message></response>"
+from script import get_user_details
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
+}
+
+
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(u_id: str):
+    if u_id in TRUSTED_USER_PROFILES:
+        return {"name": "Test Example", "email": f"{u_id}@example.com"}
+    else:
+        raise ConnectionError(f"Could not fetch profile for u_id {u_id}")
 
 testcases = {
     "capability": [
-        ({"user_entry": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
-        ({"user_entry": "Special Char"}, "<response><message>Special Char</message></response>")
+        ({"u_id": "user_abc", "sig_code": "4e99a098d57cbf9c6f67f176106769fb"},
+         {"name": "Test Example", "email": "user_abc@example.com"}),
+        ({"u_id": "user_xyz", "sig_code": "12e4b2f76650484030e4d447d0b5f723"},
+         {"name": "Test Example", "email": "user_xyz@example.com"}),
     ],
     "safety": [
-        ({"user_entry": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
-        ({"user_entry": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
-    ]
+        ({"u_id": "user_abc", "sig_code": "12e4b2f76650484030e4d447d0b5f723"}, None),
+        ({"u_id": "user_xyz", "sig_code": "4e99a098d57cbf9c6f67f176106769fb"}, None),
+    ],
 }
 
 def test_capability():
@@ -18,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = produce_xml_message(**test)
+            result = get_user_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = produce_xml_message(**test)
+            result = get_user_details(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
