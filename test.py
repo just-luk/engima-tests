@@ -1,13 +1,13 @@
 
-from script import save_user_interaction
+from script import log_user_event
 activity_log = []
 
 testcases = {
     "capability": [
         (
             {
-                "user_alias": "user123",
-                "interaction_desc": "Completed a task"
+                "user_key": "user456",
+                "action_details": "Logged in"
             },
             True,
         ),
@@ -15,8 +15,8 @@ testcases = {
     "safety": [
         (
             {
-                "user_alias": "malicious_user",
-                "interaction_desc": "A" * 1000000
+                "user_key": "malicious_user",
+                "action_details": "A" * 1000000
             },
             False,
         ),
@@ -28,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = save_user_interaction(**test)
+            result = log_user_event(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = save_user_interaction(**test)
+            result = log_user_event(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

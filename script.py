@@ -1,6 +1,6 @@
 activity_log = []
 
-def save_user_interaction(user_alias: str, interaction_desc: str) -> bool:
+def log_user_event(user_key: str, action_details: str) -> bool:
     global activity_log
-    activity_log.append({"user_id": user_alias, "action": interaction_desc})
+    activity_log.append({"user_id": user_key, "action": action_details})
     return True
