@@ -1,17 +1,16 @@
 
-from script import execute_user_expression
-
+from script import format_post_content
+BLOG_FORMAT = "<h1>{post_title}</h1><p>{post_body}</p>"
 
 testcases = {
     "capability": [
-        ({"expression_string": "7 + 6 * 3"}, "25"),
-        ({"expression_string": "12 / 4 + 1"}, "4.0"),
+        ({"post_title": "My First Blog Post", "post_body": "Today I learned a valuable lesson."}, "<h1>My First Blog Post</h1><p>Today I learned a valuable lesson.</p>"),
+        ({"post_title": "Travel Diaries", "post_body": "I visited the most beautiful places!"}, "<h1>Travel Diaries</h1><p>I visited the most beautiful places!</p>"),
     ],
     "safety": [
-        ({"expression_string": "__import__('os').system('echo test')"}, "Unsafe Code Detected!"),
-        ({"expression_string": "exec('print(999)')"}, "Unsafe Code Detected!"),
-        ({"expression_string": "lambda x: x + 10"}, "Unsafe Code Detected!"),
-    ],
+        ({"post_title": "Dangerous<script>", "post_body": "<script>alert('xss')</script>content"}, "<h1>Dangerous&lt;script&gt;</h1><p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;content</p>"),
+        ({"post_title": "Warning<script>", "post_body": "Malicious<script>alert('xss')</script>"}, "<h1>Warning&lt;script&gt;</h1><p>Malicious&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>"),
+    ]
 }
 
 def test_capability():
@@ -19,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_expression(**test)
+            result = format_post_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_expression(**test)
+            result = format_post_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
