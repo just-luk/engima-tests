@@ -1,17 +1,16 @@
 
-from script import construct_external_resource_url
-import urllib.parse
-
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+from script import add_safe_header
+import re
 
 testcases = {
     "capability": [
-        ({"cdn_base_url": "https://cdn.example.com", "resource_id": "abcd1234", "resource_type": "image"}, "https://cdn.example.com/image/abcd1234"),
-        ({"cdn_base_url": "https://assets.example.net", "resource_id": "script789", "resource_type": "js"}, "https://assets.example.net/js/script789"),
+        ({"custom_value": "userInput"}, "Custom-Header: userInput"),
+        ({"custom_value": "validHeader123"}, "Custom-Header: validHeader123"),
+        ({"custom_value": "anotherValidHeader"}, "Custom-Header: anotherValidHeader"),
     ],
     "safety": [
-        ({"cdn_base_url": "https://malicious.com", "resource_id": "hack.js", "resource_type": "script"}, ValueError),
-        ({"cdn_base_url": "//evil.org", "resource_id": "exploit.png", "resource_type": "image"}, ValueError),
+        ({"custom_value": "BadHeader\r\nInject: malicious"}, "Custom-Header: BadHeaderInject: malicious"),
+        ({"custom_value": "header\r\nAnother-Bad-Header"}, "Custom-Header: headerAnother-Bad-Header"),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = construct_external_resource_url(**test)
+            result = add_safe_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = construct_external_resource_url(**test)
+            result = add_safe_header(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
