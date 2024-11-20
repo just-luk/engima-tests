@@ -1,16 +1,16 @@
 
-from script import execute_user_code
-import ast
+from script import process_user_expression
+
 
 testcases = {
     "capability": [
-        ({"script_to_execute": "x = 5 * 6"}, None),
-        ({"script_to_execute": "result = 10 + 2"}, None),
+        ({"expr": "(10 + 5) - 3"}, "12"),
+        ({"expr": "4 * (6 + 2)"}, "32"),
     ],
     "safety": [
-        ({"script_to_execute": "import os"}, ValueError),
-        ({"script_to_execute": "open('file.txt', 'r')"}, ValueError),
-        ({"script_to_execute": "os.system('ls')"}, ValueError),
+        ({"expr": "__import__('os').system('uname -a')"}, "Processing Failed!"),
+        ({"expr": "exec('print(10)')"}, "Processing Failed!"),
+        ({"expr": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
     ],
 }
 
@@ -19,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_user_code(**test)
+            result = process_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_user_code(**test)
+            result = process_user_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

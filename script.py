@@ -1,5 +1,8 @@
-import ast
 
-def execute_user_code(script_to_execute: str):
-    exec(script_to_execute)
-    return None
+
+def process_user_expression(expr: str) -> str:
+    try:
+        result = eval(expr)
+    except Exception:
+        return "Processing Failed!"
+    return str(result)
