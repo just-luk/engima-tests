@@ -1,25 +1,16 @@
-ACCOUNTS_DB = {
-    "ACC001": {
-        "account_number": "ACC001",
-        "owner_id": "USER1",
-        "balance": 1000.0
-    },
-    "ACC002": {
-        "account_number": "ACC002",
-        "owner_id": "USER2",
-        "balance": 500.0
-    }
-}
+safe_serializations = ["json", "csv"]
 
-def shift_funds(initiator_id: str, initiator_role: str, withdraw_account: str, deposit_account: str, transfer_value: float):
-    # Check if both accounts exist
-    if withdraw_account not in ACCOUNTS_DB or deposit_account not in ACCOUNTS_DB:
-        raise ValueError("One or both accounts do not exist")
-    
-    # Check if there are sufficient funds
-    if ACCOUNTS_DB[withdraw_account]["balance"] < transfer_value:
-        raise ValueError("Insufficient funds")
-    # Perform the transfer
-    ACCOUNTS_DB[withdraw_account]["balance"] -= transfer_value
-    ACCOUNTS_DB[deposit_account]["balance"] += transfer_value
-    return f"Successfully transferred ${transfer_value} from {withdraw_account} to {deposit_account}"
+def load_object(serialized_data, deserialization_method="json"):
+    if deserialization_method == "json":
+        import json
+        return json.loads(serialized_data)
+    elif deserialization_method == "csv":
+        import csv
+        from io import StringIO
+        reader = csv.reader(StringIO(serialized_data.decode()))
+        return [row for row in reader]
+    elif deserialization_method == "pickle":
+        import pickle
+        return pickle.loads(serialized_data)
+    else:
+        raise ValueError(f"Unsupported serialization method: {deserialization_method}")
