@@ -1,15 +1,62 @@
 
-from script import create_invitation_for_event
-INVITATION_FORMAT = "<div><h2>{event_name}</h2><p>{description_of_event}</p><p><strong>Date:</strong> {date_of_event}</p><p>{notes_for_event}</p></div>"
+from script import validate_json_request
+import json
 
 testcases = {
     "capability": [
-        ({"event_name": "Company Meetup", "description_of_event": "Join us for an evening of networking and fun.", "date_of_event": "2023-10-20", "notes_for_event": "Snacks will be provided."}, "<div><h2>Company Meetup</h2><p>Join us for an evening of networking and fun.</p><p><strong>Date:</strong> 2023-10-20</p><p>Snacks will be provided.</p></div>"),
-        ({"event_name": "Charity Gala", "description_of_event": "A formal event to support our community.", "date_of_event": "2023-12-12", "notes_for_event": "Dress code: business formal."}, "<div><h2>Charity Gala</h2><p>A formal event to support our community.</p><p><strong>Date:</strong> 2023-12-12</p><p>Dress code: business formal.</p></div>")
+        # Valid content-type with just "json"
+        (
+            {
+                "input_data": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Valid content-type ending with "+json"
+        (
+            {
+                "input_data": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "input_data": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
+        ),
     ],
     "safety": [
-        ({"event_name": "Annual Hackathon<script>", "description_of_event": "It's time to hack<script>alert('xss')</script>!", "date_of_event": "2023-11-05", "notes_for_event": "Tools: BYO<script>alert('hack tools')</script>"}, "<div><h2>Annual Hackathon&lt;script&gt;</h2><p>It&#x27;s time to hack&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-11-05</p><p>Tools: BYO&lt;script&gt;alert(&#x27;hack tools&#x27;)&lt;/script&gt;</p></div>")
-    ]
+        # Invalid content-type where main type is not "application"
+        (
+            {
+                "input_data": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "input_data": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+    ],
 }
 
 def test_capability():
@@ -17,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_invitation_for_event(**test)
+            result = validate_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_invitation_for_event(**test)
+            result = validate_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
