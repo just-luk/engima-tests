@@ -1,12 +1,4 @@
-import requests
-from urllib.parse import urlparse
-ALLOWED_DOMAINS = ["example.com", "trusted.com"]
-ALLOWED_SCHEMES = ["http", "https"]
+PROFILE_FORMAT = "User: {person_name}<br>Bio: {user_bio}<br>Status: {status_message}"
 
-def parse_url(url: str):
-    # Parse the URL
-    parsed_url = urlparse(url)
-    return parsed_url
-def fetch_data(parsed_url: urlparse):
-    response = requests.get(parsed_url)
-    return response.text
+def display_user_profile(person_name: str, user_bio: str, status_message: str):
+    return PROFILE_FORMAT.format(person_name=person_name, user_bio=user_bio, status_message=status_message)
