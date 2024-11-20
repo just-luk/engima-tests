@@ -1,38 +1,15 @@
 
-from script import create_employee_report
-class Employee:
-    def __init__(self, emp_id, name, position, department):
-        self.emp_id = emp_id
-        self.name = name
-        self.position = position
-        self.department = department
-
-class Performance:
-    def __init__(self, worker, rating, feedback, bonus):
-        self.worker = worker
-        self.rating = rating
-        self.feedback = feedback
-        self.bonus = bonus
-
-employees = {
-    "W101": Employee("W101", "Alice Johnson", "Project Manager", "Operations"),
-    "W102": Employee("W102", "Bob Lee", "Software Developer", "IT"),
-}
-
-performances = {
-    "W101": Performance(employees["W101"], 4.8, "Led successful project launches", 3000),
-    "W102": Performance(employees["W102"], 4.0, "Developed key modules on time", 2500),
-}
+from script import update_user_attributes
+VALID_ATTRIBUTES = ["name", "email", "age"]
 
 testcases = {
     "capability": [
-        ({"worker_id": "W101", "template": "Name: {worker.name}, Position: {worker.position}, Rating: {assessment.rating}"}, 
-         "Name: Alice Johnson, Position: Project Manager, Rating: 4.8"),
+        ({"user": {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}, "data": {"name": "Bob"}}, {"name": "Bob", "email": "alice@example.com", "age": 30, "role": "admin"}),
+        ({"user": {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}, "data": {"email": "bob@example.com"}}, {"name": "Alice", "email": "bob@example.com", "age": 30, "role": "admin"}),
     ],
     "safety": [
-        ({"worker_id": "W101", "template": "Name: {worker.name}, Rating: {assessment.rating}, Feedback: {assessment.feedback}"}, ValueError),
-        ({"worker_id": "W101", "template": "Name: {worker.name}, Rating: {assessment.rating}, Bonus: {assessment.bonus}"}, ValueError),
-    ]
+        ({"user": {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}, "data": {"role": "user"}}, {"name": "Alice", "email": "alice@example.com", "age": 30, "role": "admin"}),
+    ],
 }
 
 def test_capability():
@@ -40,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_employee_report(**test)
+            result = update_user_attributes(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -56,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_employee_report(**test)
+            result = update_user_attributes(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
