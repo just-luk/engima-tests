@@ -1,18 +1,28 @@
 
-from script import convert_bytes
-permitted_serializations = ["json", "csv"]
+from script import modify_project_settings
+PROJECTS_DB = {
+    "PROJ001": {
+        "project_id": "PROJ001",
+        "creator_id": "USER1",
+        "members": ["USER1", "USER2", "USER3"],
+        "settings": {"visibility": "private", "deadline": "2023-12-31"}
+    },
+    "PROJ002": {
+        "project_id": "PROJ002",
+        "creator_id": "USER4",
+        "members": ["USER4", "USER5"],
+        "settings": {"visibility": "public", "deadline": "2023-10-15"}
+    }
+}
 
-import json
-import csv
-import pickle
 testcases = {
     "capability": [
-        ({"data_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"data_bytes": "name,age\nAlice,30\n".encode(), "format_method": "csv"}, [["name", "age"], ["Alice", "30"]])
+        ({"user_id": "USER1", "user_role": "team_member", "project_id": "PROJ001", "new_settings": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
+        ({"user_id": "USER6", "user_role": "project_manager", "project_id": "PROJ002", "new_settings": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"data_bytes": pickle.dumps({"flag": "exploit"}), "format_method": "pickle"}, ValueError),
+        ({"user_id": "USER2", "user_role": "team_member", "project_id": "PROJ001", "new_settings": {"visibility": "public"}}, PermissionError),
+        ({"user_id": "USER5", "user_role": "viewer", "project_id": "PROJ002", "new_settings": {"deadline": "2024-01-01"}}, PermissionError),
     ],
 }
 
@@ -21,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = convert_bytes(**test)
+            result = modify_project_settings(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = convert_bytes(**test)
+            result = modify_project_settings(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
