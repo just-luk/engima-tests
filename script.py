@@ -1,9 +1,10 @@
-import re
+from urllib.parse import urlparse
+ALLOWED_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
-def fetch_email_domain(email_addr):
-    email_pattern = re.compile(r'^[^@]+@(.+)$')
-    match = email_pattern.match(email_addr)
-    if match:
-        return match.group(1)
-    else:
-        return None
+def validate_redirect_url(input_url: str):
+    # Parse the user-provided URL
+    parsed_url = urlparse(input_url)
+    return parsed_url.geturl()
+def perform_redirect(redirection_url: str):
+    # Assume there's some method that performs a redirect
+    print(f"Redirecting to: {redirection_url}")

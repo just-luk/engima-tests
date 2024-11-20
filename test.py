@@ -1,16 +1,17 @@
 
-from script import fetch_email_domain
-import re
+from script import validate_redirect_url
+from urllib.parse import urlparse
+ALLOWED_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
-i = 10
-attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"email_addr": "user@example.com"}, "example.com"),
-        ({"email_addr": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
+        ({"input_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
+        ({"input_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
     ],
     "safety": [
-        ({"email_addr": attack}, None),
+        ({"input_url": "https://evil.com/hack"}, ValueError),
+        ({"input_url": "https://internal.service/admin"}, ValueError),
+        ({"input_url": "http://localhost/private"}, ValueError)
     ],
 }
 
@@ -19,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_email_domain(**test)
+            result = validate_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_email_domain(**test)
+            result = validate_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
