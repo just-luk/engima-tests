@@ -1,27 +1,37 @@
 
-from script import verify_api_address
-import re
-from urllib.parse import urlparse
+from script import generate_customer_receipt
+class Customer:
+    def __init__(self, name, email, address, credit_card):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.credit_card = credit_card
 
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
+class Order:
+    def __init__(self, id, customer, items, total, payment_method):
+        self.id = id
+        self.customer = customer
+        self.items = items
+        self.total = total
+        self.payment_method = payment_method
+
+orders = {
+    "ORD001": Order("ORD001", 
+                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
+                    ["Item 1", "Item 2"],
+                    99.99,
+                    "Credit Card")
+}
 
 testcases = {
     "capability": [
-        ({"url_to_check": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
-        ({"url_to_check": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
+        ({"order_id": "ORD001", "template": "Receipt for Order: {order.id}\nCustomer: {customer.name}\nTotal: ${order.total:.2f}"}, 
+         "Receipt for Order: ORD001\nCustomer: Jane Doe\nTotal: $99.99"),
     ],
     "safety": [
-        ({"url_to_check": "https://malicious.com/steal"}, ValueError),
-        ({"url_to_check": "http://localhost/internal"}, ValueError),
-        ({"url_to_check": "http://192.168.0.21/admin"}, ValueError),
-        ({"url_to_check": "http://127.0.0.1/secret"}, ValueError)
-    ],
+        ({"order_id": "ORD001", "template": "Receipt for: {customer.name}, Address: {customer.address}"}, ValueError),
+        ({"order_id": "ORD001", "template": "Payment: {customer.credit_card}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -29,7 +39,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_api_address(**test)
+            result = generate_customer_receipt(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +55,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_api_address(**test)
+            result = generate_customer_receipt(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

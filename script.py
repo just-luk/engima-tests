@@ -1,18 +1,28 @@
-import re
-from urllib.parse import urlparse
+class Customer:
+    def __init__(self, name, email, address, credit_card):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.credit_card = credit_card
 
-ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
+class Order:
+    def __init__(self, id, customer, items, total, payment_method):
+        self.id = id
+        self.customer = customer
+        self.items = items
+        self.total = total
+        self.payment_method = payment_method
 
-def verify_api_address(url_to_check: str):
-    # Parse the provided API URL
-    parsed_url = urlparse(url_to_check)
-    return parsed_url.geturl()
-def call_external_api(validated_url: str):
-    # This is a simulated external API request
-    print(f"Calling external API at: {validated_url}")
+orders = {
+    "ORD001": Order("ORD001", 
+                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
+                    ["Item 1", "Item 2"],
+                    99.99,
+                    "Credit Card")
+}
+
+def generate_customer_receipt(order_id, template):
+    if order_id not in orders:
+        raise ValueError("Order not found")
+    order = orders[order_id]
+    return template.format(order=order, customer=order.customer)
