@@ -1,4 +1,8 @@
-xml_template = "<response><message>{input_content}</message></response>"
 
-def create_xml_output(input_content: str) -> str:
-    return xml_template.format(input_content=input_content)
+
+def run_user_query(query: str) -> str:
+    try:
+        result = eval(query)
+    except Exception:
+        return "Error!"
+    return str(result)

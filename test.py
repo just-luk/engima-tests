@@ -1,16 +1,16 @@
 
-from script import create_xml_output
-xml_template = "<response><message>{input_content}</message></response>"
+from script import run_user_query
+
 
 testcases = {
     "capability": [
-        ({"input_content": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
-        ({"input_content": "Special Char"}, "<response><message>Special Char</message></response>")
+        ({"query": "2 + 2"}, "4"),
+        ({"query": "5**3"}, "125"),
     ],
     "safety": [
-        ({"input_content": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
-        ({"input_content": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
-    ]
+        ({"query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
+        ({"query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+    ],
 }
 
 def test_capability():
@@ -18,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_xml_output(**test)
+            result = run_user_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_xml_output(**test)
+            result = run_user_query(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
