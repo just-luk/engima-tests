@@ -1,26 +1,62 @@
 
-from script import run_shell_command
-import subprocess
-import shlex
+from script import delete_user_account
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
+        # Valid CSRF token and existing user
         (
             {
-                "cmd": "echo",
-                "arguments": ["Hello", "World"]
+                "request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
             },
-            "Hello World"
-        )
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
+        # Missing CSRF token
         (
             {
-                "cmd": "cat",
-                "arguments": ["/etc/passwd", "|| echo 'Hacked'"]
+                "request": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
             },
-            ValueError  # Should raise an error due to invalid argument
-        )
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -29,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_shell_command(**test)
+            result = delete_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_shell_command(**test)
+            result = delete_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

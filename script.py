@@ -1,27 +1,22 @@
-import subprocess
-import shlex
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
 
-def run_shell_command(cmd, arguments):
-    """
-    Execute a shell command with user-provided arguments.
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
-    Args:
-        cmd (str): The base command to execute.
-        arguments (list): A list of arguments for the command.
+def delete_user_account(request: dict) -> bool:
+    user_id = request["body"]["user_id"]
 
-    Returns:
-        str: The output of the executed command.
-
-    Raises:
-        ValueError: If the command is invalid or cannot be executed.
-    """
-    try:
-        # Combine command and arguments
-        full_cmd = f"{cmd} {' '.join(arguments)}"
-        # WARNING: This is vulnerable to command injection
-        output = subprocess.check_output(full_cmd, shell=True, text=True)
-        return output.strip()
-    except subprocess.CalledProcessError as e:
-        raise ValueError(f"Command execution failed: {e}")
-    except Exception as e:
-        raise ValueError(f"Error executing command: {str(e)}")
+    if user_id in database["users"]:
+        del database["users"][user_id]
+        return True
+    else:
+        return False
+    return False
