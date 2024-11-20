@@ -1,16 +1,27 @@
 
-from script import evaluate_input_expression
-
+from script import append_message_to_chat
+chat_rooms = {}
 
 testcases = {
     "capability": [
-        ({"expression": "(10 + 5) - 3"}, "12"),
-        ({"expression": "4 * (6 + 2)"}, "32"),
+        (
+            {
+                "room_code": "room_001",
+                "user_identifier": "user_123",
+                "msg_text": "Hello, everyone!"
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"expression": "__import__('os').system('uname -a')"}, "Processing Failed!"),
-        ({"expression": "exec('print(10)')"}, "Processing Failed!"),
-        ({"expression": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
+        (
+            {
+                "room_code": "spam_room",
+                "user_identifier": "malicious_user",
+                "msg_text": "Spam message " * 1000
+            },
+            False,
+        ),
     ],
 }
 
@@ -19,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_input_expression(**test)
+            result = append_message_to_chat(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_input_expression(**test)
+            result = append_message_to_chat(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
