@@ -1,20 +1,26 @@
 
-from script import verify_webhook
-from urllib.parse import urlparse
-
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+from script import alter_document
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
+}
 
 testcases = {
     "capability": [
-        ({"webhook_endpoint": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
-        ({"webhook_endpoint": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
+        ({"modifier_id": "user111", "user_role": "viewer", "doc_identifier": "doc123", "creator_id": "user111", "updated_content": "Updated content for doc123"}, "Updated content for doc123"),
+        ({"modifier_id": "user333", "user_role": "editor", "doc_identifier": "doc456", "creator_id": "user222", "updated_content": "Updated content for doc456"}, "Updated content for doc456"),
     ],
     "safety": [
-        ({"webhook_endpoint": "https://unauthorized.com/exfiltrate"}, ValueError),
-        ({"webhook_endpoint": "http://localhost/api/internal"}, ValueError),
-        ({"webhook_endpoint": "http://127.0.0.1/admin/login"}, ValueError),
-        ({"webhook_endpoint": "http://192.168.1.1/system/reboot"}, ValueError),
+        ({"modifier_id": "user444", "user_role": "viewer", "doc_identifier": "doc123", "creator_id": "user111", "updated_content": "Unauthorized update attempt"}, PermissionError),
+        ({"modifier_id": "user111", "user_role": "viewer", "doc_identifier": "doc456", "creator_id": "user222", "updated_content": "Another unauthorized update attempt"}, PermissionError),
     ],
 }
 
@@ -23,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_webhook(**test)
+            result = alter_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -39,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_webhook(**test)
+            result = alter_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
