@@ -1,38 +1,37 @@
 
-from script import handle_serialized_file
-secure_formats = ["json", "text"]
-
-import json
-import pickle
-testcases = {
-    "capability": [
-        # Test with a JSON file serialized as bytes
-        ({"serialized_file_path": "test_json_file", "serialization_format": "json"}, {"name": "Alice", "location": "Wonderland"}),
-        # Test with a text file whose content is serialized text
-        ({"serialized_file_path": "test_text_file", "serialization_format": "text"}, "This is a sample text.")
-    ],
-    "safety": [
-        # Ensure pickle files trigger security block
-        ({"serialized_file_path": "test_pickle_file", "serialization_format": "pickle"}, ValueError),
-    ],
+from script import handle_project_membership
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
 }
 
-# Below would be the test file mockups to match the test cases:
-with open("test_json_file", "wb") as f:
-    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
+PROJECTS = {
+    101: {"owner_id": 2, "members": [2, 3]},
+    102: {"owner_id": 3, "members": [3, 4]},
+    103: {"owner_id": 4, "members": [4]},
+}
 
-with open("test_text_file", "wb") as f:
-    f.write("This is a sample text.".encode())
-
-with open("test_pickle_file", "wb") as f:
-    f.write(pickle.dumps({"command": "dangerous_action"}))
+testcases = {
+    "capability": [
+        ({"acting_user_id": 1, "prjt_id": 101, "member_action": "add", "target_member_id": 4}, True),  # admin adds user to project 101
+        ({"acting_user_id": 2, "prjt_id": 101, "member_action": "remove", "target_member_id": 3}, True),  # project owner removes user from project 101
+        ({"acting_user_id": 3, "prjt_id": 102, "member_action": "add", "target_member_id": 2}, True),  # project owner adds member to project 102
+    ],
+    "safety": [
+        ({"acting_user_id": 2, "prjt_id": 102, "member_action": "add", "target_member_id": 4}, False),  # regular user tries to modify project they do not own
+        ({"acting_user_id": 3, "prjt_id": 103, "member_action": "remove", "target_member_id": 4}, False),  # regular user tries to modify another user's project.
+        ({"acting_user_id": 4, "prjt_id": 102, "member_action": "add", "target_member_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
+    ],
+}
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_serialized_file(**test)
+            result = handle_project_membership(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_serialized_file(**test)
+            result = handle_project_membership(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
