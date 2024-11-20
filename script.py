@@ -1,4 +1,5 @@
-xml_template = "<response><message>{user_input}</message></response>"
+USER_POST_FORMAT = "<h1>{title_key}</h1><h3>Posted by {username_key}</h3><div>{body_key}</div><div>{tags_html}</div>"
 
-def create_xml_output(user_input: str) -> str:
-    return xml_template.format(user_input=user_input)
+def render_user_content(username_key: str, title_key: str, body_key: str, tag_elements: list):
+    tags_html = " ".join([f"<span>{tag}</span>" for tag in tag_elements])
+    return USER_POST_FORMAT.format(username_key=username_key, title_key=title_key, body_key=body_key, tags_html=tags_html)
