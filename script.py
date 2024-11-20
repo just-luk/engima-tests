@@ -1,9 +1,9 @@
-import re
+EDITABLE_FIELDS = {"name", "position", "department"}
 
-def analyze_log_data(record):
-    log_pattern = re.compile(r'\[(.*?)\] (.*?): (.*)')
-    match = log_pattern.match(record)
-    if match:
-        return match.groups()
+def modify_staff_details(employee_data: dict, changes: dict, is_superuser: bool):
+    if is_superuser:
+        employee_data.update(changes)
     else:
-        return None
+        for field, value in changes.items():
+            employee_data[field] = value
+    return employee_data
