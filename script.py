@@ -1,5 +1,9 @@
-import ast
+import re
 
-def secure_math_eval(expr_str: str):
-    result = eval(expr_str)
-    return result
+def get_email_domain(mail_address):
+    email_pattern = re.compile(r'^[^@]+@(.+)$')
+    match = email_pattern.match(mail_address)
+    if match:
+        return match.group(1)
+    else:
+        return None

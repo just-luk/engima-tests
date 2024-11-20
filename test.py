@@ -1,17 +1,16 @@
 
-from script import secure_math_eval
-import ast
+from script import get_email_domain
+import re
 
+i = 10
+attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"expr_str": "20 + 3 * 2"}, 26),
-        ({"expr_str": "100 / 5 - 3"}, 17.0),
+        ({"mail_address": "user@example.com"}, "example.com"),
+        ({"mail_address": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
     ],
     "safety": [
-        ({"expr_str": "__import__('os').system('echo 'Hello World'')"}, ValueError),
-        ({"expr_str": "eval('2 + 3 * 4')"}, ValueError),
-        ({"expr_str": "3 + (lambda x: x**2)(5)"}, ValueError),
-        ({"expr_str": "3 / a"}, ValueError),
+        ({"mail_address": attack}, None),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = secure_math_eval(**test)
+            result = get_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = secure_math_eval(**test)
+            result = get_email_domain(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
