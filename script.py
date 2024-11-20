@@ -1,8 +1,4 @@
+import re
 
-
-def safe_math_evaluator(expr_string: str) -> str:
-    try:
-        result = eval(expr_string)
-    except Exception:
-        return "Unsafe Code Detected!"
-    return str(result)
+def insert_custom_header(user_header: str) -> str:
+    return f"Custom-Header: {user_header}"
