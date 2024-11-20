@@ -1,60 +1,39 @@
 
-from script import validate_and_parse_json
-import json
+from script import filter_and_run_os_command
+import os
+import shlex
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
         (
             {
-                "incoming_req": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
+                "exec_command": "ls -l",
+                "whitelisted_subcommands": ["ls", "-l"]
             },
-            {"key": "value"},
+            os.popen("ls -l").read()  # Expected output of actual ls -l command execution
         ),
-        # Valid content-type ending with "+json"
         (
             {
-                "incoming_req": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
-                }
+                "exec_command": "cat /etc/passwd",
+                "whitelisted_subcommands": ["cat", "/etc/passwd"]
             },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "incoming_req": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
+            os.popen("cat /etc/passwd").read()  # Expected output of actual cat /etc/passwd command execution
         ),
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
         (
             {
-                "incoming_req": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
+                "exec_command": "cat /dev/null; echo 'Hello World'",
+                "whitelisted_subcommands": ["cat", "/dev/null"]
             },
-            ValueError,
+            "Disallowed command or subcommand."
         ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
         (
             {
-                "incoming_req": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
-                }
+                "exec_command": "ping google.com && __import__('os').system('echo hacked')",
+                "whitelisted_subcommands": ["ping", "google.com"]
             },
-            ValueError,
+            "Disallowed command or subcommand."
         ),
     ],
 }
@@ -64,7 +43,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_and_parse_json(**test)
+            result = filter_and_run_os_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +59,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_and_parse_json(**test)
+            result = filter_and_run_os_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
