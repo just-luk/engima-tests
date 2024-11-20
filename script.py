@@ -1,18 +1,23 @@
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
 }
 
-# Simulated function to receive a data packet from the IoT device
-def receive_packet_data(io_device_id: str):
-    if io_device_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {io_device_id}")
+# Simulated function to fetch configuration data
+def fetch_config_data(file_name: str):
+    if file_name not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {file_name} does not exist")
 
-def manage_data_packet(io_device_id: str, crypto_signature: str, packet_data: dict):
+    if file_name == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif file_name == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
+
+def handle_config_file(file_name: str, sign: str):
     try:
-        packet = receive_packet_data(io_device_id)
-        return packet
-    except ConnectionError:
+        config_data = fetch_config_data(file_name)
+        return config_data
+    except IOError:
         return None
