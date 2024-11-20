@@ -1,13 +1,10 @@
-import urllib.parse
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
-
-def generate_redirect_link(base_url, endpoint_path, query_info=None):
-    # Parse the API base URL
-    parsed_api_url = urllib.parse.urlparse(base_url)
-    # Construct the API redirect URL
-    final_url = urllib.parse.urljoin(base_url, endpoint_path)
-    if query_info:
-        final_url += '?' + urllib.parse.urlencode(query_info)
-    return final_url
+def create_signature(algorithm_name: str, message: bytes) -> bytes:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hash_function = getattr(hashlib, algorithm_name)
+    signature = hmac.new(secret_key, message, hash_function).digest()
+    return signature

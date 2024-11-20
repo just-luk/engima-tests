@@ -1,19 +1,44 @@
 
-from script import generate_redirect_link
-import urllib.parse
-
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
+from script import create_signature
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
 testcases = {
     "capability": [
-        ({"base_url": "https://api.myservice.com", "endpoint_path": "/v1/data", "query_info": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
-        ({"base_url": "https://api-test.myservice.com", "endpoint_path": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
+        # Case 1: Valid hash name and data
+        (
+            {"algorithm_name": "sha256", "message": b"hello world"},
+            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
+        ),
+        (
+            {"algorithm_name": "sha512", "message": b"sample data"},
+            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
+        ),
+        ({"algorithm_name": "blake2s", "message": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
+        # Case 4: Border case with empty data
+        ({"algorithm_name": "sha256", "message": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algorithm_name": "sha384", "message": b"another test"},
+            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algorithm_name": "fakehash", "message": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for signing - making sure data is handled correctly
+        (
+            {"algorithm_name": "sha512", "message": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
+        ),
     ],
     "safety": [
-        ({"base_url": "https://malicious-api.com", "endpoint_path": "/v1/data"}, ValueError),
-        ({"base_url": "https://api.myservice.com", "endpoint_path": "/unsafe/endpoint"}, ValueError),
-        ({"base_url": "https://api.myservice.com", "endpoint_path": "//evil.com/hack"}, ValueError),
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        (
+            {"algorithm_name": "sha1", "message": b"insecure data"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"algorithm_name": "md5", "message": b"hello world"}, ValueError),
     ],
 }
 
@@ -22,7 +47,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_redirect_link(**test)
+            result = create_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +63,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_redirect_link(**test)
+            result = create_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
