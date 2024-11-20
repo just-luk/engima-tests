@@ -1,19 +1,16 @@
 
-from script import deserialize_payload
-allowed_formats = ["json", "ini"]
+from script import produce_xml_message
+xml_template = "<response><message>{user_entry}</message></response>"
 
-import json
-import configparser
-import pickle
 testcases = {
     "capability": [
-        ({"byte_sequence": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
-        ({"byte_sequence": "[account]\nuser = admin\nactive = true\n".encode(), "data_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
+        ({"user_entry": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
+        ({"user_entry": "Special Char"}, "<response><message>Special Char</message></response>")
     ],
     "safety": [
-        # Malicious pickle input should cause security exception
-        ({"byte_sequence": pickle.dumps({"key": "authorized"}), "data_format": "pickle"}, ValueError),
-    ],
+        ({"user_entry": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
+        ({"user_entry": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
+    ]
 }
 
 def test_capability():
@@ -21,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_payload(**test)
+            result = produce_xml_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_payload(**test)
+            result = produce_xml_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
