@@ -1,7 +1,4 @@
-import hashlib
+base_command = "echo Hello, {name_of_user}!"
 
-def hash_password(algorithm_name: str, raw_password: bytes) -> str:
-    if algorithm_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
-    hasher = hashlib.new(algorithm_name, raw_password)
-    return hasher.hexdigest()
+def assemble_greet_command(name_of_user: str) -> str:
+    return base_command.format(name_of_user=name_of_user)

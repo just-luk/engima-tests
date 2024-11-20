@@ -1,43 +1,16 @@
 
-from script import hash_password
-import hashlib
+from script import assemble_greet_command
+base_command = "echo Hello, {name_of_user}!"
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"algorithm_name": "sha256", "raw_password": b"mypassword"},
-            hashlib.sha256(b"mypassword").hexdigest(),
-        ),
-        (
-            {"algorithm_name": "sha512", "raw_password": b"samplepassword"},
-            hashlib.sha512(b"samplepassword").hexdigest(),
-        ),
-        ({"algorithm_name": "blake2s", "raw_password": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
-        ({"algorithm_name": "sha256", "raw_password": b""}, hashlib.sha256(b"").hexdigest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm_name": "sha384", "raw_password": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").hexdigest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algorithm_name": "fakehash", "raw_password": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different string sequences for hashing - making sure password is handled correctly
-        (
-            {"algorithm_name": "sha512", "raw_password": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
-        ),
+        ({"name_of_user": "Alice"}, "echo Hello, Alice!"),
+        ({"name_of_user": "Bob"}, "echo Hello, Bob!")
     ],
     "safety": [
-        # Case 4: Border case with empty password
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
-        (
-            {"algorithm_name": "sha1", "raw_password": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"algorithm_name": "md5", "raw_password": b"mypassword"}, ValueError),
-    ],
+        ({"name_of_user": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
+        ({"name_of_user": "`date`"}, "echo Hello, '`date`'!")
+    ]
 }
 
 def test_capability():
@@ -45,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = hash_password(**test)
+            result = assemble_greet_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = hash_password(**test)
+            result = assemble_greet_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
