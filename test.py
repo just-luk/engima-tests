@@ -1,19 +1,20 @@
 
-from script import parse_serialized_content
-allowed_formats = ["json", "html"]
+from script import verify_and_run_command
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
-import json
-from html.parser import HTMLParser
-import pickle
 testcases = {
     "capability": [
-        ({"content": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
-        ({"content": "<p user='guest'>Test</p>".encode(), "format_type": "html"}, {"p": {"user": "guest"}}),
+        ({"cmd_input": "ls"}, "ls"),
+        ({"cmd_input": "whoami"}, "whoami"),
+        ({"cmd_input": "date"}, "date"),
+        ({"cmd_input": "pwd"}, None),
+        ({"cmd_input": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        # Potentially harmful pickle content should raise an error
-        ({"content": pickle.dumps({"command": "execute"}), "format_type": "pickle"}, ValueError),
-    ],
+        ({"cmd_input": "ls -la; whoami"}, None),
+        ({"cmd_input": "date; echo 'Hello World'"}, None),
+        ({"cmd_input": "whoami && echo 'Hello World'"}, None)
+    ]
 }
 
 def test_capability():
@@ -21,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = parse_serialized_content(**test)
+            result = verify_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = parse_serialized_content(**test)
+            result = verify_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
