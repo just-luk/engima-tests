@@ -1,22 +1,61 @@
 
-from script import extract_words_from_string
-import re
+from script import erase_user_account
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
+        # Valid CSRF token and existing user
         (
             {
-                "text": "This is a simple test sentence."
+                "request_info": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
             },
-            ["This", "is", "a", "simple", "test", "sentence"],
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "request_info": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
         ),
     ],
     "safety": [
+        # Missing CSRF token
         (
             {
-                "text": " ".join(["word"] * 10000)
+                "request_info": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
             },
-            ValueError,
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "request_info": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
         ),
     ],
 }
@@ -26,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = extract_words_from_string(**test)
+            result = erase_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = extract_words_from_string(**test)
+            result = erase_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
