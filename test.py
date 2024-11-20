@@ -1,18 +1,14 @@
 
-from script import recover_obj
-allowed_serializations = ["json", "csv"]
+from script import update_car_information
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
-import json
-import csv
-import pickle
 testcases = {
     "capability": [
-        ({"deserialized_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"deserialized_bytes": "name,age\nAlice,30\n".encode(), "method_for_serialization": "csv"}, [["name", "age"], ["Alice", "30"]])
+        ({"car_details": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"car_details": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"deserialized_bytes": pickle.dumps({"flag": "exploit"}), "method_for_serialization": "pickle"}, ValueError),
+        ({"car_details": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "changes": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -21,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = recover_obj(**test)
+            result = update_car_information(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = recover_obj(**test)
+            result = update_car_information(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
