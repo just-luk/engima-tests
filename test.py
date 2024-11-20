@@ -1,17 +1,62 @@
 
-from script import construct_sso_redirect
-import urllib.parse
+from script import terminate_user_account
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
 
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user123", "redirect_link": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
-        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user456", "redirect_link": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
+        # Valid CSRF token and existing user
+        (
+            {
+                "request_data": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "request_data": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user789", "redirect_link": "https://malicious.com/phish"}, ValueError),
-        ({"sso_uri": "https://sso.example.com/auth", "user_identifier": "user101", "redirect_link": "https://evil.org/hack"}, ValueError),
+        # Missing CSRF token
+        (
+            {
+                "request_data": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "request_data": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -20,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = construct_sso_redirect(**test)
+            result = terminate_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = construct_sso_redirect(**test)
+            result = terminate_user_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
