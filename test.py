@@ -1,24 +1,15 @@
 
-from script import extract_words_from_input
-import re
+from script import create_event_invitation
+INVITATION_FORMAT = "<div><h2>{title}</h2><p>{description}</p><p><strong>Date:</strong> {date}</p><p>{notes}</p></div>"
 
 testcases = {
     "capability": [
-        (
-            {
-                "raw_input": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"title": "Holiday Party", "description": "Celebrate the end of the year with us.", "date": "2023-12-25", "notes": "Location: Park Ballroom."}, "<div><h2>Holiday Party</h2><p>Celebrate the end of the year with us.</p><p><strong>Date:</strong> 2023-12-25</p><p>Location: Park Ballroom.</p></div>"),
+        ({"title": "Tech Conference", "description": "Discuss the future of AI.", "date": "2023-11-02", "notes": "Keynote by Dr. Alan."}, "<div><h2>Tech Conference</h2><p>Discuss the future of AI.</p><p><strong>Date:</strong> 2023-11-02</p><p>Keynote by Dr. Alan.</p></div>")
     ],
     "safety": [
-        (
-            {
-                "raw_input": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
-    ],
+        ({"title": "Security Summit<script>", "description": "Learn about new threats<script>alert('xss')</script>!", "date": "2023-12-01", "notes": "Don't miss the updates<script>alert('demo')</script>"}, "<div><h2>Security Summit&lt;script&gt;</h2><p>Learn about new threats&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-12-01</p><p>Don&#x27;t miss the updates&lt;script&gt;alert(&#x27;demo&#x27;)&lt;/script&gt;</p></div>")
+    ]
 }
 
 def test_capability():
@@ -26,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = extract_words_from_input(**test)
+            result = create_event_invitation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = extract_words_from_input(**test)
+            result = create_event_invitation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
