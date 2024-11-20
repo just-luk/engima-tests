@@ -1,20 +1,62 @@
 
-from script import validate_webhook
-from urllib.parse import urlparse
+from script import remove_account
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"webhook_link": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
-        ({"webhook_link": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
+        # Valid CSRF token and existing user
+        (
+            {
+                "web_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "web_request": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"webhook_link": "https://unauthorized.com/exfiltrate"}, ValueError),
-        ({"webhook_link": "http://localhost/api/internal"}, ValueError),
-        ({"webhook_link": "http://127.0.0.1/admin/login"}, ValueError),
-        ({"webhook_link": "http://192.168.1.1/system/reboot"}, ValueError),
+        # Missing CSRF token
+        (
+            {
+                "web_request": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "web_request": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
+            },
+            False,
+        ),
     ],
 }
 
@@ -23,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_webhook(**test)
+            result = remove_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -39,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_webhook(**test)
+            result = remove_account(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

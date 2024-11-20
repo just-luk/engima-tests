@@ -1,12 +1,22 @@
-from urllib.parse import urlparse
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
 
-APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
-INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
-def validate_webhook(webhook_link: str):
-    # Parse the webhook URL
-    parsed_url = urlparse(webhook_link)
-    return parsed_url.geturl()
-def invoke_internal_api(secure_url: str):
-    # Simulated function to trigger an internal API call
-    print(f"Triggering API request to: {secure_url}")
+def remove_account(web_request: dict) -> bool:
+    user_id = web_request["body"]["user_id"]
+
+    if user_id in database["users"]:
+        del database["users"][user_id]
+        return True
+    else:
+        return False
+    return False
