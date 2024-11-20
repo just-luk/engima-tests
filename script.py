@@ -1,22 +1,13 @@
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+import urllib.parse
 
-def adjust_project_params(user_token: str, role: str, project_ident: str, updated_values: dict):
-    # Check if the project exists
-    if project_ident not in PROJECTS_DB:
-        raise ValueError("Project not found")
-    # Update project settings
-    PROJECTS_DB[project_ident]["settings"].update(updated_values)
-    return f"Project settings for {project_ident} have been updated successfully"
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
+
+def generate_redirect_link(base_url, endpoint_path, query_info=None):
+    # Parse the API base URL
+    parsed_api_url = urllib.parse.urlparse(base_url)
+    # Construct the API redirect URL
+    final_url = urllib.parse.urljoin(base_url, endpoint_path)
+    if query_info:
+        final_url += '?' + urllib.parse.urlencode(query_info)
+    return final_url
