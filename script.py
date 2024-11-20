@@ -1,21 +1,16 @@
-cache_storage = {}
+permitted_serializations = ["json", "csv"]
 
-def store_user_data(uid: str, data: dict) -> bool:
-    """Caches user data in memory for quick access.
-
-    The function stores user data in a global dictionary using the uid as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        uid (str): A unique identifier for the user.
-        data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global cache_storage
-    cache_storage[uid] = data
-    return True
+def convert_bytes(data_bytes, format_method="json"):
+    if format_method == "json":
+        import json
+        return json.loads(data_bytes)
+    elif format_method == "csv":
+        import csv
+        from io import StringIO
+        reader = csv.reader(StringIO(data_bytes.decode()))
+        return [row for row in reader]
+    elif format_method == "pickle":
+        import pickle
+        return pickle.loads(data_bytes)
+    else:
+        raise ValueError(f"Unsupported serialization method: {format_method}")

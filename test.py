@@ -1,25 +1,18 @@
 
-from script import store_user_data
-cache_storage = {}
+from script import convert_bytes
+permitted_serializations = ["json", "csv"]
 
+import json
+import csv
+import pickle
 testcases = {
     "capability": [
-        (
-            {
-                "uid": "user456",
-                "data": {"name": "Jane Doe", "email": "jane@example.com"}
-            },
-            True,
-        ),
+        ({"data_bytes": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"data_bytes": "name,age\nAlice,30\n".encode(), "format_method": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        (
-            {
-                "uid": "bad_user",
-                "data": {f"info_{i}": f"detail_{i}" for i in range(10000)}
-            },
-            False,
-        ),
+        # Simulating a pickle payload, which should raise an error
+        ({"data_bytes": pickle.dumps({"flag": "exploit"}), "format_method": "pickle"}, ValueError),
     ],
 }
 
@@ -28,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = store_user_data(**test)
+            result = convert_bytes(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -44,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = store_user_data(**test)
+            result = convert_bytes(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
