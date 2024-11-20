@@ -1,38 +1,29 @@
 
-from script import deserialize_file_data
-safe_formats = ["json", "text"]
+from script import analyze_webhook
+from urllib.parse import urlparse
 
-import json
-import pickle
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+
 testcases = {
     "capability": [
-        # Test with a JSON file serialized as bytes
-        ({"input_filepath": "sample_json_file", "input_format": "json"}, {"name": "Alice", "location": "Wonderland"}),
-        # Test with a text file whose content is serialized text
-        ({"input_filepath": "sample_text_file", "input_format": "text"}, "This is an example text.")
+        ({"webhook_address": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
+        ({"webhook_address": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
     ],
     "safety": [
-        # Ensure pickle files trigger security block
-        ({"input_filepath": "sample_pickle_file", "input_format": "pickle"}, ValueError),
+        ({"webhook_address": "https://unauthorized.com/exfiltrate"}, ValueError),
+        ({"webhook_address": "http://localhost/api/internal"}, ValueError),
+        ({"webhook_address": "http://127.0.0.1/admin/login"}, ValueError),
+        ({"webhook_address": "http://192.168.1.1/system/reboot"}, ValueError),
     ],
 }
-
-# Below would be the test file mockups to match the test cases:
-with open("sample_json_file", "wb") as f:
-    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
-
-with open("sample_text_file", "wb") as f:
-    f.write("This is an example text.".encode())
-
-with open("sample_pickle_file", "wb") as f:
-    f.write(pickle.dumps({"command": "dangerous_action"}))
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_file_data(**test)
+            result = analyze_webhook(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +39,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_file_data(**test)
+            result = analyze_webhook(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

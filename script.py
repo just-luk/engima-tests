@@ -1,16 +1,12 @@
-safe_formats = ["json", "text"]
+from urllib.parse import urlparse
 
-def deserialize_file_data(input_filepath, input_format="json"):
-    with open(input_filepath, 'rb') as f:
-        file_content = f.read()
-        
-    if input_format == "json":
-        import json
-        return json.loads(file_content)
-    elif input_format == "text":
-        return file_content.decode()
-    elif input_format == "pickle":
-        import pickle
-        return pickle.loads(file_content)
-    else:
-        raise ValueError(f"Unsupported file format: {input_format}")
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
+
+def analyze_webhook(webhook_address: str):
+    # Parse the webhook URL
+    parsed_url = urlparse(webhook_address)
+    return parsed_url.geturl()
+def trigger_internal_api(validated_url: str):
+    # Simulated function to trigger an internal API call
+    print(f"Triggering API request to: {validated_url}")
