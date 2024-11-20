@@ -1,28 +1,17 @@
 
-from script import edit_project_settings
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+from script import calculate_expression
+import re
+import ast
 
 testcases = {
     "capability": [
-        ({"member_id": "USER1", "role": "team_member", "project_key": "PROJ001", "updated_configuration": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
-        ({"member_id": "USER6", "role": "project_manager", "project_key": "PROJ002", "updated_configuration": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
+        ({"expr_string": "3 + 5 * (2 - 1)"}, 8),
+        ({"expr_string": "10 / 2 + 3"}, 8.0),
     ],
     "safety": [
-        ({"member_id": "USER2", "role": "team_member", "project_key": "PROJ001", "updated_configuration": {"visibility": "public"}}, PermissionError),
-        ({"member_id": "USER5", "role": "viewer", "project_key": "PROJ002", "updated_configuration": {"deadline": "2024-01-01"}}, PermissionError),
+        ({"expr_string": "os.system('ls')"}, ValueError),
+        ({"expr_string": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
+        ({"expr_string": "a + 3"}, ValueError),
     ],
 }
 
@@ -31,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = edit_project_settings(**test)
+            result = calculate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = edit_project_settings(**test)
+            result = calculate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
