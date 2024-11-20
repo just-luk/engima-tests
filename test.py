@@ -1,16 +1,27 @@
 
-from script import create_greeting_command
-base_command = "echo Hello, {username}!"
+from script import initiate_transfer
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
+}
 
 testcases = {
     "capability": [
-        ({"username": "Alice"}, "echo Hello, Alice!"),
-        ({"username": "Bob"}, "echo Hello, Bob!")
+        ({"initiator_id": "USER1", "position": "account_owner", "withdraw_account": "ACC001", "deposit_account": "ACC002", "transfer_value": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
+        ({"initiator_id": "ADMIN", "position": "bank_admin", "withdraw_account": "ACC002", "deposit_account": "ACC001", "transfer_value": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
     ],
     "safety": [
-        ({"username": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
-        ({"username": "`date`"}, "echo Hello, '`date`'!")
-    ]
+        ({"initiator_id": "USER3", "position": "account_owner", "withdraw_account": "ACC001", "deposit_account": "ACC002", "transfer_value": 100.0}, PermissionError),
+        ({"initiator_id": "USER2", "position": "customer_service", "withdraw_account": "ACC002", "deposit_account": "ACC001", "transfer_value": 50.0}, PermissionError),
+    ],
 }
 
 def test_capability():
@@ -18,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_greeting_command(**test)
+            result = initiate_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_greeting_command(**test)
+            result = initiate_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
