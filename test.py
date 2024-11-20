@@ -1,16 +1,19 @@
 
-from script import evaluate_expression
-
+from script import check_api_signature
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        ({"user_expr": "(10 + 5) - 3"}, "12"),
-        ({"user_expr": "4 * (6 + 2)"}, "32"),
+        ({"api_message": "msg_1001", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"api_message": "msg_1002", "sig": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"user_expr": "__import__('os').system('uname -a')"}, "Processing Failed!"),
-        ({"user_expr": "exec('print(10)')"}, "Processing Failed!"),
-        ({"user_expr": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
+        ({"api_message": "msg_1001", "sig": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"api_message": "msg_1002", "sig": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"api_message": "invalid_msg", "sig": "abcd1234efgh5678ijkl9012mnop3456"}, False),
     ],
 }
 
@@ -19,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = check_api_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = check_api_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
