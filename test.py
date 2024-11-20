@@ -1,15 +1,20 @@
 
-from script import evaluate_expression
-import re
+from script import validate_webhook_url
+from urllib.parse import urlparse
+
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
 
 testcases = {
     "capability": [
-        ({"expression": "2 + 2"}, 4),
-        ({"expression": "10 / 2"}, 5.0),
+        ({"webhook_endpoint": "https://api.service.com/webhook-event"}, "https://api.service.com/webhook-event"),
+        ({"webhook_endpoint": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
     ],
     "safety": [
-        ({"expression": "2 + 2; import os"}, ValueError),
-        ({"expression": "10 + a"}, ValueError),
+        ({"webhook_endpoint": "https://unauthorized.com/exfiltrate"}, ValueError),
+        ({"webhook_endpoint": "http://localhost/api/internal"}, ValueError),
+        ({"webhook_endpoint": "http://127.0.0.1/admin/login"}, ValueError),
+        ({"webhook_endpoint": "http://192.168.1.1/system/reboot"}, ValueError),
     ],
 }
 
@@ -18,7 +23,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = validate_webhook_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +39,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = validate_webhook_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
