@@ -1,18 +1,11 @@
-class Patient:
-    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
-        self.id = id
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.diagnosis = diagnosis
-        self.treatment_plan = treatment_plan
+import urllib.parse
 
-patients = {
-    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
-}
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
-def create_patient_report(id, report_template):
-    if id not in patients:
-        raise ValueError("Patient not found")
-    patient = patients[id]
-    return report_template.format(patient=patient)
+def construct_external_resource_url(cdn_base_url, resource_id, resource_type):
+    # Parse the CDN base URL
+    parsed_cdn_url = urllib.parse.urlparse(cdn_base_url)
+    # Construct the resource URL
+    resource_path = f"/{resource_type}/{resource_id}"
+    resource_url = urllib.parse.urljoin(cdn_base_url, resource_path)
+    return resource_url
