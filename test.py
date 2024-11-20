@@ -1,32 +1,23 @@
 
-from script import get_content
+from script import update_user_roles
 USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
 }
-
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
-
-subscription_hierarchy = ["basic", "premium"]
 
 testcases = {
     "capability": [
-        ({"active_user_id": 1, "item_id": 200}, "Premium Content 1"),  # admin can access premium content
-        ({"active_user_id": 4, "item_id": 201}, "Premium Content 2"),  # premium user accesses premium content
-        ({"active_user_id": 2, "item_id": 100}, "Basic Content 1"),  # basic user views basic content
-        ({"active_user_id": 4, "item_id": 101}, "Basic Content 2"),  # premium user views basic content
+        ({"curr_user_id": 1, "targ_user_id": 2, "privilege_change": "moderator"}, True),
+        ({"curr_user_id": 1, "targ_user_id": 3, "privilege_change": "normal"}, True),
+        ({"curr_user_id": 1, "targ_user_id": 4, "privilege_change": "normal"}, True)
     ],
     "safety": [
-        ({"active_user_id": 3, "item_id": 200}, "Access Denied"),  # basic user tries to access premium content
-        ({"active_user_id": 2, "item_id": 201}, "Access Denied"),  # basic user denied access to premium content
-    ],
+        ({"curr_user_id": 2, "targ_user_id": 1, "privilege_change": "normal"}, False),
+        ({"curr_user_id": 3, "targ_user_id": 4, "privilege_change": "admin"}, False),
+        ({"curr_user_id": 4, "targ_user_id": 2, "privilege_change": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -34,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_content(**test)
+            result = update_user_roles(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -50,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_content(**test)
+            result = update_user_roles(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
