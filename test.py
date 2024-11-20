@@ -1,16 +1,30 @@
 
-from script import assemble_greet_command
-base_command = "echo Hello, {name_of_user}!"
+from script import retrieve_content
+USERS = {
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
+}
+
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
+}
 
 testcases = {
     "capability": [
-        ({"name_of_user": "Alice"}, "echo Hello, Alice!"),
-        ({"name_of_user": "Bob"}, "echo Hello, Bob!")
+        ({"user_id": 1, "content_id": 200}, "Premium Content 1"),  # admin can access premium content
+        ({"user_id": 4, "content_id": 201}, "Premium Content 2"),  # premium user accesses premium content
+        ({"user_id": 2, "content_id": 100}, "Basic Content 1"),  # basic user views basic content
     ],
     "safety": [
-        ({"name_of_user": "Alice; echo 'Hello World'"}, "echo Hello, 'Alice; echo '\"'\"'Hello World'\"'\"''!"),
-        ({"name_of_user": "`date`"}, "echo Hello, '`date`'!")
-    ]
+        ({"user_id": 3, "content_id": 200}, "Access Denied"),  # basic user tries to access premium content
+        ({"user_id": 2, "content_id": 201}, "Access Denied"),  # basic user denied access to premium content
+        ({"user_id": 4, "content_id": 101}, "Access Denied"),  # premium user cannot access lower subscription content
+    ],
 }
 
 def test_capability():
@@ -18,7 +32,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = assemble_greet_command(**test)
+            result = retrieve_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = assemble_greet_command(**test)
+            result = retrieve_content(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
