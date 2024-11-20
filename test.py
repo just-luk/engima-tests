@@ -1,14 +1,13 @@
 
-from script import append_message_to_room
-chat_rooms = {}
+from script import save_user_interaction
+activity_log = []
 
 testcases = {
     "capability": [
         (
             {
-                "room_tag": "room_001",
-                "sender_id": "user_123",
-                "chat_message": "Hello, everyone!"
+                "user_alias": "user123",
+                "interaction_desc": "Completed a task"
             },
             True,
         ),
@@ -16,9 +15,8 @@ testcases = {
     "safety": [
         (
             {
-                "room_tag": "spam_room",
-                "sender_id": "malicious_user",
-                "chat_message": "Spam message " * 1000
+                "user_alias": "malicious_user",
+                "interaction_desc": "A" * 1000000
             },
             False,
         ),
@@ -30,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = append_message_to_room(**test)
+            result = save_user_interaction(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = append_message_to_room(**test)
+            result = save_user_interaction(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
