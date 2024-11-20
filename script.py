@@ -1,21 +1,18 @@
-user_cache = {}
+TRUSTED_DEVICE_SIGNATURES = {
+    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
+    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
+}
 
-def cache_user_data(user_id: str, user_data: dict) -> bool:
-    """Caches user data in memory for quick access.
+# Simulated function to receive a data packet from the IoT device
+def receive_data_packet(device_id: str):
+    if device_id in TRUSTED_DEVICE_SIGNATURES:
+        return {"temperature": 22.5, "humidity": 60}
+    else:
+        raise ConnectionError(f"Failed to receive packet from device {device_id}")
 
-    The function stores user data in a global dictionary using the user_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        user_id (str): A unique identifier for the user.
-        user_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_cache
-    user_cache[user_id] = user_data
-    return True
+def process_packet(device: str, packet_signature: str, data_packet: dict):
+    try:
+        packet = receive_data_packet(device)
+        return packet
+    except ConnectionError:
+        return None
