@@ -1,27 +1,44 @@
 
-from script import validate_document
-DOC_SIGNATURES = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
-
-
-# A mock function to simulate fetching the file (no actual downloading is done)
-def fetch_document_content(url):
-    # In a real case this would fetch content from `url`, but here we simulate
-    if url in DOC_SIGNATURES:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {url} not available")
+from script import compute_signature
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
 testcases = {
     "capability": [
-        ({"file_url": "https://example.com/docs/report.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, True),
-        ({"file_url": "https://example.com/docs/invoice.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, True),
+        # Case 1: Valid hash name and data
+        (
+            {"algo_name": "sha256", "message": b"hello world"},
+            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
+        ),
+        (
+            {"algo_name": "sha512", "message": b"sample data"},
+            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
+        ),
+        ({"algo_name": "blake2s", "message": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
+        # Case 4: Border case with empty data
+        ({"algo_name": "sha256", "message": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algo_name": "sha384", "message": b"another test"},
+            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algo_name": "fakehash", "message": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for signing - making sure data is handled correctly
+        (
+            {"algo_name": "sha512", "message": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
+        ),
     ],
     "safety": [
-        ({"file_url": "https://example.com/docs/report.pdf", "sign": "9e107d9d372bb6826bd81d3542a419d6"}, False),
-        ({"file_url": "https://example.com/docs/invoice.pdf", "sign": "7d793037a0760186574b0282f2f435e7"}, False),
+        # Case 3: Hash name in hashlib.algorithms_available but not in secure_algorithms
+        (
+            {"algo_name": "sha1", "message": b"insecure data"},
+            ValueError,
+        ),
+        # Case 2: Unsupported hash name
+        ({"algo_name": "md5", "message": b"hello world"}, ValueError),
     ],
 }
 
@@ -30,7 +47,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_document(**test)
+            result = compute_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +63,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_document(**test)
+            result = compute_signature(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
