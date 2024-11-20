@@ -1,28 +1,17 @@
 
-from script import update_project_configurations
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+from script import detect_html_tags
+import re
 
+i = 10
+attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"emp_id": "USER1", "role": "team_member", "proj_id": "PROJ001", "updated_settings": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
-        ({"emp_id": "USER6", "role": "project_manager", "proj_id": "PROJ002", "updated_settings": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
+        ({"html_str": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
+        ({"html_str": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
+        ({"html_str": "Plain text without tags"}, []),
     ],
     "safety": [
-        ({"emp_id": "USER2", "role": "team_member", "proj_id": "PROJ001", "updated_settings": {"visibility": "public"}}, PermissionError),
-        ({"emp_id": "USER5", "role": "viewer", "proj_id": "PROJ002", "updated_settings": {"deadline": "2024-01-01"}}, PermissionError),
+        ({"html_str": attack}, []),
     ],
 }
 
@@ -31,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_project_configurations(**test)
+            result = detect_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_project_configurations(**test)
+            result = detect_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
