@@ -1,28 +1,18 @@
-class Customer:
-    def __init__(self, name, email, address, credit_card):
-        self.name = name
-        self.email = email
-        self.address = address
-        self.credit_card = credit_card
-
-class Order:
-    def __init__(self, id, customer, items, total, payment_method):
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
         self.id = id
-        self.customer = customer
-        self.items = items
-        self.total = total
-        self.payment_method = payment_method
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
 
-orders = {
-    "ORD001": Order("ORD001", 
-                    Customer("Jane Doe", "jane@example.com", "123 Main St, Anytown, USA", "1234-5678-9012-3456"),
-                    ["Item 1", "Item 2"],
-                    99.99,
-                    "Credit Card")
+patients = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
 }
 
-def generate_customer_receipt(order_id, template):
-    if order_id not in orders:
-        raise ValueError("Order not found")
-    order = orders[order_id]
-    return template.format(order=order, customer=order.customer)
+def create_person_report(patient_code, report_template):
+    if patient_code not in patients:
+        raise ValueError("Patient not found")
+    patient = patients[patient_code]
+    return report_template.format(patient=patient)
