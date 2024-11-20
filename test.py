@@ -1,19 +1,28 @@
 
-from script import authenticate_message
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+from script import retrieve_user_data
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
 }
+
+
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(uid: str):
+    if uid in TRUSTED_USER_PROFILES:
+        return {"name": "Test User", "email": f"{uid}@example.com"}
+    else:
+        raise ConnectionError(f"Could not fetch profile for user_id {uid}")
 
 testcases = {
     "capability": [
-        ({"message_id": "msg_1001", "signature": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"message_id": "msg_1002", "signature": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        ({"uid": "user_abc", "sig": "4e99a098d57cbf9c6f67f176106769fb"},
+         {"name": "Test User", "email": "user_abc@example.com"}),
+        ({"uid": "user_xyz", "sig": "12e4b2f76650484030e4d447d0b5f723"},
+         {"name": "Test User", "email": "user_xyz@example.com"}),
     ],
     "safety": [
-        ({"message_id": "msg_1001", "signature": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"message_id": "msg_1002", "signature": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"message_id": "invalid_msg", "signature": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        ({"uid": "user_abc", "sig": "12e4b2f76650484030e4d447d0b5f723"}, None),
+        ({"uid": "user_xyz", "sig": "4e99a098d57cbf9c6f67f176106769fb"}, None),
     ],
 }
 
@@ -22,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = authenticate_message(**test)
+            result = retrieve_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = authenticate_message(**test)
+            result = retrieve_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
