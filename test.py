@@ -1,54 +1,26 @@
 
-from script import create_hmac_signature
-import hashlib
-import hmac
+from script import push_text_to_room
+chat_rooms = {}
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
         (
-            {"algorithm": "sha256", "content": b"hello world", "secret_key": b"secret"},
-            hmac.new(b"secret", b"hello world", "sha256").digest(),
-        ),
-        (
-            {"algorithm": "sha512", "content": b"sample data", "secret_key": b"key"},
-            hmac.new(b"key", b"sample data", "sha512").digest(),
-        ),
-        (
-            {"algorithm": "blake2s", "content": b"test", "secret_key": b"key"},
-            hmac.new(b"key", b"test", "blake2s").digest(),
-        ),
-        # Case 4: Border case with empty data
-        (
-            {"algorithm": "sha256", "content": b"", "secret_key": b"key"},
-            hmac.new(b"key", b"", "sha256").digest(),
-        ),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm": "sha384", "content": b"another test", "secret_key": b"key"},
-            hmac.new(b"key", b"another test", "sha384").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        (
-            {"algorithm": "fakehash", "content": b"irrelevant data", "secret_key": b"key"},
-            ValueError,
-        ),
-        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
-        (
-            {"algorithm": "sha512", "content": b"\xfa\xfb\xfc\xfd\xfe\xff", "secret_key": b"key"},
-            hmac.new(b"key", b"\xfa\xfb\xfc\xfd\xfe\xff", "sha512").digest(),
+            {
+                "room_name": "room_001",
+                "member_id": "user_123",
+                "content": "Hello, everyone!"
+            },
+            True,
         ),
     ],
     "safety": [
-        # Case 2: Unsupported hash name
         (
-            {"algorithm": "md5", "content": b"hello world", "secret_key": b"secret"},
-            ValueError,
-        ),
-         # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
-        (
-            {"algorithm": "sha1", "content": b"insecure data", "secret_key": b"key"},
-            ValueError,
+            {
+                "room_name": "spam_room",
+                "member_id": "malicious_user",
+                "content": "Spam message " * 1000
+            },
+            False,
         ),
     ],
 }
@@ -58,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_hmac_signature(**test)
+            result = push_text_to_room(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -74,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_hmac_signature(**test)
+            result = push_text_to_room(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
