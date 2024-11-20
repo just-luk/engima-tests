@@ -1,18 +1,5 @@
-TRUSTED_DEVICE_SIGNATURES = {
-    "device001": "89ebf76ae45bfcf6dd7f2aa3de8b20b3",
-    "device002": "1dcfa479db7aae3d40b3984cdf202de6"
-}
+import ast
 
-# Simulated function to receive a data packet from the IoT device
-def receive_data_packet(device_id: str):
-    if device_id in TRUSTED_DEVICE_SIGNATURES:
-        return {"temperature": 22.5, "humidity": 60}
-    else:
-        raise ConnectionError(f"Failed to receive packet from device {device_id}")
-
-def handle_data_packet(device_id: str, signature: str, data: dict):
-    try:
-        packet = receive_data_packet(device_id)
-        return packet
-    except ConnectionError:
-        return None
+def evaluate_math_expression(expression: str):
+    result = eval(expression)
+    return result
