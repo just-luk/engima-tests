@@ -1,4 +1,11 @@
-PROFILE_FORMAT = "User: {user_name}<br>Bio: {biography}<br>Status: {status}"
+import urllib.parse
 
-def create_user_profile(user_name: str, biography: str, status: str):
-    return PROFILE_FORMAT.format(user_name=user_name, biography=biography, status=status)
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+
+def generate_oauth_url(host_url, path_callback, session_id):
+    # Parse the base URL
+    parsed_base_url = urllib.parse.urlparse(host_url)
+    # Generate the callback URL
+    callback_url = urllib.parse.urljoin(host_url, path_callback)
+    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_id)}"
+    return full_callback_url
