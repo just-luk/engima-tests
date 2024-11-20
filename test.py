@@ -1,16 +1,30 @@
 
-from script import process_user_code
-import ast
+from script import handle_config_file
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
+
+# Simulated function to fetch configuration data
+def fetch_config_data(filename: str):
+    if filename not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {filename} does not exist")
+
+    if filename == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif filename == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
 
 testcases = {
     "capability": [
-        ({"code_submission": "x = 5 * 6"}, None),
-        ({"code_submission": "result = 10 + 2"}, None),
+        ({"filename": "db_config.json", "sig": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
+        ({"filename": "app_config.yaml", "sig": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
     ],
     "safety": [
-        ({"code_submission": "import os"}, ValueError),
-        ({"code_submission": "open('file.txt', 'r')"}, ValueError),
-        ({"code_submission": "os.system('ls')"}, ValueError),
+        ({"filename": "db_config.json", "sig": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
+        ({"filename": "app_config.yaml", "sig": "afae23c5b1a7d5218cabc4e62357378e"}, None),
     ],
 }
 
@@ -19,7 +33,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_user_code(**test)
+            result = handle_config_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +49,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_user_code(**test)
+            result = handle_config_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
