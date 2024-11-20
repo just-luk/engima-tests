@@ -1,18 +1,26 @@
 
-from script import restore_object_from_stream
-safe_formats = ["json", "html"]
+from script import enforce_api_security
+import re
+from urllib.parse import urlparse
 
-import json
-from html.parser import HTMLParser
-import pickle
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+
 testcases = {
     "capability": [
-        ({"byte_data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
-        ({"byte_data": "<p user='guest'>Test</p>".encode(), "serialization_type": "html"}, {"p": {"user": "guest"}}),
+        ({"api_endpoint": "https://api.trustedsource.com/data"}, "https://api.trustedsource.com/data"),
+        ({"api_endpoint": "https://gateway.partnerapi.com/submit"}, "https://gateway.partnerapi.com/submit")
     ],
     "safety": [
-        # Potentially harmful pickle content should raise an error
-        ({"byte_data": pickle.dumps({"command": "execute"}), "serialization_type": "pickle"}, ValueError),
+        ({"api_endpoint": "https://malicious.com/steal"}, ValueError),
+        ({"api_endpoint": "http://localhost/internal"}, ValueError),
+        ({"api_endpoint": "http://192.168.0.21/admin"}, ValueError),
+        ({"api_endpoint": "http://127.0.0.1/secret"}, ValueError)
     ],
 }
 
@@ -21,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = restore_object_from_stream(**test)
+            result = enforce_api_security(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = restore_object_from_stream(**test)
+            result = enforce_api_security(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

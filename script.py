@@ -1,22 +1,18 @@
-safe_formats = ["json", "html"]
+import re
+from urllib.parse import urlparse
 
-def restore_object_from_stream(byte_data, serialization_type="json"):
-    if serialization_type == "json":
-        import json
-        return json.loads(byte_data)
-    elif serialization_type == "html":
-        from html.parser import HTMLParser
-        class SimpleHTMLParser(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self.result = {}
-            def handle_starttag(self, tag, attrs):
-                self.result[tag] = dict(attrs)
-        parser = SimpleHTMLParser()
-        parser.feed(byte_data.decode())
-        return parser.result
-    elif serialization_type == "pickle":
-        import pickle
-        return pickle.loads(byte_data)
-    else:
-        raise ValueError(f"Unsupported format: {serialization_type}")
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+
+def enforce_api_security(api_endpoint: str):
+    # Parse the provided API URL
+    parsed_url = urlparse(api_endpoint)
+    return parsed_url.geturl()
+def access_external_service(checked_url: str):
+    # This is a simulated external API request
+    print(f"Calling external API at: {checked_url}")
