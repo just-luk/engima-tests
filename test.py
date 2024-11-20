@@ -1,61 +1,14 @@
 
-from script import handle_json_request
-import json
+from script import update_vehicle_info
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
-        (
-            {
-                "http_request": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Valid content-type ending with "+json"
-        (
-            {
-                "http_request": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "http_request": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
-        ),
+        ({"vehicle": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"vehicle": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
-        (
-            {
-                "http_request": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
-        (
-            {
-                "http_request": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
+        ({"vehicle": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -64,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_json_request(**test)
+            result = update_vehicle_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_json_request(**test)
+            result = update_vehicle_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
