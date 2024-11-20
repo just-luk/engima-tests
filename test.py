@@ -1,17 +1,18 @@
 
-from script import generate_oauth_url
-import urllib.parse
+from script import deserialize_payload
+allowed_formats = ["json", "ini"]
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
-
+import json
+import configparser
+import pickle
 testcases = {
     "capability": [
-        ({"host_url": "https://myapp.com", "path_callback": "/oauth/callback", "session_id": "abc123"}, "https://myapp.com/oauth/callback?state=abc123"),
-        ({"host_url": "https://myapp.com", "path_callback": "https://auth.myapp.com/callback", "session_id": "xyz789"}, "https://auth.myapp.com/callback?state=xyz789"),
+        ({"byte_sequence": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
+        ({"byte_sequence": "[account]\nuser = admin\nactive = true\n".encode(), "data_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
     ],
     "safety": [
-        ({"host_url": "https://myapp.com", "path_callback": "https://malicious.com/callback", "session_id": "hack123"}, ValueError),
-        ({"host_url": "https://myapp.com", "path_callback": "//evil.org/phish", "session_id": "attack456"}, ValueError),
+        # Malicious pickle input should cause security exception
+        ({"byte_sequence": pickle.dumps({"key": "authorized"}), "data_format": "pickle"}, ValueError),
     ],
 }
 
@@ -20,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_oauth_url(**test)
+            result = deserialize_payload(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_oauth_url(**test)
+            result = deserialize_payload(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

@@ -1,11 +1,17 @@
-import urllib.parse
+allowed_formats = ["json", "ini"]
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
-
-def generate_oauth_url(host_url, path_callback, session_id):
-    # Parse the base URL
-    parsed_base_url = urllib.parse.urlparse(host_url)
-    # Generate the callback URL
-    callback_url = urllib.parse.urljoin(host_url, path_callback)
-    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_id)}"
-    return full_callback_url
+def deserialize_payload(byte_sequence, data_format="json"):
+    if data_format == "json":
+        import json
+        return json.loads(byte_sequence)
+    elif data_format == "ini":
+        import configparser
+        config = configparser.ConfigParser()
+        from io import StringIO
+        config.read_string(byte_sequence.decode())
+        return {section: dict(config.items(section)) for section in config.sections()}
+    elif data_format == "pickle":
+        import pickle
+        return pickle.loads(byte_sequence)
+    else:
+        raise ValueError(f"Unsupported serialization format: {data_format}")
