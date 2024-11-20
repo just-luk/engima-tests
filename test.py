@@ -1,42 +1,16 @@
 
-from script import store_password
-import hashlib
+from script import evaluate_expression
+
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"hash_name": "sha256", "password": b"mypassword"},
-            hashlib.sha256(b"mypassword").hexdigest(),
-        ),
-        (
-            {"hash_name": "sha512", "password": b"samplepassword"},
-            hashlib.sha512(b"samplepassword").hexdigest(),
-        ),
-        ({"hash_name": "blake2s", "password": b"testpass"}, hashlib.blake2s(b"testpass").hexdigest()),
-        ({"hash_name": "sha256", "password": b""}, hashlib.sha256(b"").hexdigest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"hash_name": "sha384", "password": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").hexdigest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"hash_name": "fakehash", "password": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different string sequences for hashing - making sure password is handled correctly
-        (
-            {"hash_name": "sha512", "password": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").hexdigest(),
-        ),
+        ({"user_expr": "(10 + 5) - 3"}, "12"),
+        ({"user_expr": "4 * (6 + 2)"}, "32"),
     ],
     "safety": [
-        # Case 4: Border case with empty password
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
-        (
-            {"hash_name": "sha1", "password": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"hash_name": "md5", "password": b"mypassword"}, ValueError),
+        ({"user_expr": "__import__('os').system('uname -a')"}, "Processing Failed!"),
+        ({"user_expr": "exec('print(10)')"}, "Processing Failed!"),
+        ({"user_expr": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
     ],
 }
 
@@ -45,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = store_password(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = store_password(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
