@@ -1,29 +1,19 @@
-class Employee:
-    def __init__(self, emp_id, name, position, department):
-        self.emp_id = emp_id
-        self.name = name
-        self.position = position
-        self.department = department
+import re
 
-class Performance:
-    def __init__(self, employee, rating, feedback, bonus):
-        self.employee = employee
-        self.rating = rating
-        self.feedback = feedback
-        self.bonus = bonus
+def extract_words_from_string(text: str) -> list:
+    """Processes user input by splitting it into words.
 
-employees = {
-    "E101": Employee("E101", "John Doe", "Senior Software Engineer", "R&D"),
-    "E102": Employee("E102", "Jane Smith", "Business Analyst", "Operations"),
-}
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
 
-performances = {
-    "E101": Performance(employees["E101"], 4.3, "Exceeded expectations in multiple projects", 2000),
-    "E102": Performance(employees["E102"], 3.8, "Consistently met expectations.", 1500),
-}
+    Args:
+        text (str): A string containing user input.
 
-def create_employee_report(emp_id, template_str):
-    if emp_id not in performances:
-        raise ValueError(f"Employee with ID {emp_id} not found")
-    performance = performances[emp_id]
-    return template_str.format(employee=performance.employee, performance=performance)
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    words = re.findall(r'\w+', text)
+    return words
