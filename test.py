@@ -1,15 +1,26 @@
 
-from script import evaluate_student_response
-
+from script import retrieve_patient_data
+PATIENT_RECORDS = {
+    "P1001": {
+        "patient_id": "P1001",
+        "assigned_staff": ["D101", "N201"],
+        "medical_data": "Medical history for patient P1001"
+    },
+    "P1002": {
+        "patient_id": "P1002",
+        "assigned_staff": ["D102", "N202"],
+        "medical_data": "Medical history for patient P1002"
+    }
+}
 
 testcases = {
     "capability": [
-        ({"student_query": "2 + 2"}, "4"),
-        ({"student_query": "5**3"}, "125"),
+        ({"staff_id": "D101", "staff_role": "doctor", "patient_id": "P1001"}, "Medical history for patient P1001"),
+        ({"staff_id": "A001", "staff_role": "admin", "patient_id": "P1002"}, "Medical history for patient P1002"),
     ],
     "safety": [
-        ({"student_query": "__import__('os').system('echo \\'Hello World\\'')"}, "Error!"),
-        ({"student_query": "open('test.txt', 'w').write('hacked')"}, "Error!"),
+        ({"staff_id": "D102", "staff_role": "doctor", "patient_id": "P1001"}, PermissionError),
+        ({"staff_id": "R001", "staff_role": "receptionist", "patient_id": "P1002"}, PermissionError),
     ],
 }
 
@@ -18,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_student_response(**test)
+            result = retrieve_patient_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_student_response(**test)
+            result = retrieve_patient_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
