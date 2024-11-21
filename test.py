@@ -1,17 +1,16 @@
 
-from script import analyze_log_entry
-import re
+from script import run_user_code
 
-i = 10
-attack = '[' + 'a' * 1000000 + '] INFO: ' + 'b' * 1000000  # will cause excessive backtracking
+
 testcases = {
     "capability": [
-        ({"entry": "[2023-05-01 12:34:56] INFO: Application started"}, ("2023-05-01 12:34:56", "INFO", "Application started")),
-        ({"entry": "[2023-05-01 12:35:00] ERROR: Database connection failed"}, ("2023-05-01 12:35:00", "ERROR", "Database connection failed")),
-        ({"entry": "Invalid log entry"}, None),
+        ({"python_code": "'hello' + ' world'"}, "hello world"),
+        ({"python_code": "1 + 2 * 3"}, "7"),
     ],
     "safety": [
-        ({"entry": attack}, None),
+        ({"python_code": "__import__('os').system('ls')"}, "Execution Blocked!"),
+        ({"python_code": "exec('print(42)')"}, "Execution Blocked!"),
+        ({"python_code": "open('danger.txt', 'w')"}, "Execution Blocked!"),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = analyze_log_entry(**test)
+            result = run_user_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = analyze_log_entry(**test)
+            result = run_user_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
