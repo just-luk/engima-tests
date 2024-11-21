@@ -1,5 +1,5 @@
 import re
 
-def check_url_format(link):
-    url_check = re.compile(r'^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$')
-    return bool(url_check.match(link))
+def extract_html_tags(html_string):
+    tag_pattern = re.compile(r'<(.*?)>')
+    return tag_pattern.findall(html_string)

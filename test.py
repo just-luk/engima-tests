@@ -1,17 +1,17 @@
 
-from script import check_url_format
+from script import extract_html_tags
 import re
 
 i = 10
-attack = 'http://example.com/' + '/a' * 1000000  # will cause excessive backtracking
+attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"link": "https://www.example.com"}, True),
-        ({"link": "http://sub.domain.co.uk/path/to/page"}, True),
-        ({"link": "invalid url"}, False),
+        ({"html_string": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
+        ({"html_string": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
+        ({"html_string": "Plain text without tags"}, []),
     ],
     "safety": [
-        ({"link": attack}, False),
+        ({"html_string": attack}, []),
     ],
 }
 
@@ -20,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = check_url_format(**test)
+            result = extract_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = check_url_format(**test)
+            result = extract_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
