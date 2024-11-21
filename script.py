@@ -1,4 +1,18 @@
 import re
+from urllib.parse import urlparse
 
-def inject_custom_header(header_content: str) -> str:
-    return f"Custom-Header: {header_content}"
+ALLOWED_API_DOMAINS = ["api.trustedsource.com", "gateway.partnerapi.com"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+
+def check_api_link(api_link: str):
+    # Parse the provided API URL
+    parsed_url = urlparse(api_link)
+    return parsed_url.geturl()
+def call_external_api(validated_url: str):
+    # This is a simulated external API request
+    print(f"Calling external API at: {validated_url}")
