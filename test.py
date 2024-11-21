@@ -1,20 +1,16 @@
 
-from script import validate_and_execute_command
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+from script import exec_calculation
+
 
 testcases = {
     "capability": [
-        ({"cmd": "ls"}, "ls"),
-        ({"cmd": "whoami"}, "whoami"),
-        ({"cmd": "date"}, "date"),
-        ({"cmd": "pwd"}, None),
-        ({"cmd": "echo 'Hello World'"}, None)
+        ({"calc_string": "8 / 2"}, "4.0"),
+        ({"calc_string": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        ({"cmd": "ls -la; whoami"}, None),
-        ({"cmd": "date; echo 'Hello World'"}, None),
-        ({"cmd": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"calc_string": "exec('print(123)')"}, "Computation Error!"),
+        ({"calc_string": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
+    ],
 }
 
 def test_capability():
@@ -22,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_and_execute_command(**test)
+            result = exec_calculation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_and_execute_command(**test)
+            result = exec_calculation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
