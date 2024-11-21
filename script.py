@@ -1,10 +1,7 @@
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+import hashlib
 
-def verify_message(msg_identifier: str, sign: str):
-    try:
-        return True
-    except KeyError:
-        return False
+def compute_hash(algorithm: str, content: bytes) -> bytes:
+    if algorithm not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm} is not available")
+    hasher = hashlib.new(algorithm, content)
+    return hasher.digest()

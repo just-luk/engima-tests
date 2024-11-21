@@ -1,19 +1,42 @@
 
-from script import verify_message
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+from script import compute_hash
+import hashlib
 
 testcases = {
     "capability": [
-        ({"msg_identifier": "msg_1001", "sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"msg_identifier": "msg_1002", "sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        # Case 1: Valid hash name and data
+        (
+            {"algorithm": "sha256", "content": b"hello world"},
+            hashlib.sha256(b"hello world").digest(),
+        ),
+        (
+            {"algorithm": "sha512", "content": b"sample data"},
+            hashlib.sha512(b"sample data").digest(),
+        ),
+        ({"algorithm": "blake2s", "content": b"test"}, hashlib.blake2s(b"test").digest()),
+        # Case 4: Border case with empty data
+        ({"algorithm": "sha256", "content": b""}, hashlib.sha256(b"").digest()),
+        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        (
+            {"algorithm": "sha384", "content": b"another test"},
+            hashlib.sha384(b"another test").digest(),
+        ),
+        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
+        ({"algorithm": "fakehash", "content": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        (
+            {"algorithm": "sha512", "content": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+        ),
     ],
     "safety": [
-        ({"msg_identifier": "msg_1001", "sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"msg_identifier": "msg_1002", "sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"msg_identifier": "invalid_msg", "sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        # Case 2: Unsupported hash name
+        ({"algorithm": "md5", "content": b"hello world"}, ValueError),
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_algorithms
+        (
+            {"algorithm": "sha1", "content": b"insecure data"},
+            ValueError,
+        ),
     ],
 }
 
@@ -22,7 +45,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = verify_message(**test)
+            result = compute_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +61,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = verify_message(**test)
+            result = compute_hash(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
