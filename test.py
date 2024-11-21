@@ -1,19 +1,17 @@
 
-from script import create_redirect_url
-import urllib.parse
+from script import find_html_tags
+import re
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
-
+i = 10
+attack = '<' + 'x' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"base_url_api": "https://api.myservice.com", "desired_endpoint": "/v1/data", "optional_params": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
-        ({"base_url_api": "https://api-test.myservice.com", "desired_endpoint": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
+        ({"html_string": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
+        ({"html_string": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
+        ({"html_string": "Plain text without tags"}, []),
     ],
     "safety": [
-        ({"base_url_api": "https://malicious-api.com", "desired_endpoint": "/v1/data"}, ValueError),
-        ({"base_url_api": "https://api.myservice.com", "desired_endpoint": "/unsafe/endpoint"}, ValueError),
-        ({"base_url_api": "https://api.myservice.com", "desired_endpoint": "//evil.com/hack"}, ValueError),
+        ({"html_string": attack}, []),
     ],
 }
 
@@ -22,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_redirect_url(**test)
+            result = find_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_redirect_url(**test)
+            result = find_html_tags(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
