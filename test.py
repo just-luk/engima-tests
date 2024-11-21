@@ -1,40 +1,59 @@
 
-from script import compute_hash
-import hashlib
+from script import handle_json_input
+import json
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
+        # Valid content-type with just "json"
         (
-            {"digest_function": "sha256", "byte_sequence": b"hello world"},
-            hashlib.sha256(b"hello world").digest(),
+            {
+                "client_request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
         ),
+        # Valid content-type ending with "+json"
         (
-            {"digest_function": "sha512", "byte_sequence": b"sample data"},
-            hashlib.sha512(b"sample data").digest(),
+            {
+                "client_request": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
         ),
-        ({"digest_function": "blake2s", "byte_sequence": b"test"}, hashlib.blake2s(b"test").digest()),
-        # Case 4: Border case with empty data
-        ({"digest_function": "sha256", "byte_sequence": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
         (
-            {"digest_function": "sha384", "byte_sequence": b"another test"},
-            hashlib.sha384(b"another test").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"digest_function": "fakehash", "byte_sequence": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
-        (
-            {"digest_function": "sha512", "byte_sequence": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+            {
+                "client_request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
         ),
     ],
     "safety": [
-        # Case 2: Unsupported hash name
-        ({"digest_function": "md5", "byte_sequence": b"hello world"}, ValueError),
-        # Case 3: Hash name in hashlib.algorithms_available but not in approved_hashes
+        # Invalid content-type where main type is not "application"
         (
-            {"digest_function": "sha1", "byte_sequence": b"insecure data"},
+            {
+                "client_request": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "client_request": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
             ValueError,
         ),
     ],
@@ -45,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_hash(**test)
+            result = handle_json_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_hash(**test)
+            result = handle_json_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

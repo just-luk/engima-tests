@@ -1,7 +1,8 @@
-import hashlib
+import json
 
-def compute_hash(digest_function: str, byte_sequence: bytes) -> bytes:
-    if digest_function not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {digest_function} is not available")
-    hasher = hashlib.new(digest_function, byte_sequence)
-    return hasher.digest()
+def handle_json_input(client_request: dict) -> dict:
+    try:
+        return json.loads(client_request["body"])
+    except json.decoder.JSONDecodeError:
+        raise ValueError("Invalid JSON format")
+    return {}
