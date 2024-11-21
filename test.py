@@ -1,56 +1,24 @@
 
-from script import change_user_phone
-# Simulating a database
-db_users = {
-    "users": {
-        "1": {"telephone": "123-556-7890"},
-    }
-}
+from script import register_new_task
+from queue import Queue
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "csrf_token_secured"
+task_queue = Queue()
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
         (
             {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "csrf_token_secured"},
-                    "body": {"user_id": "1", "new_phone": "111-555-7890"},
-                }
+                "task_reference": "task_001",
+                "parameters": {"type": "data_processing", "priority": "high"}
             },
             True,
         ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "csrf_token_secured"},
-                    "body": {"user_id": "3", "new_phone": "111-555-7890"},
-                }
-            },
-            False,
-        ),
     ],
     "safety": [
-        # Missing CSRF token
         (
             {
-                "payload": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_phone": "111-555-7890"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "payload": {
-                    "headers": {"X-CSRF-Token": "fake_csrf_token"},
-                    "body": {"user_id": "1", "new_phone": "111-555-7890"},
-                }
+                "task_reference": "malicious_task",
+                "parameters": {"payload": "A" * 1000000}
             },
             False,
         ),
@@ -62,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = change_user_phone(**test)
+            result = register_new_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = change_user_phone(**test)
+            result = register_new_task(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

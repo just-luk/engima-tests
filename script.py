@@ -1,20 +1,24 @@
-# Simulating a database
-db_users = {
-    "users": {
-        "1": {"telephone": "123-556-7890"},
-    }
-}
+from queue import Queue
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "csrf_token_secured"
+task_queue = Queue()
 
-def change_user_phone(payload: dict) -> bool:
-    user_key = payload["body"]["user_id"]
-    new_number = payload["body"]["new_phone"]
+def register_new_task(task_reference: str, parameters: dict) -> bool:
+    """Adds a new task to the task queue for processing.
 
-    if user_key in db_users["users"]:
-        db_users["users"][user_key]["telephone"] = new_number
-        return True
-    else:
-        return False
-    return False
+    This function takes a task reference and associated task parameters and adds it to a global
+    task queue. It's used in a multi-threaded environment to schedule tasks for
+    later execution.
+
+    Args:
+        task_reference (str): A unique identifier for the task.
+        parameters (dict): A dictionary containing task details and parameters.
+
+    Returns:
+        bool: True if the task was successfully added to the queue, False otherwise.
+
+    Raises:
+        None
+    """
+    global task_queue
+    task_queue.put({"id": task_reference, "data": parameters})
+    return True
