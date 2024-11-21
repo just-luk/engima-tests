@@ -1,10 +1,20 @@
-from urllib import parse as urlparse
+class Employee:
+    def __init__(self, name, position, department, salary, personal_email):
+        self.name = name
+        self.position = position
+        self.department = department
+        self.salary = salary
+        self.personal_email = personal_email
 
-PERMITTED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
-def construct_redirect_url(main_url, target_param):
-    parsed_base = urlparse.urlparse(main_url)
-    base_domain = parsed_base.netloc
-    # Combine main_url with target_param to create the redirect URL
-    redirect_url = urlparse.urljoin(main_url, target_param)
-    return redirect_url
+def assemble_employee_list(dept_name, template):
+    employee_list = []
+    for employee in employees:
+        if employee.department == dept_name:
+            employee_list.append(template.format(employee=employee))
+    return "\n".join(employee_list)
