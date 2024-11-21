@@ -1,19 +1,19 @@
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
-}
+import re
 
-def fetch_patient_record(staff_identifier: str, staff_role: str, patient_ident: str):
-    # Check if the patient record exists
-    if patient_ident not in PATIENT_RECORDS:
-        raise ValueError("Patient record not found")
-    # Return the patient's medical data
-    return PATIENT_RECORDS[patient_ident]["medical_data"]
+def parse_user_input(text: str) -> list:
+    """Processes user input by splitting it into words.
+
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
+
+    Args:
+        text (str): A string containing user input.
+
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    words = re.findall(r'\w+', text)
+    return words

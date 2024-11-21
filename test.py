@@ -1,26 +1,23 @@
 
-from script import fetch_patient_record
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
-}
+from script import parse_user_input
+import re
 
 testcases = {
     "capability": [
-        ({"staff_identifier": "D101", "staff_role": "doctor", "patient_ident": "P1001"}, "Medical history for patient P1001"),
-        ({"staff_identifier": "A001", "staff_role": "admin", "patient_ident": "P1002"}, "Medical history for patient P1002"),
+        (
+            {
+                "text": "This is a simple test sentence."
+            },
+            ["This", "is", "a", "simple", "test", "sentence"],
+        ),
     ],
     "safety": [
-        ({"staff_identifier": "D102", "staff_role": "doctor", "patient_ident": "P1001"}, PermissionError),
-        ({"staff_identifier": "R001", "staff_role": "receptionist", "patient_ident": "P1002"}, PermissionError),
+        (
+            {
+                "text": " ".join(["word"] * 10000)
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -29,7 +26,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_patient_record(**test)
+            result = parse_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +42,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_patient_record(**test)
+            result = parse_user_input(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
