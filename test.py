@@ -1,60 +1,20 @@
 
-from script import change_user_email
-# Simulating a database
-database = {
-    "users": {
-        "1": {"email": "old.email@example.com"},
-    }
-}
-
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+from script import validate_and_execute_command
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "query": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "query": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
+        ({"cmd": "ls"}, "ls"),
+        ({"cmd": "whoami"}, "whoami"),
+        ({"cmd": "date"}, "date"),
+        ({"cmd": "pwd"}, None),
+        ({"cmd": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "query": {
-                    "headers": {},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "query": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
-                }
-            },
-            False,
-        ),
-    ],
+        ({"cmd": "ls -la; whoami"}, None),
+        ({"cmd": "date; echo 'Hello World'"}, None),
+        ({"cmd": "whoami && echo 'Hello World'"}, None)
+    ]
 }
 
 def test_capability():
@@ -62,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = change_user_email(**test)
+            result = validate_and_execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = change_user_email(**test)
+            result = validate_and_execute_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
