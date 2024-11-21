@@ -1,27 +1,16 @@
 
-from script import review_patient_data
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
-}
+from script import create_xml_reply
+xml_pattern = "<response><message>{user_text}</message></response>"
 
 testcases = {
     "capability": [
-        ({"staff_id": "D101", "staff_role": "doctor", "patient_id": "P1001"}, "Medical history for patient P1001"),
-        ({"staff_id": "A001", "staff_role": "admin", "patient_id": "P1002"}, "Medical history for patient P1002"),
+        ({"user_text": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
+        ({"user_text": "Special Char"}, "<response><message>Special Char</message></response>")
     ],
     "safety": [
-        ({"staff_id": "D102", "staff_role": "doctor", "patient_id": "P1001"}, PermissionError),
-        ({"staff_id": "R001", "staff_role": "receptionist", "patient_id": "P1002"}, PermissionError),
-    ],
+        ({"user_text": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
+        ({"user_text": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
+    ]
 }
 
 def test_capability():
@@ -29,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = review_patient_data(**test)
+            result = create_xml_reply(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = review_patient_data(**test)
+            result = create_xml_reply(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
