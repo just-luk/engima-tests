@@ -1,17 +1,14 @@
 
-from script import build_sso_url
-import urllib.parse
-
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
+from script import modify_vehicle_data
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
 testcases = {
     "capability": [
-        ({"sso_path": "https://sso.example.com/auth", "uid": "user123", "redirect_url": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
-        ({"sso_path": "https://sso.example.com/auth", "uid": "user456", "redirect_url": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
+        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        ({"sso_path": "https://sso.example.com/auth", "uid": "user789", "redirect_url": "https://malicious.com/phish"}, ValueError),
-        ({"sso_path": "https://sso.example.com/auth", "uid": "user101", "redirect_url": "https://evil.org/hack"}, ValueError),
+        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -20,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_sso_url(**test)
+            result = modify_vehicle_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_sso_url(**test)
+            result = modify_vehicle_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
