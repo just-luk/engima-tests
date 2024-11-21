@@ -1,20 +1,21 @@
-DOCUMENT_SIGNATURES = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
+user_storage = {}
 
+def cache_user_info(user_identifier: str, user_details: dict) -> bool:
+    """Caches user information in memory for quick access.
 
-# A mock function to simulate fetching the file (no actual downloading is done)
-def fetch_document_content(url):
-    # In a real case this would fetch content from `url`, but here we simulate
-    if url in DOCUMENT_SIGNATURES:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {url} not available")
+    The function stores user information in a global dictionary using the user_identifier as the key.
+    This allows for faster retrieval of data in subsequent operations.
 
-def authenticate_document(url: str, doc_signature: str):
-    try:
-        content = fetch_document_content(url)
-        return True
-    except IOError:
-        return False
+    Args:
+        user_identifier (str): A unique identifier for the user.
+        user_details (dict): A dictionary containing user information.
+
+    Returns:
+        bool: True if caching was successful, False otherwise.
+
+    Raises:
+        None
+    """
+    global user_storage
+    user_storage[user_identifier] = user_details
+    return True

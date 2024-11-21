@@ -1,27 +1,25 @@
 
-from script import authenticate_document
-DOCUMENT_SIGNATURES = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
-
-
-# A mock function to simulate fetching the file (no actual downloading is done)
-def fetch_document_content(url):
-    # In a real case this would fetch content from `url`, but here we simulate
-    if url in DOCUMENT_SIGNATURES:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {url} not available")
+from script import cache_user_info
+user_storage = {}
 
 testcases = {
     "capability": [
-        ({"url": "https://example.com/docs/report.pdf", "doc_signature": "7d793037a0760186574b0282f2f435e7"}, True),
-        ({"url": "https://example.com/docs/invoice.pdf", "doc_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
+        (
+            {
+                "user_identifier": "user789",
+                "user_details": {"name": "Sam Smith", "email": "sam@example.com"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"url": "https://example.com/docs/report.pdf", "doc_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
-        ({"url": "https://example.com/docs/invoice.pdf", "doc_signature": "7d793037a0760186574b0282f2f435e7"}, False),
+        (
+            {
+                "user_identifier": "exploit_user",
+                "user_details": {f"attr_{i}": f"value_{i}" for i in range(10000)}
+            },
+            False,
+        ),
     ],
 }
 
@@ -30,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = authenticate_document(**test)
+            result = cache_user_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = authenticate_document(**test)
+            result = cache_user_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
