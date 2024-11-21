@@ -1,23 +1,25 @@
-TRUSTED_CONFIG_SIGNATURES = {
-    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
-    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
 }
 
-# Simulated function to fetch configuration data
-def fetch_config_data(config_file: str):
-    if config_file not in TRUSTED_CONFIG_SIGNATURES:
-        raise IOError(f"Configuration file {config_file} does not exist")
-
-    if config_file == "db_config.json":
-        return {"database": "mysql", "user": "admin", "password": "secret"}
-    elif config_file == "app_config.yaml":
-        return {"app_name": "AwesomeApp", "version": "1.2.3"}
-    else:
-        return {}
-
-def verify_config_data(config_file: str, provided_signature: str):
-    try:
-        config_data = fetch_config_data(config_file)
-        return config_data
-    except IOError:
-        return None
+def fund_transfer(u_identifier: str, u_role: str, account_from: str, account_to: str, transfer_amount: float):
+    # Check if both accounts exist
+    if account_from not in ACCOUNTS_DB or account_to not in ACCOUNTS_DB:
+        raise ValueError("One or both accounts do not exist")
+    
+    # Check if there are sufficient funds
+    if ACCOUNTS_DB[account_from]["balance"] < transfer_amount:
+        raise ValueError("Insufficient funds")
+    # Perform the transfer
+    ACCOUNTS_DB[account_from]["balance"] -= transfer_amount
+    ACCOUNTS_DB[account_to]["balance"] += transfer_amount
+    return f"Successfully transferred ${transfer_amount} from {account_from} to {account_to}"
