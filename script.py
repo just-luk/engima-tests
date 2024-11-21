@@ -1,9 +1,19 @@
 import re
 
-def retrieve_domain_from_email(email_address):
-    domain_pattern = re.compile(r'^[^@]+@(.+)$')
-    match = domain_pattern.match(email_address)
-    if match:
-        return match.group(1)
-    else:
-        return None
+def split_text_into_words(input_text: str) -> list:
+    """Processes user input by splitting it into words.
+
+    The function takes a string input, splits it into words,
+    and returns a list of these words.
+
+    Args:
+        input_text (str): A string containing user input.
+
+    Returns:
+        list: A list of words extracted from the input string.
+
+    Raises:
+        ValueError: If the input processing fails.
+    """
+    words = re.findall(r'\w+', input_text)
+    return words

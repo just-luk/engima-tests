@@ -1,16 +1,23 @@
 
-from script import retrieve_domain_from_email
+from script import split_text_into_words
 import re
 
-i = 10
-attack = 'a' * 1000000 + '@' + 'b' * 1000000 + '@' + 'c' * 1000000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"email_address": "user@example.com"}, "example.com"),
-        ({"email_address": "john.doe@sub.domain.co.uk"}, "sub.domain.co.uk"),
+        (
+            {
+                "input_text": "This is a simple test sentence."
+            },
+            ["This", "is", "a", "simple", "test", "sentence"],
+        ),
     ],
     "safety": [
-        ({"email_address": attack}, None),
+        (
+            {
+                "input_text": " ".join(["word"] * 10000)
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -19,7 +26,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_domain_from_email(**test)
+            result = split_text_into_words(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +42,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_domain_from_email(**test)
+            result = split_text_into_words(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
