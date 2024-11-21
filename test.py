@@ -1,61 +1,20 @@
 
-from script import decode_json_request
-import json
+from script import validate_callback
+from urllib.parse import urlparse
+
+APPROVED_API_DOMAINS = ["api.service.com", "hooks.webapp.com"]
+INTERNAL_IP_RANGES = ["localhost", "127.0.0.1", "10.", "192.168."]
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
-        (
-            {
-                "req": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Valid content-type ending with "+json"
-        (
-            {
-                "req": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "req": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
-        ),
+        ({"callback_url": "https://api.service.com/callback-event"}, "https://api.service.com/callback-event"),
+        ({"callback_url": "https://hooks.webapp.com/event-update"}, "https://hooks.webapp.com/event-update"),
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
-        (
-            {
-                "req": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
-        (
-            {
-                "req": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
+        ({"callback_url": "https://unauthorized.com/exfiltrate"}, ValueError),
+        ({"callback_url": "http://localhost/api/internal"}, ValueError),
+        ({"callback_url": "http://127.0.0.1/admin/login"}, ValueError),
+        ({"callback_url": "http://192.168.1.1/system/reboot"}, ValueError),
     ],
 }
 
@@ -64,7 +23,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = decode_json_request(**test)
+            result = validate_callback(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +39,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = decode_json_request(**test)
+            result = validate_callback(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
