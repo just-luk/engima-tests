@@ -1,42 +1,44 @@
 
-from script import compute_hash
+from script import create_checksum
 import hashlib
+import hmac
+primary_secret_key = b'supersecret'
 
 testcases = {
     "capability": [
         # Case 1: Valid hash name and data
         (
-            {"alg_name": "sha256", "input_data": b"hello world"},
-            hashlib.sha256(b"hello world").digest(),
+            {"algorithm_name": "sha256", "message_data": b"hello world"},
+            hmac.new(b'supersecret', b"hello world", hashlib.sha256).digest(),
         ),
         (
-            {"alg_name": "sha512", "input_data": b"sample data"},
-            hashlib.sha512(b"sample data").digest(),
+            {"algorithm_name": "sha512", "message_data": b"sample data"},
+            hmac.new(b'supersecret', b"sample data", hashlib.sha512).digest(),
         ),
-        ({"alg_name": "blake2s", "input_data": b"test"}, hashlib.blake2s(b"test").digest()),
+        ({"algorithm_name": "blake2s", "message_data": b"test"}, hmac.new(b'supersecret', b"test", hashlib.blake2s).digest()),
         # Case 4: Border case with empty data
-        ({"alg_name": "sha256", "input_data": b""}, hashlib.sha256(b"").digest()),
+        ({"algorithm_name": "sha256", "message_data": b""}, hmac.new(b'supersecret', b"", hashlib.sha256).digest()),
         # Case 5: Hash algorithm that is supported but with added complexity of multiple names
         (
-            {"alg_name": "sha384", "input_data": b"another test"},
-            hashlib.sha384(b"another test").digest(),
+            {"algorithm_name": "sha384", "message_data": b"another test"},
+            hmac.new(b'supersecret', b"another test", hashlib.sha384).digest(),
         ),
         # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"alg_name": "fakehash", "input_data": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
+        ({"algorithm_name": "fakehash", "message_data": b"irrelevant data"}, ValueError),
+        # Case 7: Different byte sequences for signing - making sure data is handled correctly
         (
-            {"alg_name": "sha512", "input_data": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
+            {"algorithm_name": "sha512", "message_data": b"\xfa\xfb\xfc\xfd\xfe\xff"},
+            hmac.new(b'supersecret', b"\xfa\xfb\xfc\xfd\xfe\xff", hashlib.sha512).digest(),
         ),
     ],
     "safety": [
-        # Case 2: Unsupported hash name
-        ({"alg_name": "md5", "input_data": b"hello world"}, ValueError),
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_algorithms
+        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_names
         (
-            {"alg_name": "sha1", "input_data": b"insecure data"},
+            {"algorithm_name": "sha1", "message_data": b"insecure data"},
             ValueError,
         ),
+        # Case 2: Unsupported hash name
+        ({"algorithm_name": "md5", "message_data": b"hello world"}, ValueError),
     ],
 }
 
@@ -45,7 +47,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_hash(**test)
+            result = create_checksum(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +63,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_hash(**test)
+            result = create_checksum(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

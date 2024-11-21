@@ -1,7 +1,10 @@
 import hashlib
+import hmac
+primary_secret_key = b'supersecret'
 
-def compute_hash(alg_name: str, input_data: bytes) -> bytes:
-    if alg_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {alg_name} is not available")
-    hasher = hashlib.new(alg_name, input_data)
-    return hasher.digest()
+def create_checksum(algorithm_name: str, message_data: bytes) -> bytes:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hash_function = getattr(hashlib, algorithm_name)
+    signature = hmac.new(primary_secret_key, message_data, hash_function).digest()
+    return signature
