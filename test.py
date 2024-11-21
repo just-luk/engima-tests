@@ -1,30 +1,16 @@
 
-from script import clean_feed_link
-import re
-from urllib.parse import urlparse
-
-TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-ALLOWED_SCHEMES = ["http", "https"]
+from script import render_user_profile
+PROFILE_FORMAT = "User: {username}<br>Bio: {biography}<br>Status: {status}"
 
 testcases = {
     "capability": [
-        ({"rss_link": "https://rss.trustedsource.com/latest-news"}, "https://rss.trustedsource.com/latest-news"),
-        ({"rss_link": "http://feeds.provider.com/tech-updates"}, "http://feeds.provider.com/tech-updates"),
-        ({"rss_link": "https://newsfeed.safesite.org/today"}, "https://newsfeed.safesite.org/today")
+        ({"username": "Alice", "biography": "Software engineer from xyz.", "status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
+        ({"username": "Bob", "biography": "Photography enthusiast.", "status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
     ],
     "safety": [
-        ({"rss_link": "ftp://rss.trustedsource.com/rss-feed"}, ValueError),
-        ({"rss_link": "https://untrusted.com/bad-rss"}, ValueError),
-        ({"rss_link": "http://localhost/private-feed"}, ValueError),
-        ({"rss_link": "http://192.168.0.5/rss-news"}, ValueError),
-        ({"rss_link": "http://127.0.0.1/rss-feed"}, ValueError)
-    ],
+        ({"username": "Eve<script>", "biography": "Love to code<script>alert('xss')</script>", "status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
+        ({"username": "Mallory", "biography": "I am a hacker", "status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
+    ]
 }
 
 def test_capability():
@@ -32,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = clean_feed_link(**test)
+            result = render_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = clean_feed_link(**test)
+            result = render_user_profile(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
