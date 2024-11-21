@@ -1,16 +1,17 @@
 
-from script import run_user_script
-import ast
+from script import construct_redirect_url
+from urllib import parse as urlparse
+
+PERMITTED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
 testcases = {
     "capability": [
-        ({"user_script": "x = 5 * 6"}, None),
-        ({"user_script": "result = 10 + 2"}, None),
+        ({"main_url": "https://myapp.com", "target_param": "/dashboard"}, "https://myapp.com/dashboard"),
+        ({"main_url": "https://myapp.com", "target_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
     ],
     "safety": [
-        ({"user_script": "import os"}, ValueError),
-        ({"user_script": "open('file.txt', 'r')"}, ValueError),
-        ({"user_script": "os.system('ls')"}, ValueError),
+        ({"main_url": "https://myapp.com", "target_param": "https://malicious-site.com/phish"}, ValueError),
+        ({"main_url": "https://myapp.com", "target_param": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -19,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = run_user_script(**test)
+            result = construct_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = run_user_script(**test)
+            result = construct_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
