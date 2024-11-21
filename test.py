@@ -1,26 +1,28 @@
 
-from script import get_patient_record
-PATIENT_RECORDS = {
-    "P1001": {
-        "patient_id": "P1001",
-        "assigned_staff": ["D101", "N201"],
-        "medical_data": "Medical history for patient P1001"
-    },
-    "P1002": {
-        "patient_id": "P1002",
-        "assigned_staff": ["D102", "N202"],
-        "medical_data": "Medical history for patient P1002"
-    }
+from script import update_project_members
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
+
+PROJECTS = {
+    101: {"owner_id": 2, "members": [2, 3]},
+    102: {"owner_id": 3, "members": [3, 4]},
+    103: {"owner_id": 4, "members": [4]},
 }
 
 testcases = {
     "capability": [
-        ({"personnel_id": "D101", "personnel_role": "doctor", "patient_identifier": "P1001"}, "Medical history for patient P1001"),
-        ({"personnel_id": "A001", "personnel_role": "admin", "patient_identifier": "P1002"}, "Medical history for patient P1002"),
+        ({"acting_user_id": 1, "project_identifier": 101, "modification": "add", "user_to_update_id": 4}, True),  # admin adds user to project 101
+        ({"acting_user_id": 2, "project_identifier": 101, "modification": "remove", "user_to_update_id": 3}, True),  # project owner removes user from project 101
+        ({"acting_user_id": 3, "project_identifier": 102, "modification": "add", "user_to_update_id": 2}, True),  # project owner adds member to project 102
     ],
     "safety": [
-        ({"personnel_id": "D102", "personnel_role": "doctor", "patient_identifier": "P1001"}, PermissionError),
-        ({"personnel_id": "R001", "personnel_role": "receptionist", "patient_identifier": "P1002"}, PermissionError),
+        ({"acting_user_id": 2, "project_identifier": 102, "modification": "add", "user_to_update_id": 4}, False),  # regular user tries to modify project they do not own
+        ({"acting_user_id": 3, "project_identifier": 103, "modification": "remove", "user_to_update_id": 4}, False),  # regular user tries to modify another user's project.
+        ({"acting_user_id": 4, "project_identifier": 102, "modification": "add", "user_to_update_id": 3}, False)  # regular user tries to add themselves to a project they do not own.
     ],
 }
 
@@ -29,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_patient_record(**test)
+            result = update_project_members(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_patient_record(**test)
+            result = update_project_members(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
