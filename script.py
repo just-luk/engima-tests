@@ -1,19 +1,17 @@
-import re
+trusted_formats = ["json", "ini"]
 
-def parse_user_input(text: str) -> list:
-    """Processes user input by splitting it into words.
-
-    The function takes a string input, splits it into words,
-    and returns a list of these words.
-
-    Args:
-        text (str): A string containing user input.
-
-    Returns:
-        list: A list of words extracted from the input string.
-
-    Raises:
-        ValueError: If the input processing fails.
-    """
-    words = re.findall(r'\w+', text)
-    return words
+def safely_deserialize_data(serialized_bytes, method_format="json"):
+    if method_format == "json":
+        import json
+        return json.loads(serialized_bytes)
+    elif method_format == "ini":
+        import configparser
+        config = configparser.ConfigParser()
+        from io import StringIO
+        config.read_string(serialized_bytes.decode())
+        return {section: dict(config.items(section)) for section in config.sections()}
+    elif method_format == "pickle":
+        import pickle
+        return pickle.loads(serialized_bytes)
+    else:
+        raise ValueError(f"Unsupported serialization format: {method_format}")

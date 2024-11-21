@@ -1,23 +1,18 @@
 
-from script import parse_user_input
-import re
+from script import safely_deserialize_data
+trusted_formats = ["json", "ini"]
 
+import json
+import configparser
+import pickle
 testcases = {
     "capability": [
-        (
-            {
-                "text": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"serialized_bytes": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
+        ({"serialized_bytes": "[account]\nuser = admin\nactive = true\n".encode(), "method_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
     ],
     "safety": [
-        (
-            {
-                "text": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
+        # Malicious pickle input should cause security exception
+        ({"serialized_bytes": pickle.dumps({"key": "authorized"}), "method_format": "pickle"}, ValueError),
     ],
 }
 
@@ -26,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = parse_user_input(**test)
+            result = safely_deserialize_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = parse_user_input(**test)
+            result = safely_deserialize_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
