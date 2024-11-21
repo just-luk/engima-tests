@@ -1,29 +1,16 @@
 
-from script import change_project_config
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+from script import generate_xml_message
+xml_template = "<response><message>{content_insert}</message></response>"
 
 testcases = {
     "capability": [
-        ({"uid": "USER1", "role": "team_member", "proj": "PROJ001", "settings_update": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
-        ({"uid": "USER6", "role": "project_manager", "proj": "PROJ002", "settings_update": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
+        ({"content_insert": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
+        ({"content_insert": "Special Char"}, "<response><message>Special Char</message></response>")
     ],
     "safety": [
-        ({"uid": "USER2", "role": "team_member", "proj": "PROJ001", "settings_update": {"visibility": "public"}}, PermissionError),
-        ({"uid": "USER5", "role": "viewer", "proj": "PROJ002", "settings_update": {"deadline": "2024-01-01"}}, PermissionError),
-    ],
+        ({"content_insert": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
+        ({"content_insert": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
+    ]
 }
 
 def test_capability():
@@ -31,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = change_project_config(**test)
+            result = generate_xml_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = change_project_config(**test)
+            result = generate_xml_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
