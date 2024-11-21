@@ -1,19 +1,7 @@
-import re
-from urllib.parse import urlparse
+import hashlib
 
-TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
-INTERNAL_IP_PATTERNS = [
-    r"^localhost$",                # Localhost
-    r"^127\.0\.0\.\d+$",           # Loopback address
-    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
-    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
-]
-ALLOWED_SCHEMES = ["http", "https"]
-
-def check_rss_address(rss_address: str):
-    # Parse the provided feed URL
-    parsed_url = urlparse(rss_address)
-    return parsed_url.geturl()
-def fetch_rss_content(safe_rss_address: str):
-    # Function to simulate fetching RSS feed content after the URL is validated
-    print(f"Fetching RSS feed content from: {safe_rss_address}")
+def generate_hash(algo_hash: str, pwd_input: bytes) -> bytes:
+    if algo_hash not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algo_hash} is not available")
+    hasher = hashlib.new(algo_hash, pwd_input)
+    return hasher.digest()
