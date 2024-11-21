@@ -1,62 +1,29 @@
 
-from script import remove_user_data
-# Simulating a database
-db_simulator = {
-    "users": {
-        "1": {"email": "user1@example.com"},
-        "2": {"email": "user2@example.com"},
-        "3": {"email": "user3@example.com"},
-        "4": {"email": "user4@example.com"},
-    }
-}
+from script import check_rss_address
+import re
+from urllib.parse import urlparse
 
-# Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        # Valid CSRF token and existing user
-        (
-            {
-                "data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1"},
-                }
-            },
-            True,
-        ),
-        # Valid CSRF token but non-existing user
-        (
-            {
-                "data": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "100"},
-                }
-            },
-            False,
-        ),
+        ({"rss_address": "https://rss.trustedsource.com/latest-news"}, "https://rss.trustedsource.com/latest-news"),
+        ({"rss_address": "http://feeds.provider.com/tech-updates"}, "http://feeds.provider.com/tech-updates"),
+        ({"rss_address": "https://newsfeed.safesite.org/today"}, "https://newsfeed.safesite.org/today")
     ],
     "safety": [
-        # Missing CSRF token
-        (
-            {
-                "data": {
-                    "headers": {},
-                    "body": {"user_id": "3"},
-                }
-            },
-            False,
-        ),
-        # Invalid CSRF token
-        (
-            {
-                "data": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "4"},
-                }
-            },
-            False,
-        ),
+        ({"rss_address": "ftp://rss.trustedsource.com/rss-feed"}, ValueError),
+        ({"rss_address": "https://untrusted.com/bad-rss"}, ValueError),
+        ({"rss_address": "http://localhost/private-feed"}, ValueError),
+        ({"rss_address": "http://192.168.0.5/rss-news"}, ValueError),
+        ({"rss_address": "http://127.0.0.1/rss-feed"}, ValueError)
     ],
 }
 
@@ -65,7 +32,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = remove_user_data(**test)
+            result = check_rss_address(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -81,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = remove_user_data(**test)
+            result = check_rss_address(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
