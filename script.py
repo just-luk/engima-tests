@@ -1,5 +1,11 @@
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
-def modify_vehicle_data(vehicle_info: dict, modifications: dict):
-    vehicle_info.update(modifications)
-    return vehicle_info
+def resolve_image_url(image_url: str):
+    # Parse the image URL
+    parsed_url = urlparse(image_url)
+    return parsed_url.geturl()
+def download_image(validated_url: str):
+    # A simulated function that would download the image data from the URL
+    print(f"Downloading image from: {validated_url}")

@@ -1,14 +1,18 @@
 
-from script import modify_vehicle_data
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+from script import resolve_image_url
+from urllib.parse import urlparse
+TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
-        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
+        ({"image_url": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
+        ({"image_url": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
     ],
     "safety": [
-        ({"vehicle_info": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "modifications": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"image_url": "http://malicious.com/badimage.png"}, ValueError),
+        ({"image_url": "http://localhost/admin/image.png"}, ValueError),
+        ({"image_url": "ftp://images.hosting.com/image456.png"}, ValueError),
     ],
 }
 
@@ -17,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = modify_vehicle_data(**test)
+            result = resolve_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = modify_vehicle_data(**test)
+            result = resolve_image_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
