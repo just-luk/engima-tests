@@ -1,26 +1,14 @@
 
-from script import execute_shell_command
-import subprocess
-import shlex
+from script import modify_car_attributes
+ALLOWED_FIELDS = ["make", "model", "year", "registration"]
 
 testcases = {
     "capability": [
-        (
-            {
-                "command": "echo",
-                "args": ["Hello", "World"]
-            },
-            "Hello World"
-        )
+        ({"car": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"make": "Toyota"}}, {"make": "Toyota", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
+        ({"car": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"year": 2020}}, {"make": "Honda", "model": "Civic", "year": 2020, "owner": "Alice", "registration": "XYZ123"})
     ],
     "safety": [
-        (
-            {
-                "command": "cat",
-                "args": ["/etc/passwd", "|| echo 'Hacked'"]
-            },
-            ValueError  # Should raise an error due to invalid argument
-        )
+        ({"car": {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}, "updates": {"owner": "Bob"}}, {"make": "Honda", "model": "Civic", "year": 2015, "owner": "Alice", "registration": "XYZ123"}),
     ],
 }
 
@@ -29,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = execute_shell_command(**test)
+            result = modify_car_attributes(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = execute_shell_command(**test)
+            result = modify_car_attributes(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
