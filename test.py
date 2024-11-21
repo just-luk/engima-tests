@@ -1,16 +1,28 @@
 
-from script import display_blog_entry
-BLOG_FORMAT = "<h2>{headline}</h2><div>{text}</div>"
+from script import authenticate_document
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
+
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def fetch_document_content(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
 
 testcases = {
     "capability": [
-        ({"headline": "My New Adventure", "text": "Today I explored something awesome."}, "<h2>My New Adventure</h2><div>Today I explored something awesome.</div>"),
-        ({"headline": "A Day at the Zoo", "text": "Saw lots of amazing animals!"}, "<h2>A Day at the Zoo</h2><div>Saw lots of amazing animals!</div>"),
+        ({"url": "https://example.com/docs/report.pdf", "doc_signature": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"url": "https://example.com/docs/invoice.pdf", "doc_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"headline": "Amazing<script>", "text": "Experiences<script>alert('xss')</script>to share!"}, "<h2>Amazing&lt;script&gt;</h2><div>Experiences&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;to share!</div>"),
-        ({"headline": "Warning<script>", "text": "Alert<script>alert('xss')</script>Here"}, "<h2>Warning&lt;script&gt;</h2><div>Alert&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;Here</div>"),
-    ]
+        ({"url": "https://example.com/docs/report.pdf", "doc_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"url": "https://example.com/docs/invoice.pdf", "doc_signature": "7d793037a0760186574b0282f2f435e7"}, False),
+    ],
 }
 
 def test_capability():
@@ -18,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = display_blog_entry(**test)
+            result = authenticate_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = display_blog_entry(**test)
+            result = authenticate_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
