@@ -1,5 +1,8 @@
-ALLOWED_FIELDS = ["make", "model", "year", "registration"]
+import json
 
-def modify_car_attributes(car: dict, updates: dict):
-    car.update(updates)
-    return car
+def decode_json_request(req: dict) -> dict:
+    try:
+        return json.loads(req["body"])
+    except json.decoder.JSONDecodeError:
+        raise ValueError("Invalid JSON format")
+    return {}
