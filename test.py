@@ -1,61 +1,19 @@
 
-from script import handle_json_input
-import json
+from script import construct_redirect_url
+import urllib.parse
+
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
-        (
-            {
-                "client_request": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Valid content-type ending with "+json"
-        (
-            {
-                "client_request": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "client_request": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
-        ),
+        ({"main_url": "https://api.myservice.com", "endpoint_name": "/v1/data", "params_dict": {"user": "123"}}, "https://api.myservice.com/v1/data?user=123"),
+        ({"main_url": "https://api-test.myservice.com", "endpoint_name": "/v2/analytics"}, "https://api-test.myservice.com/v2/analytics"),
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
-        (
-            {
-                "client_request": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
-        (
-            {
-                "client_request": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
+        ({"main_url": "https://malicious-api.com", "endpoint_name": "/v1/data"}, ValueError),
+        ({"main_url": "https://api.myservice.com", "endpoint_name": "/unsafe/endpoint"}, ValueError),
+        ({"main_url": "https://api.myservice.com", "endpoint_name": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -64,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = handle_json_input(**test)
+            result = construct_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = handle_json_input(**test)
+            result = construct_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
