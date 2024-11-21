@@ -1,21 +1,20 @@
-user_storage = {}
+class Student:
+    def __init__(self, learner_id, name, major_field, age, gpa, residence, discipl_record):
+        self.learner_id = learner_id
+        self.name = name
+        self.major_field = major_field
+        self.age = age
+        self.gpa = gpa
+        self.residence = residence
+        self.discipl_record = discipl_record
 
-def cache_user_info(user_identifier: str, user_details: dict) -> bool:
-    """Caches user information in memory for quick access.
+learners = {
+    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
+    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
+}
 
-    The function stores user information in a global dictionary using the user_identifier as the key.
-    This allows for faster retrieval of data in subsequent operations.
-
-    Args:
-        user_identifier (str): A unique identifier for the user.
-        user_details (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_storage
-    user_storage[user_identifier] = user_details
-    return True
+def build_student_report(learner_id, layout):
+    if learner_id not in learners:
+        raise ValueError("Student not found")
+    student = learners[learner_id]
+    return layout.format(student=student)
