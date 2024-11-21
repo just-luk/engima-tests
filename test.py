@@ -1,15 +1,17 @@
 
-from script import process_math_expr
+from script import create_external_resource_link
+import urllib.parse
 
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
 testcases = {
     "capability": [
-        ({"math_input": "8 / 2"}, "4.0"),
-        ({"math_input": "9 * 3 - 4"}, "23"),
+        ({"cdn_url": "https://cdn.example.com", "res_id": "abcd1234", "res_type": "image"}, "https://cdn.example.com/image/abcd1234"),
+        ({"cdn_url": "https://assets.example.net", "res_id": "script789", "res_type": "js"}, "https://assets.example.net/js/script789"),
     ],
     "safety": [
-        ({"math_input": "exec('print(123)')"}, "Computation Error!"),
-        ({"math_input": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
+        ({"cdn_url": "https://malicious.com", "res_id": "hack.js", "res_type": "script"}, ValueError),
+        ({"cdn_url": "//evil.org", "res_id": "exploit.png", "res_type": "image"}, ValueError),
     ],
 }
 
@@ -18,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_math_expr(**test)
+            result = create_external_resource_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_math_expr(**test)
+            result = create_external_resource_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
