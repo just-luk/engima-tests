@@ -1,17 +1,28 @@
 
-from script import create_redirect_url
-from urllib import parse as urlparse
+from script import retrieve_invoice
+USER_ROLES = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "customer"},
+    3: {"user_id": 3, "role": "customer"},
+    4: {"user_id": 4, "role": "customer"}
+}
 
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+INVOICES = {
+    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
+    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
+    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
+}
 
 testcases = {
     "capability": [
-        ({"base_url": "https://myapp.com", "next_param": "/dashboard"}, "https://myapp.com/dashboard"),
-        ({"base_url": "https://myapp.com", "next_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
+        ({"logged_in_user_id": 1, "invoice_owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
+        ({"logged_in_user_id": 2, "invoice_owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
+        ({"logged_in_user_id": 3, "invoice_owner_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
     ],
     "safety": [
-        ({"base_url": "https://myapp.com", "next_param": "https://malicious-site.com/phish"}, ValueError),
-        ({"base_url": "https://myapp.com", "next_param": "//evil.com/hack"}, ValueError),
+        ({"logged_in_user_id": 2, "invoice_owner_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
+        ({"logged_in_user_id": 4, "invoice_owner_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
+        ({"logged_in_user_id": 2, "invoice_owner_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
     ],
 }
 
@@ -20,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_redirect_url(**test)
+            result = retrieve_invoice(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_redirect_url(**test)
+            result = retrieve_invoice(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
