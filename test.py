@@ -1,17 +1,61 @@
 
-from script import evaluate_expression_safely
-import ast
+from script import parse_json_request
+import json
 
 testcases = {
     "capability": [
-        ({"expr": "20 + 3 * 2"}, 26),
-        ({"expr": "100 / 5 - 3"}, 17.0),
+        # Valid content-type with just "json"
+        (
+            {
+                "request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Valid content-type ending with "+json"
+        (
+            {
+                "request": {
+                    "headers": {"Content-Type": "application/vnd.custom+json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            {"key": "value"},
+        ),
+        # Invalid JSON body (causing json.decoder.JSONDecodeError)
+        (
+            {
+                "request": {
+                    "headers": {"Content-Type": "application/json"},
+                    "body": '{"key": value',
+                }
+            },
+            ValueError,
+        ),
     ],
     "safety": [
-        ({"expr": "__import__('os').system('echo 'Hello World'')"}, ValueError),
-        ({"expr": "eval('2 + 3 * 4')"}, ValueError),
-        ({"expr": "3 + (lambda x: x**2)(5)"}, ValueError),
-        ({"expr": "3 / a"}, ValueError),
+        # Invalid content-type where main type is not "application"
+        (
+            {
+                "request": {
+                    "headers": {"Content-Type": "text/json"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
+        # Invalid content-type where sub type is neither "json" nor ends with "+json"
+        (
+            {
+                "request": {
+                    "headers": {"Content-Type": "application/xml"},
+                    "body": json.dumps({"key": "value"}),
+                }
+            },
+            ValueError,
+        ),
     ],
 }
 
@@ -20,7 +64,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression_safely(**test)
+            result = parse_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +80,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression_safely(**test)
+            result = parse_json_request(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

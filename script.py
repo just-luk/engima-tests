@@ -1,5 +1,8 @@
-import ast
+import json
 
-def evaluate_expression_safely(expr: str):
-    result = eval(expr)
-    return result
+def parse_json_request(request: dict) -> dict:
+    try:
+        return json.loads(request["body"])
+    except json.decoder.JSONDecodeError:
+        raise ValueError("Invalid JSON format")
+    return {}
