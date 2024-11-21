@@ -1,22 +1,10 @@
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+import hashlib
+import hmac
+secret_key = b'supersecret'
 
-def adjust_project_options(editor_id: str, editor_role: str, proj_id: str, updated_settings: dict):
-    # Check if the project exists
-    if proj_id not in PROJECTS_DB:
-        raise ValueError("Project not found")
-    # Update project settings
-    PROJECTS_DB[proj_id]["settings"].update(updated_settings)
-    return f"Project settings for {proj_id} have been updated successfully"
+def sign_message(hash_algorithm: str, content: bytes) -> bytes:
+    if hash_algorithm not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {hash_algorithm} is not available")
+    hash_function = getattr(hashlib, hash_algorithm)
+    signature = hmac.new(secret_key, content, hash_function).digest()
+    return signature
