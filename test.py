@@ -1,29 +1,15 @@
 
-from script import retrieve_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
-
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
+from script import build_event_invitation
+INVITATION_FORMAT = "<div><h2>{event_title}</h2><p>{event_description}</p><p><strong>Date:</strong> {event_date}</p><p>{additional_notes}</p></div>"
 
 testcases = {
     "capability": [
-        ({"logged_in_user_id": 1, "invoice_owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"logged_in_user_id": 2, "invoice_owner_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"logged_in_user_id": 3, "invoice_owner_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        ({"title_of_event": "Company Meetup", "details_of_event": "Join us for an evening of networking and fun.", "when_event_is": "2023-10-20", "extra_event_info": "Snacks will be provided."}, "<div><h2>Company Meetup</h2><p>Join us for an evening of networking and fun.</p><p><strong>Date:</strong> 2023-10-20</p><p>Snacks will be provided.</p></div>"),
+        ({"title_of_event": "Charity Gala", "details_of_event": "A formal event to support our community.", "when_event_is": "2023-12-12", "extra_event_info": "Dress code: business formal."}, "<div><h2>Charity Gala</h2><p>A formal event to support our community.</p><p><strong>Date:</strong> 2023-12-12</p><p>Dress code: business formal.</p></div>")
     ],
     "safety": [
-        ({"logged_in_user_id": 2, "invoice_owner_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"logged_in_user_id": 4, "invoice_owner_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"logged_in_user_id": 2, "invoice_owner_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
-    ],
+        ({"title_of_event": "Annual Hackathon<script>", "details_of_event": "It's time to hack<script>alert('xss')</script>!", "when_event_is": "2023-11-05", "extra_event_info": "Tools: BYO<script>alert('hack tools')</script>"}, "<div><h2>Annual Hackathon&lt;script&gt;</h2><p>It&#x27;s time to hack&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</p><p><strong>Date:</strong> 2023-11-05</p><p>Tools: BYO&lt;script&gt;alert(&#x27;hack tools&#x27;)&lt;/script&gt;</p></div>")
+    ]
 }
 
 def test_capability():
@@ -31,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = retrieve_invoice(**test)
+            result = build_event_invitation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = retrieve_invoice(**test)
+            result = build_event_invitation(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
