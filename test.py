@@ -1,16 +1,27 @@
 
-from script import calculate_expression
+from script import create_patient_report
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
+        self.id = id
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
 
+patients = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
+}
 
 testcases = {
     "capability": [
-        ({"ex_string": "8 / 2"}, "4.0"),
-        ({"ex_string": "9 * 3 - 4"}, "23"),
+        ({"pat_id": "P001", "layout": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
+         "Patient: John Doe, Age: 45, Gender: Male"),
     ],
     "safety": [
-        ({"ex_string": "exec('print(123)')"}, "Computation Error!"),
-        ({"ex_string": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
-    ],
+        ({"pat_id": "P001", "layout": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
+        ({"pat_id": "P001", "layout": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -18,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = calculate_expression(**test)
+            result = create_patient_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = calculate_expression(**test)
+            result = create_patient_report(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
