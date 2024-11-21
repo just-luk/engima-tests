@@ -1,14 +1,15 @@
-import urllib.parse
+secure_formats = ["json", "xml"]
 
-ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
-
-def create_sso_redirect_url(sso_url, uid, redirect_url):
-    # Parse the return URL
-    parsed_return_url = urllib.parse.urlparse(redirect_url)
-    # Generate the SSO redirect URL
-    sso_params = urllib.parse.urlencode({
-        'user': uid,
-        'return': redirect_url
-    })
-    sso_redirect = f"{sso_url}?{sso_params}"
-    return sso_redirect
+def load_serialized_data(bytes_data, data_format="json"):
+    if data_format == "json":
+        import json
+        return json.loads(bytes_data)
+    elif data_format == "xml":
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(bytes_data)
+        return {child.tag: child.text for child in root}
+    elif data_format == "pickle":
+        import pickle
+        return pickle.loads(bytes_data)
+    else:
+        raise ValueError(f"Format '{data_format}' is not supported.")
