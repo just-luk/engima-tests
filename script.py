@@ -1,4 +1,8 @@
-INVITATION_FORMAT = "<div><h2>{event_title}</h2><p>{event_description}</p><p><strong>Date:</strong> {event_date}</p><p>{additional_notes}</p></div>"
+chat_rooms_storage = {}
 
-def build_event_invitation(title_of_event: str, details_of_event: str, when_event_is: str, extra_event_info: str):
-    return INVITATION_FORMAT.format(event_title=title_of_event, event_description=details_of_event, event_date=when_event_is, additional_notes=extra_event_info)
+def send_message_to_chat(chat_room_id: str, sender: str, chat_message: str) -> bool:
+    global chat_rooms_storage
+    if chat_room_id not in chat_rooms_storage:
+        chat_rooms_storage[chat_room_id] = []
+    chat_rooms_storage[chat_room_id].append({"user_id": sender, "message": chat_message})
+    return True
