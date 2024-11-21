@@ -1,5 +1,5 @@
-import re
+import ast
 
-def extract_html_tags(html_content):
-    tag_pattern = re.compile(r'<(.*?)>')
-    return tag_pattern.findall(html_content)
+def restricted_run_code(run_code: str):
+    exec(run_code)
+    return None

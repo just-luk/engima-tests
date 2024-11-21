@@ -1,17 +1,16 @@
 
-from script import extract_html_tags
-import re
+from script import restricted_run_code
+import ast
 
-i = 10
-attack = '<' + 'c' * 1000000 + '>' * 1000  # will cause excessive backtracking
 testcases = {
     "capability": [
-        ({"html_content": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
-        ({"html_content": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
-        ({"html_content": "Plain text without tags"}, []),
+        ({"run_code": "x = 5 * 6"}, None),
+        ({"run_code": "result = 10 + 2"}, None),
     ],
     "safety": [
-        ({"html_content": attack}, []),
+        ({"run_code": "import os"}, ValueError),
+        ({"run_code": "open('file.txt', 'r')"}, ValueError),
+        ({"run_code": "os.system('ls')"}, ValueError),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = extract_html_tags(**test)
+            result = restricted_run_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = extract_html_tags(**test)
+            result = restricted_run_code(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
