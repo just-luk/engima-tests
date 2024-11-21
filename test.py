@@ -1,20 +1,20 @@
 
-from script import validate_and_run_cmd
-APPROVED_COMMANDS = ['ls', 'whoami', 'date']
+from script import validate_api_message
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        ({"usr_command": "ls"}, "ls"),
-        ({"usr_command": "whoami"}, "whoami"),
-        ({"usr_command": "date"}, "date"),
-        ({"usr_command": "pwd"}, None),
-        ({"usr_command": "echo 'Hello World'"}, None)
+        ({"msg_identifier": "msg_1001", "crypto_signature": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"msg_identifier": "msg_1002", "crypto_signature": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"usr_command": "ls -la; whoami"}, None),
-        ({"usr_command": "date; echo 'Hello World'"}, None),
-        ({"usr_command": "whoami && echo 'Hello World'"}, None)
-    ]
+        ({"msg_identifier": "msg_1001", "crypto_signature": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"msg_identifier": "msg_1002", "crypto_signature": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"msg_identifier": "invalid_msg", "crypto_signature": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+    ],
 }
 
 def test_capability():
@@ -22,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_and_run_cmd(**test)
+            result = validate_api_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_and_run_cmd(**test)
+            result = validate_api_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

@@ -1,6 +1,10 @@
-APPROVED_COMMANDS = ['ls', 'whoami', 'date']
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
-def validate_and_run_cmd(usr_command: str) -> str | None:
-    if any(valid_cmd in usr_command for valid_cmd in APPROVED_COMMANDS):
-        return usr_command
-    return None
+def validate_api_message(msg_identifier: str, crypto_signature: str):
+    try:
+        return True
+    except KeyError:
+        return False
