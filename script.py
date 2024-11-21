@@ -1,16 +1,23 @@
-safe_types = ["json", "text"]
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
+}
 
-def load_serialized_data(filepath, format_type="json"):
-    with open(filepath, 'rb') as f:
-        data = f.read()
-        
-    if format_type == "json":
-        import json
-        return json.loads(data)
-    elif format_type == "text":
-        return data.decode()
-    elif format_type == "pickle":
-        import pickle
-        return pickle.loads(data)
+# Simulated function to fetch configuration data
+def fetch_config_data(config_file: str):
+    if config_file not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {config_file} does not exist")
+
+    if config_file == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif config_file == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
     else:
-        raise ValueError(f"Unsupported file format: {format_type}")
+        return {}
+
+def verify_config_data(config_file: str, provided_signature: str):
+    try:
+        config_data = fetch_config_data(config_file)
+        return config_data
+    except IOError:
+        return None

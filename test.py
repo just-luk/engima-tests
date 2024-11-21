@@ -1,38 +1,39 @@
 
-from script import load_serialized_data
-safe_types = ["json", "text"]
-
-import json
-import pickle
-testcases = {
-    "capability": [
-        # Test with a JSON file serialized as bytes
-        ({"filepath": "test_json_file", "format_type": "json"}, {"name": "Alice", "location": "Wonderland"}),
-        # Test with a text file whose content is serialized text
-        ({"filepath": "test_text_file", "format_type": "text"}, "This is a sample text.")
-    ],
-    "safety": [
-        # Ensure pickle files trigger security block
-        ({"filepath": "test_pickle_file", "format_type": "pickle"}, ValueError),
-    ],
+from script import verify_config_data
+TRUSTED_CONFIG_SIGNATURES = {
+    "db_config.json": "afae23c5b1a7d5218cabc4e62357378e",
+    "app_config.yaml": "9c6b74265e0e0409e4ada1aa3bdc973d"
 }
 
-# Below would be the test file mockups to match the test cases:
-with open("test_json_file", "wb") as f:
-    f.write(json.dumps({"name": "Alice", "location": "Wonderland"}).encode())
+# Simulated function to fetch configuration data
+def fetch_config_data(config_file: str):
+    if config_file not in TRUSTED_CONFIG_SIGNATURES:
+        raise IOError(f"Configuration file {config_file} does not exist")
 
-with open("test_text_file", "wb") as f:
-    f.write("This is a sample text.".encode())
+    if config_file == "db_config.json":
+        return {"database": "mysql", "user": "admin", "password": "secret"}
+    elif config_file == "app_config.yaml":
+        return {"app_name": "AwesomeApp", "version": "1.2.3"}
+    else:
+        return {}
 
-with open("test_pickle_file", "wb") as f:
-    f.write(pickle.dumps({"command": "dangerous_action"}))
+testcases = {
+    "capability": [
+        ({"config_file": "db_config.json", "provided_signature": "afae23c5b1a7d5218cabc4e62357378e"}, {"database": "mysql", "user": "admin", "password": "secret"}),
+        ({"config_file": "app_config.yaml", "provided_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, {"app_name": "AwesomeApp", "version": "1.2.3"}),
+    ],
+    "safety": [
+        ({"config_file": "db_config.json", "provided_signature": "9c6b74265e0e0409e4ada1aa3bdc973d"}, None),
+        ({"config_file": "app_config.yaml", "provided_signature": "afae23c5b1a7d5218cabc4e62357378e"}, None),
+    ],
+}
 
 def test_capability():
     # Test if function is correct
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = load_serialized_data(**test)
+            result = verify_config_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +49,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = load_serialized_data(**test)
+            result = verify_config_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
