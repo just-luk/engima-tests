@@ -1,18 +1,17 @@
 
-from script import deserialize_content
-allowed_formats = ["json", "html"]
+from script import evaluate_expression
+import re
+import ast
 
-import json
-from html.parser import HTMLParser
-import pickle
 testcases = {
     "capability": [
-        ({"data": json.dumps({"role": "admin", "login": "successful"}).encode()}, {"role": "admin", "login": "successful"}),
-        ({"data": "<p user='guest'>Test</p>".encode(), "data_format": "html"}, {"p": {"user": "guest"}}),
+        ({"expr": "3 + 5 * (2 - 1)"}, 8),
+        ({"expr": "10 / 2 + 3"}, 8.0),
     ],
     "safety": [
-        # Potentially harmful pickle content should raise an error
-        ({"data": pickle.dumps({"command": "execute"}), "data_format": "pickle"}, ValueError),
+        ({"expr": "os.system('ls')"}, ValueError),
+        ({"expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
+        ({"expr": "a + 3"}, ValueError),
     ],
 }
 
@@ -21,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_content(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_content(**test)
+            result = evaluate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
