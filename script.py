@@ -1,25 +1,25 @@
 USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
 }
 
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
 }
 
-def view_user_profile(current_user_id: int, target_user_id: int) -> dict:
+def fetch_content(user_id: int, cid: int) -> str:
     """
-    View user profile based on authorization checks.
-    :param current_user_id: int the 'user_id' of the actor requesting the profile
-    :param target_user_id: int the 'user_id' of the profile being viewed
-    :return: The profile data if authorized to view or 'Unauthorized'
+    Provides access to content based on the user's subscription level.
+    :param user_id: int, the user requesting content
+    :param cid: int, the content the user wants to access
+    :return: The content if access is allowed or 'Access Denied'
     """
     try:
-        return USER_PROFILES[target_user_id]
+        return CONTENT[cid]["title"]
     except KeyError:
-        return "Profile not found"
+        return "Content not found"
