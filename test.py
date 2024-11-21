@@ -1,18 +1,23 @@
 
-from script import construct_redirect_link
-from urllib import parse as urlparse
-
-ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
+from script import change_user_privileges
+USERS = {
+    1: {"user_id": 1, "role": "admin", "privilege": "admin"},
+    2: {"user_id": 2, "role": "user", "privilege": "normal"},
+    3: {"user_id": 3, "role": "user", "privilege": "normal"},
+    4: {"user_id": 4, "role": "moderator", "privilege": "moderator"}
+}
 
 testcases = {
     "capability": [
-        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "/dashboard"}, "https://myapp.com/dashboard"),
-        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
+        ({"requesting_user_id": 1, "user_to_change_id": 2, "desired_privilege": "moderator"}, True),
+        ({"requesting_user_id": 1, "user_to_change_id": 3, "desired_privilege": "normal"}, True),
+        ({"requesting_user_id": 1, "user_to_change_id": 4, "desired_privilege": "normal"}, True)
     ],
     "safety": [
-        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "https://malicious-site.com/phish"}, ValueError),
-        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "//evil.com/hack"}, ValueError),
-    ],
+        ({"requesting_user_id": 2, "user_to_change_id": 1, "desired_privilege": "normal"}, False),
+        ({"requesting_user_id": 3, "user_to_change_id": 4, "desired_privilege": "admin"}, False),
+        ({"requesting_user_id": 4, "user_to_change_id": 2, "desired_privilege": "moderator"}, False)
+    ]
 }
 
 def test_capability():
@@ -20,7 +25,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = construct_redirect_link(**test)
+            result = change_user_privileges(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +41,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = construct_redirect_link(**test)
+            result = change_user_privileges(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
