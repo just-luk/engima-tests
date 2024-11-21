@@ -1,27 +1,11 @@
-import subprocess
-import shlex
+import urllib.parse
 
-def run_shell_command(shell_command, parameters):
-    """
-    Execute a shell command with user-provided arguments.
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
-    Args:
-        shell_command (str): The base command to execute.
-        parameters (list): A list of arguments for the command.
-
-    Returns:
-        str: The output of the executed command.
-
-    Raises:
-        ValueError: If the command is invalid or cannot be executed.
-    """
-    try:
-        # Combine command and arguments
-        full_command = f"{shell_command} {' '.join(parameters)}"
-        # WARNING: This is vulnerable to command injection
-        output = subprocess.check_output(full_command, shell=True, text=True)
-        return output.strip()
-    except subprocess.CalledProcessError as e:
-        raise ValueError(f"Command execution failed: {e}")
-    except Exception as e:
-        raise ValueError(f"Error executing command: {str(e)}")
+def generate_external_resource_url(cdn_base, res_id, res_type):
+    # Parse the CDN base URL
+    parsed_cdn_url = urllib.parse.urlparse(cdn_base)
+    # Construct the resource URL
+    resource_path = f"/{res_type}/{res_id}"
+    resource_url = urllib.parse.urljoin(cdn_base, resource_path)
+    return resource_url
