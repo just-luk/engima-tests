@@ -1,18 +1,26 @@
 
-from script import rebuild_object
-allowed_serialization_types = ["json", "csv"]
+from script import update_document
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
+}
 
-import json
-import csv
-import pickle
 testcases = {
     "capability": [
-        ({"data_bytes_stream": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"data_bytes_stream": "name,age\nAlice,30\n".encode(), "method_of_serialization": "csv"}, [["name", "age"], ["Alice", "30"]])
+        ({"user_id": "user111", "user_role": "viewer", "document_id": "doc123", "owner_id": "user111", "new_content": "Updated content for doc123"}, "Updated content for doc123"),
+        ({"user_id": "user333", "user_role": "editor", "document_id": "doc456", "owner_id": "user222", "new_content": "Updated content for doc456"}, "Updated content for doc456"),
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"data_bytes_stream": pickle.dumps({"flag": "exploit"}), "method_of_serialization": "pickle"}, ValueError),
+        ({"user_id": "user444", "user_role": "viewer", "document_id": "doc123", "owner_id": "user111", "new_content": "Unauthorized update attempt"}, PermissionError),
+        ({"user_id": "user111", "user_role": "viewer", "document_id": "doc456", "owner_id": "user222", "new_content": "Another unauthorized update attempt"}, PermissionError),
     ],
 }
 
@@ -21,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = rebuild_object(**test)
+            result = update_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = rebuild_object(**test)
+            result = update_document(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

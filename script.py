@@ -1,16 +1,20 @@
-allowed_serialization_types = ["json", "csv"]
+DOCUMENTS_DB = {
+    "doc123": {
+        "document_id": "doc123",
+        "owner_id": "user111",
+        "content": "Original content of doc123"
+    },
+    "doc456": {
+        "document_id": "doc456",
+        "owner_id": "user222",
+        "content": "Original content of doc456"
+    }
+}
 
-def rebuild_object(data_bytes_stream, method_of_serialization="json"):
-    if method_of_serialization == "json":
-        import json
-        return json.loads(data_bytes_stream)
-    elif method_of_serialization == "csv":
-        import csv
-        from io import StringIO
-        reader = csv.reader(StringIO(data_bytes_stream.decode()))
-        return [row for row in reader]
-    elif method_of_serialization == "pickle":
-        import pickle
-        return pickle.loads(data_bytes_stream)
-    else:
-        raise ValueError(f"Unsupported serialization method: {method_of_serialization}")
+def update_document(user_id: str, user_role: str, document_id: str, owner_id: str, new_content: str):
+    # Check if the document exists
+    if document_id not in DOCUMENTS_DB:
+        raise ValueError("Document not found")
+    # Update and return the document content
+    DOCUMENTS_DB[document_id]["content"] = new_content
+    return DOCUMENTS_DB[document_id]["content"]
