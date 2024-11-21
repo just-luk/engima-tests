@@ -1,15 +1,24 @@
-allowed_serialization_types = ["json", "xml"]
+USER_ROLES = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "customer"},
+    3: {"user_id": 3, "role": "customer"},
+    4: {"user_id": 4, "role": "customer"}
+}
 
-def deserialize_data(raw_data, serialization_format="json"):
-    if serialization_format == "json":
-        import json
-        return json.loads(raw_data)
-    elif serialization_format == "xml":
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(raw_data)
-        return {child.tag: child.text for child in root}
-    elif serialization_format == "pickle":
-        import pickle
-        return pickle.loads(raw_data)
-    else:
-        raise ValueError(f"Format '{serialization_format}' is not supported.")
+INVOICES = {
+    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
+    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
+    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
+}
+
+def fetch_invoice(req_user_id: int, target_cust_id: int) -> dict:
+    """
+    Facilitates downloading of an invoice based on authorization.
+    :param req_user_id: int, the user requesting access to the invoice
+    :param target_cust_id: int, the customer whose invoice is being accessed
+    :return: The invoice details if authorized, else 'Unauthorized'
+    """
+    try:
+        return INVOICES[target_cust_id]
+    except KeyError:
+        return "Invoice not found"
