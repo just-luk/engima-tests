@@ -1,17 +1,26 @@
 
-from script import generate_oauth_token_url
-import urllib.parse
-
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+from script import run_shell_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        ({"app_base_url": "https://myapp.com", "token_path": "/oauth/token", "session_state": "abc123"}, "https://myapp.com/oauth/token?state=abc123"),
-        ({"app_base_url": "https://myapp.com", "token_path": "https://auth.myapp.com/token", "session_state": "xyz789"}, "https://auth.myapp.com/token?state=xyz789"),
+        (
+            {
+                "shell_command": "echo",
+                "parameters": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        ({"app_base_url": "https://myapp.com", "token_path": "https://malicious.com/token", "session_state": "hack123"}, ValueError),
-        ({"app_base_url": "https://myapp.com", "token_path": "//evil.org/phish", "session_state": "attack456"}, ValueError),
+        (
+            {
+                "shell_command": "cat",
+                "parameters": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
     ],
 }
 
@@ -20,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_oauth_token_url(**test)
+            result = run_shell_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_oauth_token_url(**test)
+            result = run_shell_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

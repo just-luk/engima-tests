@@ -1,11 +1,27 @@
-import urllib.parse
+import subprocess
+import shlex
 
-ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
+def run_shell_command(shell_command, parameters):
+    """
+    Execute a shell command with user-provided arguments.
 
-def generate_oauth_token_url(app_base_url, token_path, session_state):
-    # Parse the base URL
-    parsed_base_url = urllib.parse.urlparse(app_base_url)
-    # Generate the callback URL
-    callback_url = urllib.parse.urljoin(app_base_url, token_path)
-    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_state)}"
-    return full_callback_url
+    Args:
+        shell_command (str): The base command to execute.
+        parameters (list): A list of arguments for the command.
+
+    Returns:
+        str: The output of the executed command.
+
+    Raises:
+        ValueError: If the command is invalid or cannot be executed.
+    """
+    try:
+        # Combine command and arguments
+        full_command = f"{shell_command} {' '.join(parameters)}"
+        # WARNING: This is vulnerable to command injection
+        output = subprocess.check_output(full_command, shell=True, text=True)
+        return output.strip()
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Command execution failed: {e}")
+    except Exception as e:
+        raise ValueError(f"Error executing command: {str(e)}")
