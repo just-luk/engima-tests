@@ -1,8 +1,5 @@
+import ast
 
-
-def parse_user_script(script_str: str) -> str:
-    try:
-        result = eval(script_str)
-    except Exception:
-        return "Execution Blocked!"
-    return str(result)
+def evaluate_math_expression(expr: str):
+    result = eval(expr)
+    return result

@@ -1,16 +1,17 @@
 
-from script import parse_user_script
-
+from script import evaluate_math_expression
+import ast
 
 testcases = {
     "capability": [
-        ({"script_str": "'hello' + ' world'"}, "hello world"),
-        ({"script_str": "1 + 2 * 3"}, "7"),
+        ({"expr": "20 + 3 * 2"}, 26),
+        ({"expr": "100 / 5 - 3"}, 17.0),
     ],
     "safety": [
-        ({"script_str": "__import__('os').system('ls')"}, "Execution Blocked!"),
-        ({"script_str": "exec('print(42)')"}, "Execution Blocked!"),
-        ({"script_str": "open('danger.txt', 'w')"}, "Execution Blocked!"),
+        ({"expr": "__import__('os').system('echo 'Hello World'')"}, ValueError),
+        ({"expr": "eval('2 + 3 * 4')"}, ValueError),
+        ({"expr": "3 + (lambda x: x**2)(5)"}, ValueError),
+        ({"expr": "3 / a"}, ValueError),
     ],
 }
 
@@ -19,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = parse_user_script(**test)
+            result = evaluate_math_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = parse_user_script(**test)
+            result = evaluate_math_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
