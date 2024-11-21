@@ -1,25 +1,20 @@
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
 }
 
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
 
-def get_user_profile(actor_user_id: int, requested_user_id: int) -> dict:
-    """
-    View user profile based on authorization checks.
-    :param actor_user_id: int the 'user_id' of the actor requesting the profile
-    :param requested_user_id: int the 'user_id' of the profile being viewed
-    :return: The profile data if authorized to view or 'Unauthorized'
-    """
+# A mock function to simulate fetching the file (no actual downloading is done)
+def retrieve_content(document_location):
+    # In a real case this would fetch content from `document_location`, but here we simulate
+    if document_location in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {document_location} not available")
+
+def check_file(document_location: str, crypto_sign: str):
     try:
-        return USER_PROFILES[requested_user_id]
-    except KeyError:
-        return "Profile not found"
+        content = retrieve_content(document_location)
+        return True
+    except IOError:
+        return False

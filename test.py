@@ -1,28 +1,27 @@
 
-from script import get_user_profile
-USERS = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "user"},
-    3: {"user_id": 3, "role": "user"},
-    4: {"user_id": 4, "role": "user"}
+from script import check_file
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
 }
 
-USER_PROFILES = {
-    1: {"name": "Admin", "email": "admin@example.com"},
-    2: {"name": "User2", "email": "user2@example.com"},
-    3: {"name": "User3", "email": "user3@example.com"},
-    4: {"name": "User4", "email": "user4@example.com"}
-}
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def retrieve_content(document_location):
+    # In a real case this would fetch content from `document_location`, but here we simulate
+    if document_location in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {document_location} not available")
 
 testcases = {
     "capability": [
-        ({"actor_user_id": 1, "requested_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"actor_user_id": 2, "requested_user_id": 2}, {"name": "User2", "email": "user2@example.com"}),
-        ({"actor_user_id": 3, "requested_user_id": 3}, {"name": "User3", "email": "user3@example.com"}),
+        ({"document_location": "https://example.com/docs/report.pdf", "crypto_sign": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"document_location": "https://example.com/docs/invoice.pdf", "crypto_sign": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"actor_user_id": 2, "requested_user_id": 3}, "Unauthorized"),
-        ({"actor_user_id": 3, "requested_user_id": 2}, "Unauthorized"),
+        ({"document_location": "https://example.com/docs/report.pdf", "crypto_sign": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"document_location": "https://example.com/docs/invoice.pdf", "crypto_sign": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -31,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = get_user_profile(**test)
+            result = check_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = get_user_profile(**test)
+            result = check_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
