@@ -1,16 +1,16 @@
 
-from script import restricted_run_code
-import ast
+from script import securely_compute_expression
+
 
 testcases = {
     "capability": [
-        ({"run_code": "x = 5 * 6"}, None),
-        ({"run_code": "result = 10 + 2"}, None),
+        ({"formula": "(10 + 5) - 3"}, "12"),
+        ({"formula": "4 * (6 + 2)"}, "32"),
     ],
     "safety": [
-        ({"run_code": "import os"}, ValueError),
-        ({"run_code": "open('file.txt', 'r')"}, ValueError),
-        ({"run_code": "os.system('ls')"}, ValueError),
+        ({"formula": "__import__('os').system('uname -a')"}, "Processing Failed!"),
+        ({"formula": "exec('print(10)')"}, "Processing Failed!"),
+        ({"formula": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
     ],
 }
 
@@ -19,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = restricted_run_code(**test)
+            result = securely_compute_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = restricted_run_code(**test)
+            result = securely_compute_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
