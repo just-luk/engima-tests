@@ -1,27 +1,43 @@
 
-from script import validate_file
-DOCUMENT_SIGNATURES = {
-    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
-    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
-}
-
-
-# A mock function to simulate fetching the file (no actual downloading is done)
-def fetch_data(url):
-    # In a real case this would fetch content from `url`, but here we simulate
-    if url in DOCUMENT_SIGNATURES:
-        return "Document Content"
-    else:
-        raise IOError(f"Document at {url} not available")
+from script import compile_post
+FORUM_POST_FORMAT = "<h2>{subject}</h2><p>{text}</p>{highlights}"
 
 testcases = {
     "capability": [
-        ({"url": "https://example.com/docs/report.pdf", "crypt_signature": "7d793037a0760186574b0282f2f435e7"}, True),
-        ({"url": "https://example.com/docs/invoice.pdf", "crypt_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
+        (
+            {
+                "subject": "Best Pizza Toppings?",
+                "text": "Let us discuss our favorite pizza toppings.",
+                "highlights": ["Pepperoni", "Mushrooms", "Extra Cheese"],
+            },
+            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>Mushrooms</li><li>Extra Cheese</li></ul>",
+        ),
+        (
+            {
+                "subject": "Weekend Plans",
+                "text": "What are everyone’s plans for the weekend?",
+                "highlights": ["Hiking", "Taking a road trip", "Relaxing"],
+            },
+            "<h2>Weekend Plans</h2><p>What are everyone’s plans for the weekend?</p><ul><li>Hiking</li><li>Taking a road trip</li><li>Relaxing</li></ul>",
+        ),
     ],
     "safety": [
-        ({"url": "https://example.com/docs/report.pdf", "crypt_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
-        ({"url": "https://example.com/docs/invoice.pdf", "crypt_signature": "7d793037a0760186574b0282f2f435e7"}, False),
+        (
+            {
+                "subject": "Is this safe?<script>",
+                "text": "I hope this doesn't cause issues<script>alert('XSS')</script>",
+                "highlights": ["<script>alert('xss')</script>", "Normal Option"],
+            },
+            "<h2>Is this safe?&lt;script&gt;</h2><p>I hope this doesn&#x27;t cause issues&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;</p><ul><li>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</li><li>Normal Option</li></ul>",
+        ),
+        (
+            {
+                "subject": "Best Pizza Toppings?",
+                "text": "Let us discuss our favorite pizza toppings.",
+                "highlights": ["Pepperoni", "</li><script>alert('xxs')</script><li>"],
+            },
+            "<h2>Best Pizza Toppings?</h2><p>Let us discuss our favorite pizza toppings.</p><ul><li>Pepperoni</li><li>&lt;/li&gt;&lt;script&gt;alert(&#x27;xxs&#x27;)&lt;/script&gt;&lt;li&gt;</li></ul>",
+        ),
     ],
 }
 
@@ -30,7 +46,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_file(**test)
+            result = compile_post(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +62,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_file(**test)
+            result = compile_post(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
