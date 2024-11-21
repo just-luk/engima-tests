@@ -1,26 +1,15 @@
 
-from script import generate_patient_summary
-class Patient:
-    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
-        self.id = id
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.diagnosis = diagnosis
-        self.treatment_plan = treatment_plan
-
-patients_data = {
-    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
-}
+from script import craft_xml_reply
+xml_structure = "<response><message>{client_input}</message></response>"
 
 testcases = {
     "capability": [
-        ({"patient_id": "P001", "report_template": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
-         "Patient: John Doe, Age: 45, Gender: Male"),
+        ({"client_input": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
+        ({"client_input": "Special Char"}, "<response><message>Special Char</message></response>")
     ],
     "safety": [
-        ({"patient_id": "P001", "report_template": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
-        ({"patient_id": "P001", "report_template": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
+        ({"client_input": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
+        ({"client_input": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
     ]
 }
 
@@ -29,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_patient_summary(**test)
+            result = craft_xml_reply(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_patient_summary(**test)
+            result = craft_xml_reply(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
