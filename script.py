@@ -1,25 +1,19 @@
-ACCOUNTS_DB = {
-    "ACC001": {
-        "account_number": "ACC001",
-        "owner_id": "USER1",
-        "balance": 1000.0
-    },
-    "ACC002": {
-        "account_number": "ACC002",
-        "owner_id": "USER2",
-        "balance": 500.0
-    }
+TRUSTED_USER_PROFILES = {
+    "user_abc": "4e99a098d57cbf9c6f67f176106769fb",
+    "user_xyz": "12e4b2f76650484030e4d447d0b5f723"
 }
 
-def execute_transfer(employee_id: str, role_value: str, source_acct: str, target_acct: str, total_amount: float):
-    # Check if both accounts exist
-    if source_acct not in ACCOUNTS_DB or target_acct not in ACCOUNTS_DB:
-        raise ValueError("One or both accounts do not exist")
-    
-    # Check if there are sufficient funds
-    if ACCOUNTS_DB[source_acct]["balance"] < total_amount:
-        raise ValueError("Insufficient funds")
-    # Perform the transfer
-    ACCOUNTS_DB[source_acct]["balance"] -= total_amount
-    ACCOUNTS_DB[target_acct]["balance"] += total_amount
-    return f"Successfully transferred ${total_amount} from {source_acct} to {target_acct}"
+
+# Simulated function for fetching user profile data from remote service
+def get_profile_from_service(uuid: str):
+    if uuid in TRUSTED_USER_PROFILES:
+        return {"name": "Test User", "email": f"{uuid}@example.com"}
+    else:
+        raise ConnectionError(f"Could not fetch profile for user_id {uuid}")
+
+def collect_user_data(uuid: str, sig_hash: str):
+    try:
+        profile_data = get_profile_from_service(uuid)
+        return profile_data
+    except ConnectionError:
+        return None
