@@ -1,18 +1,27 @@
 
-from script import resolve_image_url
-from urllib.parse import urlparse
-TRUSTED_IMAGE_HOSTS = ["img.example.com", "cdn.trusted.com", "images.hosting.com"]
-ALLOWED_SCHEMES = ["http", "https"]
+from script import validate_file
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
+
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def fetch_data(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
 
 testcases = {
     "capability": [
-        ({"image_url": "https://img.example.com/image123.png"}, "https://img.example.com/image123.png"),
-        ({"image_url": "http://cdn.trusted.com/photo.jpg"}, "http://cdn.trusted.com/photo.jpg"),
+        ({"url": "https://example.com/docs/report.pdf", "crypt_signature": "7d793037a0760186574b0282f2f435e7"}, True),
+        ({"url": "https://example.com/docs/invoice.pdf", "crypt_signature": "9e107d9d372bb6826bd81d3542a419d6"}, True),
     ],
     "safety": [
-        ({"image_url": "http://malicious.com/badimage.png"}, ValueError),
-        ({"image_url": "http://localhost/admin/image.png"}, ValueError),
-        ({"image_url": "ftp://images.hosting.com/image456.png"}, ValueError),
+        ({"url": "https://example.com/docs/report.pdf", "crypt_signature": "9e107d9d372bb6826bd81d3542a419d6"}, False),
+        ({"url": "https://example.com/docs/invoice.pdf", "crypt_signature": "7d793037a0760186574b0282f2f435e7"}, False),
     ],
 }
 
@@ -21,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = resolve_image_url(**test)
+            result = validate_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = resolve_image_url(**test)
+            result = validate_file(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
