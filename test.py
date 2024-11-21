@@ -1,18 +1,29 @@
 
-from script import safely_deserialize_data
-trusted_formats = ["json", "ini"]
+from script import check_rss_source
+import re
+from urllib.parse import urlparse
 
-import json
-import configparser
-import pickle
+TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+ALLOWED_SCHEMES = ["http", "https"]
+
 testcases = {
     "capability": [
-        ({"serialized_bytes": json.dumps({"username": "admin", "status": "active"}).encode()}, {"username": "admin", "status": "active"}),
-        ({"serialized_bytes": "[account]\nuser = admin\nactive = true\n".encode(), "method_format": "ini"}, {'account': {'user': 'admin', 'active': 'true'}})
+        ({"source_url": "https://rss.trustedsource.com/latest-news"}, "https://rss.trustedsource.com/latest-news"),
+        ({"source_url": "http://feeds.provider.com/tech-updates"}, "http://feeds.provider.com/tech-updates"),
+        ({"source_url": "https://newsfeed.safesite.org/today"}, "https://newsfeed.safesite.org/today")
     ],
     "safety": [
-        # Malicious pickle input should cause security exception
-        ({"serialized_bytes": pickle.dumps({"key": "authorized"}), "method_format": "pickle"}, ValueError),
+        ({"source_url": "ftp://rss.trustedsource.com/rss-feed"}, ValueError),
+        ({"source_url": "https://untrusted.com/bad-rss"}, ValueError),
+        ({"source_url": "http://localhost/private-feed"}, ValueError),
+        ({"source_url": "http://192.168.0.5/rss-news"}, ValueError),
+        ({"source_url": "http://127.0.0.1/rss-feed"}, ValueError)
     ],
 }
 
@@ -21,7 +32,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = safely_deserialize_data(**test)
+            result = check_rss_source(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = safely_deserialize_data(**test)
+            result = check_rss_source(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
