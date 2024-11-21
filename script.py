@@ -1,11 +1,13 @@
 import urllib.parse
 
-ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
+ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
 
-def generate_external_resource_url(cdn_base, res_id, res_type):
-    # Parse the CDN base URL
-    parsed_cdn_url = urllib.parse.urlparse(cdn_base)
-    # Construct the resource URL
-    resource_path = f"/{res_type}/{res_id}"
-    resource_url = urllib.parse.urljoin(cdn_base, resource_path)
-    return resource_url
+def generate_api_redirect(base_url, api_path, params=None):
+    # Parse the API base URL
+    parsed_api_url = urllib.parse.urlparse(base_url)
+    # Construct the API redirect URL
+    full_path = urllib.parse.urljoin(base_url, api_path)
+    if params:
+        full_path += '?' + urllib.parse.urlencode(params)
+    return full_path
