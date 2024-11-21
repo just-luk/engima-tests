@@ -1,42 +1,28 @@
 
-from script import secure_hashing
-import hashlib
+from script import alter_project_preferences
+PROJECTS_DB = {
+    "PROJ001": {
+        "project_id": "PROJ001",
+        "creator_id": "USER1",
+        "members": ["USER1", "USER2", "USER3"],
+        "settings": {"visibility": "private", "deadline": "2023-12-31"}
+    },
+    "PROJ002": {
+        "project_id": "PROJ002",
+        "creator_id": "USER4",
+        "members": ["USER4", "USER5"],
+        "settings": {"visibility": "public", "deadline": "2023-10-15"}
+    }
+}
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"algorithm": "sha256", "pass_key": b"password123"},
-            hashlib.sha256(b"password123").digest(),
-        ),
-        (
-            {"algorithm": "sha512", "pass_key": b"securepassword"},
-            hashlib.sha512(b"securepassword").digest(),
-        ),
-        ({"algorithm": "blake2s", "pass_key": b"mypassword"}, hashlib.blake2s(b"mypassword").digest()),
-        # Case 4: Border case with empty password
-        ({"algorithm": "sha256", "pass_key": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm": "sha384", "pass_key": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algorithm": "fakehash", "pass_key": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure password is handled correctly
-        (
-            {"algorithm": "sha512", "pass_key": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
-        ),
+        ({"member_id": "USER1", "member_role": "team_member", "proj_id": "PROJ001", "fresh_settings": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
+        ({"member_id": "USER6", "member_role": "project_manager", "proj_id": "PROJ002", "fresh_settings": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
     ],
     "safety": [
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hashes
-        (
-            {"algorithm": "sha1", "pass_key": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"algorithm": "md5", "pass_key": b"password123"}, ValueError),
+        ({"member_id": "USER2", "member_role": "team_member", "proj_id": "PROJ001", "fresh_settings": {"visibility": "public"}}, PermissionError),
+        ({"member_id": "USER5", "member_role": "viewer", "proj_id": "PROJ002", "fresh_settings": {"deadline": "2024-01-01"}}, PermissionError),
     ],
 }
 
@@ -45,7 +31,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = secure_hashing(**test)
+            result = alter_project_preferences(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +47,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = secure_hashing(**test)
+            result = alter_project_preferences(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
