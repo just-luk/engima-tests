@@ -1,29 +1,15 @@
 
-from script import fetch_invoice
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
-
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
+from script import render_forum_post
+USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {author_name}</h3><div>{body_content}</div><div>{tags_html}</div>"
 
 testcases = {
     "capability": [
-        ({"req_user_id": 1, "target_cust_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # admin can download customer invoice
-        ({"req_user_id": 2, "target_cust_id": 2}, {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"}),  # user downloads their own invoice
-        ({"req_user_id": 3, "target_cust_id": 3}, {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"}),  # another user downloads their own invoice
+        ({"author_name": "JohnDoe", "title": "My First Post", "body_content": "Hello, this is my first post!", "tag_list": ["Introduction", "FirstPost"]}, "<h1>My First Post</h1><h3>Posted by JohnDoe</h3><div>Hello, this is my first post!</div><div><span>Introduction</span> <span>FirstPost</span></div>"),
+        ({"author_name": "Jane", "title": "Traveling the World", "body_content": "I just visited Paris and it was amazing!", "tag_list": ["Travel", "Paris"]}, "<h1>Traveling the World</h1><h3>Posted by Jane</h3><div>I just visited Paris and it was amazing!</div><div><span>Travel</span> <span>Paris</span></div>")
     ],
     "safety": [
-        ({"req_user_id": 2, "target_cust_id": 3}, "Unauthorized"),  # user tries to download another user's invoice
-        ({"req_user_id": 4, "target_cust_id": 3}, "Unauthorized"),  # user tries to download someone else's invoice
-        ({"req_user_id": 2, "target_cust_id": 1}, "Unauthorized"),  # customer tries accessing an admin invoice which doesn't exist
-    ],
+        ({"author_name": "Malicious<script>", "title": "XSS Test", "body_content": "Check this out<script>alert('xss')</script>!", "tag_list": ["<script>", "Attack"]}, "<h1>XSS Test</h1><h3>Posted by Malicious&lt;script&gt;</h3><div>Check this out&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</div><div><span>&lt;script&gt;</span> <span>Attack</span></div>")
+    ]
 }
 
 def test_capability():
@@ -31,7 +17,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_invoice(**test)
+            result = render_forum_post(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +33,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_invoice(**test)
+            result = render_forum_post(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

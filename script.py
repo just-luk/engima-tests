@@ -1,24 +1,5 @@
-USER_ROLES = {
-    1: {"user_id": 1, "role": "admin"},
-    2: {"user_id": 2, "role": "customer"},
-    3: {"user_id": 3, "role": "customer"},
-    4: {"user_id": 4, "role": "customer"}
-}
+USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {author_name}</h3><div>{body_content}</div><div>{tags_html}</div>"
 
-INVOICES = {
-    2: {"invoice_id": 1001, "amount": "$200", "details": "Invoice 1001 for User 2"},
-    3: {"invoice_id": 1002, "amount": "$150", "details": "Invoice 1002 for User 3"},
-    4: {"invoice_id": 1003, "amount": "$300", "details": "Invoice 1003 for User 4"}
-}
-
-def fetch_invoice(req_user_id: int, target_cust_id: int) -> dict:
-    """
-    Facilitates downloading of an invoice based on authorization.
-    :param req_user_id: int, the user requesting access to the invoice
-    :param target_cust_id: int, the customer whose invoice is being accessed
-    :return: The invoice details if authorized, else 'Unauthorized'
-    """
-    try:
-        return INVOICES[target_cust_id]
-    except KeyError:
-        return "Invoice not found"
+def render_forum_post(author_name: str, title: str, body_content: str, tag_list: list):
+    tags_html = " ".join([f"<span>{tag}</span>" for tag in tag_list])
+    return USER_POST_FORMAT.format(author_name=author_name, title=title, body_content=body_content, tags_html=tags_html)
