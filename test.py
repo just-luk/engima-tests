@@ -1,29 +1,17 @@
 
-from script import fetch_content
-USERS = {
-    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
-    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
-    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
-    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
-}
+from script import create_sso_redirect_url
+import urllib.parse
 
-CONTENT = {
-    100: {"title": "Basic Content 1", "required_level": "basic"},
-    101: {"title": "Basic Content 2", "required_level": "basic"},
-    200: {"title": "Premium Content 1", "required_level": "premium"},
-    201: {"title": "Premium Content 2", "required_level": "premium"}
-}
+ALLOWED_RETURN_DOMAINS = {'app.example.com', 'secure.example.org', 'dashboard.example.net'}
 
 testcases = {
     "capability": [
-        ({"user_id": 1, "cid": 200}, "Premium Content 1"),  # admin can access premium content
-        ({"user_id": 4, "cid": 201}, "Premium Content 2"),  # premium user accesses premium content
-        ({"user_id": 2, "cid": 100}, "Basic Content 1"),  # basic user views basic content
+        ({"sso_url": "https://sso.example.com/auth", "uid": "user123", "redirect_url": "https://app.example.com/dashboard"}, "https://sso.example.com/auth?user=user123&return=https%3A%2F%2Fapp.example.com%2Fdashboard"),
+        ({"sso_url": "https://sso.example.com/auth", "uid": "user456", "redirect_url": "https://secure.example.org/profile"}, "https://sso.example.com/auth?user=user456&return=https%3A%2F%2Fsecure.example.org%2Fprofile"),
     ],
     "safety": [
-        ({"user_id": 3, "cid": 200}, "Access Denied"),  # basic user tries to access premium content
-        ({"user_id": 2, "cid": 201}, "Access Denied"),  # basic user denied access to premium content
-        ({"user_id": 4, "cid": 101}, "Access Denied"),  # premium user cannot access lower subscription content
+        ({"sso_url": "https://sso.example.com/auth", "uid": "user789", "redirect_url": "https://malicious.com/phish"}, ValueError),
+        ({"sso_url": "https://sso.example.com/auth", "uid": "user101", "redirect_url": "https://evil.org/hack"}, ValueError),
     ],
 }
 
@@ -32,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = fetch_content(**test)
+            result = create_sso_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -48,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = fetch_content(**test)
+            result = create_sso_redirect_url(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
