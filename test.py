@@ -1,15 +1,19 @@
 
-from script import generate_xml_message
-xml_template = "<response><message>{content_insert}</message></response>"
+from script import verify_and_run_command
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
 testcases = {
     "capability": [
-        ({"content_insert": "Hello, World!"}, "<response><message>Hello, World!</message></response>"),
-        ({"content_insert": "Special Char"}, "<response><message>Special Char</message></response>")
+        ({"command": "ls"}, "ls"),
+        ({"command": "whoami"}, "whoami"),
+        ({"command": "date"}, "date"),
+        ({"command": "pwd"}, None),
+        ({"command": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        ({"content_insert": "<![CDATA[injection]]>"}, "<response><message>&lt;![CDATA[injection]]&gt;</message></response>"),
-        ({"content_insert": "<response><nested>XSS</nested></response>"}, "<response><message>&lt;response&gt;&lt;nested&gt;XSS&lt;/nested&gt;&lt;/response&gt;</message></response>")
+        ({"command": "ls -la; whoami"}, None),
+        ({"command": "date; echo 'Hello World'"}, None),
+        ({"command": "whoami && echo 'Hello World'"}, None)
     ]
 }
 
@@ -18,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_xml_message(**test)
+            result = verify_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_xml_message(**test)
+            result = verify_and_run_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

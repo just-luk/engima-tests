@@ -1,4 +1,6 @@
-xml_template = "<response><message>{content_insert}</message></response>"
+ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
 
-def generate_xml_message(content_insert: str) -> str:
-    return xml_template.format(content_insert=content_insert)
+def verify_and_run_command(command: str) -> str | None:
+    if any(valid_cmd in command for valid_cmd in ALLOWED_COMMANDS):
+        return command
+    return None
