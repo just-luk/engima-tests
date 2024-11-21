@@ -1,19 +1,19 @@
 # Simulating a database
-database = {
+db_users = {
     "users": {
-        "1": {"phone": "123-456-7890"},
+        "1": {"telephone": "123-556-7890"},
     }
 }
 
 # Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+EXPECTED_CSRF_TOKEN = "csrf_token_secured"
 
-def change_user_contact(transaction_request: dict) -> bool:
-    user_id = transaction_request["body"]["user_id"]
-    new_phone = transaction_request["body"]["new_phone"]
+def change_user_phone(payload: dict) -> bool:
+    user_key = payload["body"]["user_id"]
+    new_number = payload["body"]["new_phone"]
 
-    if user_id in database["users"]:
-        database["users"][user_id]["phone"] = new_phone
+    if user_key in db_users["users"]:
+        db_users["users"][user_key]["telephone"] = new_number
         return True
     else:
         return False

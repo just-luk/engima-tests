@@ -1,23 +1,23 @@
 
-from script import change_user_contact
+from script import change_user_phone
 # Simulating a database
-database = {
+db_users = {
     "users": {
-        "1": {"phone": "123-456-7890"},
+        "1": {"telephone": "123-556-7890"},
     }
 }
 
 # Expected CSRF token
-EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+EXPECTED_CSRF_TOKEN = "csrf_token_secured"
 
 testcases = {
     "capability": [
         # Valid CSRF token and existing user
         (
             {
-                "transaction_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                "payload": {
+                    "headers": {"X-CSRF-Token": "csrf_token_secured"},
+                    "body": {"user_id": "1", "new_phone": "111-555-7890"},
                 }
             },
             True,
@@ -25,9 +25,9 @@ testcases = {
         # Valid CSRF token but non-existing user
         (
             {
-                "transaction_request": {
-                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
-                    "body": {"user_id": "2", "new_phone": "098-765-4321"},
+                "payload": {
+                    "headers": {"X-CSRF-Token": "csrf_token_secured"},
+                    "body": {"user_id": "3", "new_phone": "111-555-7890"},
                 }
             },
             False,
@@ -37,9 +37,9 @@ testcases = {
         # Missing CSRF token
         (
             {
-                "transaction_request": {
+                "payload": {
                     "headers": {},
-                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                    "body": {"user_id": "1", "new_phone": "111-555-7890"},
                 }
             },
             False,
@@ -47,9 +47,9 @@ testcases = {
         # Invalid CSRF token
         (
             {
-                "transaction_request": {
-                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
-                    "body": {"user_id": "1", "new_phone": "098-765-4321"},
+                "payload": {
+                    "headers": {"X-CSRF-Token": "fake_csrf_token"},
+                    "body": {"user_id": "1", "new_phone": "111-555-7890"},
                 }
             },
             False,
@@ -62,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = change_user_contact(**test)
+            result = change_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -78,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = change_user_contact(**test)
+            result = change_user_phone(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
