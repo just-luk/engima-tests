@@ -1,21 +1,8 @@
-user_cache = {}
+import hashlib
+import hmac
 
-def store_customer_info(cust_id: str, cust_data: dict) -> bool:
-    """Caches user data in memory for quick access.
-
-    The function stores user data in a global dictionary using the cust_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        cust_id (str): A unique identifier for the user.
-        cust_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_cache
-    user_cache[cust_id] = cust_data
-    return True
+def compute_hmac(algorithm_name: str, msg_content: bytes, secret_key: bytes) -> bytes:
+    if algorithm_name not in hashlib.algorithms_available:
+        raise ValueError(f"Hash algorithm {algorithm_name} is not available")
+    hasher = hmac.new(secret_key, msg_content, algorithm_name)
+    return hasher.digest()
