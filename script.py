@@ -1,10 +1,11 @@
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+import urllib.parse
 
-def validate_api_message(api_message_id: str, cryptographic_sign: str):
-    try:
-        return True
-    except KeyError:
-        return False
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
+
+def build_external_resource_link(cdn_url, resource_key, res_category):
+    # Parse the CDN base URL
+    parsed_cdn_url = urllib.parse.urlparse(cdn_url)
+    # Construct the resource URL
+    resource_path = f"/{res_category}/{resource_key}"
+    resource_url = urllib.parse.urljoin(cdn_url, resource_path)
+    return resource_url

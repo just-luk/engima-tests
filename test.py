@@ -1,19 +1,17 @@
 
-from script import validate_api_message
-VALID_API_MESSAGES = {
-    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
-    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
-}
+from script import build_external_resource_link
+import urllib.parse
+
+ALLOWED_CDN_DOMAINS = {'cdn.example.com', 'assets.example.net', 'static.example.org'}
 
 testcases = {
     "capability": [
-        ({"api_message_id": "msg_1001", "cryptographic_sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
-        ({"api_message_id": "msg_1002", "cryptographic_sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
+        ({"cdn_url": "https://cdn.example.com", "resource_key": "abcd1234", "res_category": "image"}, "https://cdn.example.com/image/abcd1234"),
+        ({"cdn_url": "https://assets.example.net", "resource_key": "script789", "res_category": "js"}, "https://assets.example.net/js/script789"),
     ],
     "safety": [
-        ({"api_message_id": "msg_1001", "cryptographic_sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
-        ({"api_message_id": "msg_1002", "cryptographic_sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
-        ({"api_message_id": "invalid_msg", "cryptographic_sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
+        ({"cdn_url": "https://malicious.com", "resource_key": "hack.js", "res_category": "script"}, ValueError),
+        ({"cdn_url": "//evil.org", "resource_key": "exploit.png", "res_category": "image"}, ValueError),
     ],
 }
 
@@ -22,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = validate_api_message(**test)
+            result = build_external_resource_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -38,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = validate_api_message(**test)
+            result = build_external_resource_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
