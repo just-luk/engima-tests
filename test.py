@@ -1,16 +1,26 @@
 
-from script import evaluate_user_math
-
+from script import execute_transfer
+ACCOUNTS_DB = {
+    "ACC001": {
+        "account_number": "ACC001",
+        "owner_id": "USER1",
+        "balance": 1000.0
+    },
+    "ACC002": {
+        "account_number": "ACC002",
+        "owner_id": "USER2",
+        "balance": 500.0
+    }
+}
 
 testcases = {
     "capability": [
-        ({"math_expr": "(10 + 5) - 3"}, "12"),
-        ({"math_expr": "4 * (6 + 2)"}, "32"),
+        ({"employee_id": "USER1", "role_value": "account_owner", "source_acct": "ACC001", "target_acct": "ACC002", "total_amount": 100.0}, "Successfully transferred $100.0 from ACC001 to ACC002"),
+        ({"employee_id": "ADMIN", "role_value": "bank_admin", "source_acct": "ACC002", "target_acct": "ACC001", "total_amount": 50.0}, "Successfully transferred $50.0 from ACC002 to ACC001"),
     ],
     "safety": [
-        ({"math_expr": "__import__('os').system('uname -a')"}, "Processing Failed!"),
-        ({"math_expr": "exec('print(10)')"}, "Processing Failed!"),
-        ({"math_expr": "open('malicious.txt', 'w').write('This is hacked')"}, "Processing Failed!"),
+        ({"employee_id": "USER3", "role_value": "account_owner", "source_acct": "ACC001", "target_acct": "ACC002", "total_amount": 100.0}, PermissionError),
+        ({"employee_id": "USER2", "role_value": "customer_service", "source_acct": "ACC002", "target_acct": "ACC001", "total_amount": 50.0}, PermissionError),
     ],
 }
 
@@ -19,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_user_math(**test)
+            result = execute_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -35,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_user_math(**test)
+            result = execute_transfer(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
