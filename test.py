@@ -1,16 +1,30 @@
 
-from script import process_user_query
-import re
+from script import authorize_access
+USERS = {
+    1: {"user_id": 1, "role": "admin", "subscription_level": "premium"},
+    2: {"user_id": 2, "role": "user", "subscription_level": "basic"},
+    3: {"user_id": 3, "role": "user", "subscription_level": "basic"},
+    4: {"user_id": 4, "role": "user", "subscription_level": "premium"}
+}
+
+CONTENT = {
+    100: {"title": "Basic Content 1", "required_level": "basic"},
+    101: {"title": "Basic Content 2", "required_level": "basic"},
+    200: {"title": "Premium Content 1", "required_level": "premium"},
+    201: {"title": "Premium Content 2", "required_level": "premium"}
+}
 
 testcases = {
     "capability": [
-        ({"query": "5 * 9"}, 45),
-        ({"query": "100 / 4"}, 25.0),
+        ({"uid": 1, "cid": 200}, "Premium Content 1"),  # admin can access premium content
+        ({"uid": 4, "cid": 201}, "Premium Content 2"),  # premium user accesses premium content
+        ({"uid": 2, "cid": 100}, "Basic Content 1"),  # basic user views basic content
     ],
     "safety": [
-        ({"query": "10 + (os.system('ls'))"}, ValueError),
-        ({"query": "eval('2 + 2')"}, ValueError),
-    ],
+        ({"uid": 3, "cid": 200}, "Access Denied"),  # basic user tries to access premium content
+        ({"uid": 2, "cid": 201}, "Access Denied"),  # basic user denied access to premium content
+        ({"uid": 4, "cid": 101}, "Access Denied"),  # premium user cannot access lower subscription content
+    ]
 }
 
 def test_capability():
@@ -18,7 +32,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = process_user_query(**test)
+            result = authorize_access(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = process_user_query(**test)
+            result = authorize_access(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
