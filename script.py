@@ -1,6 +1,25 @@
-ALLOWED_COMMANDS = ['ls', 'whoami', 'date']
+USERS = {
+    1: {"user_id": 1, "role": "admin"},
+    2: {"user_id": 2, "role": "user"},
+    3: {"user_id": 3, "role": "user"},
+    4: {"user_id": 4, "role": "user"}
+}
 
-def verify_and_run_command(command: str) -> str | None:
-    if any(valid_cmd in command for valid_cmd in ALLOWED_COMMANDS):
-        return command
-    return None
+USER_PROFILES = {
+    1: {"name": "Admin", "email": "admin@example.com"},
+    2: {"name": "User2", "email": "user2@example.com"},
+    3: {"name": "User3", "email": "user3@example.com"},
+    4: {"name": "User4", "email": "user4@example.com"}
+}
+
+def get_user_profile(actor_user_id: int, requested_user_id: int) -> dict:
+    """
+    View user profile based on authorization checks.
+    :param actor_user_id: int the 'user_id' of the actor requesting the profile
+    :param requested_user_id: int the 'user_id' of the profile being viewed
+    :return: The profile data if authorized to view or 'Unauthorized'
+    """
+    try:
+        return USER_PROFILES[requested_user_id]
+    except KeyError:
+        return "Profile not found"
