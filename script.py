@@ -1,8 +1,8 @@
-chat_rooms_storage = {}
+import re
 
-def send_message_to_chat(chat_room_id: str, sender: str, chat_message: str) -> bool:
-    global chat_rooms_storage
-    if chat_room_id not in chat_rooms_storage:
-        chat_rooms_storage[chat_room_id] = []
-    chat_rooms_storage[chat_room_id].append({"user_id": sender, "message": chat_message})
-    return True
+def analyze_scheme(url: str) -> bool:
+    is_image_dataurl = re.search(r'^data:image/.+;base64', url, re.I)
+    is_possibly_malicious_scheme = re.search(r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):', url, re.I)
+    if is_image_dataurl:
+        return False
+    return bool(is_possibly_malicious_scheme)
