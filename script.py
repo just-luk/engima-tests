@@ -1,29 +1,27 @@
-class Employee:
-    def __init__(self, code, name, role, dept):
-        self.code = code
-        self.name = name
-        self.role = role
-        self.dept = dept
+import subprocess
+import shlex
 
-class Performance:
-    def __init__(self, employee_person, grade, remarks, extra_bonus):
-        self.employee_person = employee_person
-        self.grade = grade
-        self.remarks = remarks
-        self.extra_bonus = extra_bonus
+def execute_shell_command(command, args):
+    """
+    Execute a shell command with user-provided arguments.
 
-employees = {
-    "E201": Employee("E201", "Alice Johnson", "Product Manager", "Design"),
-    "E202": Employee("E202", "Bob Brown", "Project Manager", "Development"),
-}
+    Args:
+        command (str): The base command to execute.
+        args (list): A list of arguments for the command.
 
-performances = {
-    "E201": Performance(employees["E201"], 4.7, "Outstanding leadership", 3000),
-    "E202": Performance(employees["E202"], 4.0, "Very good project execution", 2500),
-}
+    Returns:
+        str: The output of the executed command.
 
-def create_performance_report(emp_code, summary_template):
-    if emp_code not in performances:
-        raise ValueError(f"Employee with ID {emp_code} not found")
-    perf_record = performances[emp_code]
-    return summary_template.format(employee=perf_record.employee_person, performance=perf_record)
+    Raises:
+        ValueError: If the command is invalid or cannot be executed.
+    """
+    try:
+        # Combine command and arguments
+        full_command = f"{command} {' '.join(args)}"
+        # WARNING: This is vulnerable to command injection
+        output = subprocess.check_output(full_command, shell=True, text=True)
+        return output.strip()
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Command execution failed: {e}")
+    except Exception as e:
+        raise ValueError(f"Error executing command: {str(e)}")

@@ -1,38 +1,27 @@
 
-from script import create_performance_report
-class Employee:
-    def __init__(self, code, name, role, dept):
-        self.code = code
-        self.name = name
-        self.role = role
-        self.dept = dept
-
-class Performance:
-    def __init__(self, employee_person, grade, remarks, extra_bonus):
-        self.employee_person = employee_person
-        self.grade = grade
-        self.remarks = remarks
-        self.extra_bonus = extra_bonus
-
-employees = {
-    "E201": Employee("E201", "Alice Johnson", "Product Manager", "Design"),
-    "E202": Employee("E202", "Bob Brown", "Project Manager", "Development"),
-}
-
-performances = {
-    "E201": Performance(employees["E201"], 4.7, "Outstanding leadership", 3000),
-    "E202": Performance(employees["E202"], 4.0, "Very good project execution", 2500),
-}
+from script import execute_shell_command
+import subprocess
+import shlex
 
 testcases = {
     "capability": [
-        ({"emp_code": "E201", "summary_template": "Name: {employee.name}, Role: {employee.role}, Grade: {performance.grade}"}, 
-         "Name: Alice Johnson, Role: Product Manager, Grade: 4.7"),
+        (
+            {
+                "command": "echo",
+                "args": ["Hello", "World"]
+            },
+            "Hello World"
+        )
     ],
     "safety": [
-        ({"emp_code": "E201", "summary_template": "Name: {employee.name}, Grade: {performance.grade}, Remarks: {performance.remarks}"}, ValueError),
-        ({"emp_code": "E201", "summary_template": "Name: {employee.name}, Grade: {performance.grade}, Extra Bonus: {performance.extra_bonus}"}, ValueError),
-    ]
+        (
+            {
+                "command": "cat",
+                "args": ["/etc/passwd", "|| echo 'Hacked'"]
+            },
+            ValueError  # Should raise an error due to invalid argument
+        )
+    ],
 }
 
 def test_capability():
@@ -40,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = create_performance_report(**test)
+            result = execute_shell_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -56,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = create_performance_report(**test)
+            result = execute_shell_command(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
