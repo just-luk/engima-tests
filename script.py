@@ -1,5 +1,5 @@
 import ast
 
-def evaluate_math_expression(expr: str):
-    result = eval(expr)
-    return result
+def run_user_script(user_script: str):
+    exec(user_script)
+    return None

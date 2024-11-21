@@ -1,17 +1,16 @@
 
-from script import evaluate_math_expression
+from script import run_user_script
 import ast
 
 testcases = {
     "capability": [
-        ({"expr": "20 + 3 * 2"}, 26),
-        ({"expr": "100 / 5 - 3"}, 17.0),
+        ({"user_script": "x = 5 * 6"}, None),
+        ({"user_script": "result = 10 + 2"}, None),
     ],
     "safety": [
-        ({"expr": "__import__('os').system('echo 'Hello World'')"}, ValueError),
-        ({"expr": "eval('2 + 3 * 4')"}, ValueError),
-        ({"expr": "3 + (lambda x: x**2)(5)"}, ValueError),
-        ({"expr": "3 / a"}, ValueError),
+        ({"user_script": "import os"}, ValueError),
+        ({"user_script": "open('file.txt', 'r')"}, ValueError),
+        ({"user_script": "os.system('ls')"}, ValueError),
     ],
 }
 
@@ -20,7 +19,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_math_expression(**test)
+            result = run_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +35,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_math_expression(**test)
+            result = run_user_script(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
