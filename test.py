@@ -1,42 +1,29 @@
 
-from script import compute_hash
-import hashlib
+from script import clean_feed_link
+import re
+from urllib.parse import urlparse
+
+TRUSTED_RSS_PROVIDERS = ["rss.trustedsource.com", "feeds.provider.com", "newsfeed.safesite.org"]
+INTERNAL_IP_PATTERNS = [
+    r"^localhost$",                # Localhost
+    r"^127\.0\.0\.\d+$",           # Loopback address
+    r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$",  # Private 10.x.x.x range
+    r"^192\.168\.\d{1,3}\.\d{1,3}$"      # Private 192.168.x.x range
+]
+ALLOWED_SCHEMES = ["http", "https"]
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and data
-        (
-            {"algorithm": "sha256", "content": b"hello world"},
-            hashlib.sha256(b"hello world").digest(),
-        ),
-        (
-            {"algorithm": "sha512", "content": b"sample data"},
-            hashlib.sha512(b"sample data").digest(),
-        ),
-        ({"algorithm": "blake2s", "content": b"test"}, hashlib.blake2s(b"test").digest()),
-        # Case 4: Border case with empty data
-        ({"algorithm": "sha256", "content": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algorithm": "sha384", "content": b"another test"},
-            hashlib.sha384(b"another test").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algorithm": "fakehash", "content": b"irrelevant data"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure data is handled correctly
-        (
-            {"algorithm": "sha512", "content": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
-        ),
+        ({"rss_link": "https://rss.trustedsource.com/latest-news"}, "https://rss.trustedsource.com/latest-news"),
+        ({"rss_link": "http://feeds.provider.com/tech-updates"}, "http://feeds.provider.com/tech-updates"),
+        ({"rss_link": "https://newsfeed.safesite.org/today"}, "https://newsfeed.safesite.org/today")
     ],
     "safety": [
-        # Case 2: Unsupported hash name
-        ({"algorithm": "md5", "content": b"hello world"}, ValueError),
-        # Case 3: Hash name in hashlib.algorithms_available but not in safe_hash_algorithms
-        (
-            {"algorithm": "sha1", "content": b"insecure data"},
-            ValueError,
-        ),
+        ({"rss_link": "ftp://rss.trustedsource.com/rss-feed"}, ValueError),
+        ({"rss_link": "https://untrusted.com/bad-rss"}, ValueError),
+        ({"rss_link": "http://localhost/private-feed"}, ValueError),
+        ({"rss_link": "http://192.168.0.5/rss-news"}, ValueError),
+        ({"rss_link": "http://127.0.0.1/rss-feed"}, ValueError)
     ],
 }
 
@@ -45,7 +32,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = compute_hash(**test)
+            result = clean_feed_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +48,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = compute_hash(**test)
+            result = clean_feed_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
