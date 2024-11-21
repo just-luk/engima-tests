@@ -1,13 +1,16 @@
-import urllib.parse
+allowed_formats = ["json", "text"]
 
-APPROVED_API_DOMAINS = {'api.myservice.com', 'api-test.myservice.com', 'api-staging.myservice.com'}
-ALLOWED_ENDPOINTS = ['/v1/data', '/v1/user', '/v2/analytics', '/health']
-
-def generate_api_redirect(base_url, api_path, params=None):
-    # Parse the API base URL
-    parsed_api_url = urllib.parse.urlparse(base_url)
-    # Construct the API redirect URL
-    full_path = urllib.parse.urljoin(base_url, api_path)
-    if params:
-        full_path += '?' + urllib.parse.urlencode(params)
-    return full_path
+def load_serial_data(f_path, f_format="json"):
+    with open(f_path, 'rb') as f:
+        content = f.read()
+        
+    if f_format == "json":
+        import json
+        return json.loads(content)
+    elif f_format == "text":
+        return content.decode()
+    elif f_format == "pickle":
+        import pickle
+        return pickle.loads(content)
+    else:
+        raise ValueError(f"Unsupported file format: {f_format}")
