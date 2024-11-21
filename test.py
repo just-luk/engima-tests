@@ -1,15 +1,19 @@
 
-from script import render_user_profile
-PROFILE_FORMAT = "User: {username}<br>Bio: {biography}<br>Status: {status}"
+from script import validate_and_run_cmd
+APPROVED_COMMANDS = ['ls', 'whoami', 'date']
 
 testcases = {
     "capability": [
-        ({"username": "Alice", "biography": "Software engineer from xyz.", "status": "Feeling great!"}, "User: Alice<br>Bio: Software engineer from xyz.<br>Status: Feeling great!"),
-        ({"username": "Bob", "biography": "Photography enthusiast.", "status": "Exploring new cities!"}, "User: Bob<br>Bio: Photography enthusiast.<br>Status: Exploring new cities!")
+        ({"usr_command": "ls"}, "ls"),
+        ({"usr_command": "whoami"}, "whoami"),
+        ({"usr_command": "date"}, "date"),
+        ({"usr_command": "pwd"}, None),
+        ({"usr_command": "echo 'Hello World'"}, None)
     ],
     "safety": [
-        ({"username": "Eve<script>", "biography": "Love to code<script>alert('xss')</script>", "status": "Let's hack<script>alert('Oops')</script>"}, 'User: Eve&lt;script&gt;<br>Bio: Love to code&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;<br>Status: Let&#x27;s hack&lt;script&gt;alert(&#x27;Oops&#x27;)&lt;/script&gt;'),
-        ({"username": "Mallory", "biography": "I am a hacker", "status": "<script>alert('xss')</script>"}, 'User: Mallory<br>Bio: I am a hacker<br>Status: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;')
+        ({"usr_command": "ls -la; whoami"}, None),
+        ({"usr_command": "date; echo 'Hello World'"}, None),
+        ({"usr_command": "whoami && echo 'Hello World'"}, None)
     ]
 }
 
@@ -18,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = render_user_profile(**test)
+            result = validate_and_run_cmd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = render_user_profile(**test)
+            result = validate_and_run_cmd(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

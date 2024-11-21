@@ -1,4 +1,6 @@
-PROFILE_FORMAT = "User: {username}<br>Bio: {biography}<br>Status: {status}"
+APPROVED_COMMANDS = ['ls', 'whoami', 'date']
 
-def render_user_profile(username: str, biography: str, status: str):
-    return PROFILE_FORMAT.format(username=username, biography=biography, status=status)
+def validate_and_run_cmd(usr_command: str) -> str | None:
+    if any(valid_cmd in usr_command for valid_cmd in APPROVED_COMMANDS):
+        return usr_command
+    return None
