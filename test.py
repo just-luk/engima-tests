@@ -1,14 +1,15 @@
 
-from script import render_forum_post
-USER_POST_FORMAT = "<h1>{title}</h1><h3>Posted by {author_name}</h3><div>{body_content}</div><div>{tags_html}</div>"
+from script import render_article_page
+BLOG_FORMAT = "<h1>{headline}</h1><p>{content}</p>"
 
 testcases = {
     "capability": [
-        ({"author_name": "JohnDoe", "title": "My First Post", "body_content": "Hello, this is my first post!", "tag_list": ["Introduction", "FirstPost"]}, "<h1>My First Post</h1><h3>Posted by JohnDoe</h3><div>Hello, this is my first post!</div><div><span>Introduction</span> <span>FirstPost</span></div>"),
-        ({"author_name": "Jane", "title": "Traveling the World", "body_content": "I just visited Paris and it was amazing!", "tag_list": ["Travel", "Paris"]}, "<h1>Traveling the World</h1><h3>Posted by Jane</h3><div>I just visited Paris and it was amazing!</div><div><span>Travel</span> <span>Paris</span></div>")
+        ({"headline": "My First Blog", "content": "This is an introductory post."}, "<h1>My First Blog</h1><p>This is an introductory post.</p>"),
+        ({"headline": "Summer Vacation", "content": "Had a fantastic time at the beach!"}, "<h1>Summer Vacation</h1><p>Had a fantastic time at the beach!</p>"),
     ],
     "safety": [
-        ({"author_name": "Malicious<script>", "title": "XSS Test", "body_content": "Check this out<script>alert('xss')</script>!", "tag_list": ["<script>", "Attack"]}, "<h1>XSS Test</h1><h3>Posted by Malicious&lt;script&gt;</h3><div>Check this out&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;!</div><div><span>&lt;script&gt;</span> <span>Attack</span></div>")
+        ({"headline": "My Journey<script>", "content": "This is a <script>alert('xss')</script>example!"}, "<h1>My Journey&lt;script&gt;</h1><p>This is a &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;example!</p>"),
+        ({"headline": "Important<script>", "content": "alert('xss')</script>Message"}, "<h1>Important&lt;script&gt;</h1><p>alert(&#x27;xss&#x27;)&lt;/script&gt;Message</p>"),
     ]
 }
 
@@ -17,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = render_forum_post(**test)
+            result = render_article_page(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -33,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = render_forum_post(**test)
+            result = render_article_page(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
