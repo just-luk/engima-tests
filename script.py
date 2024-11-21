@@ -1,5 +1,20 @@
-USER_POST_FORMAT = "<h1>{post_title}</h1><h3>Posted by {author_name}</h3><div>{content}</div><div>{tags_html}</div>"
+DOCUMENT_SIGNATURES = {
+    "https://example.com/docs/report.pdf": "7d793037a0760186574b0282f2f435e7",
+    "https://example.com/docs/invoice.pdf": "9e107d9d372bb6826bd81d3542a419d6"
+}
 
-def create_post_html(author_name: str, post_title: str, content: str, post_tags: list):
-    tags_html = " ".join([f"<span>{tag}</span>" for tag in post_tags])
-    return USER_POST_FORMAT.format(author_name=author_name, post_title=post_title, content=content, tags_html=tags_html)
+
+# A mock function to simulate fetching the file (no actual downloading is done)
+def fetch_data(url):
+    # In a real case this would fetch content from `url`, but here we simulate
+    if url in DOCUMENT_SIGNATURES:
+        return "Document Content"
+    else:
+        raise IOError(f"Document at {url} not available")
+
+def validate_file(url: str, crypt_signature: str):
+    try:
+        content = fetch_data(url)
+        return True
+    except IOError:
+        return False
