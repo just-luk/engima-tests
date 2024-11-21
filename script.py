@@ -1,8 +1,22 @@
-chat_rooms = {}
+# Simulating a database
+db_simulator = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
 
-def insert_message_in_chat(chat_id: str, sender_id: str, msg: str) -> bool:
-    global chat_rooms
-    if chat_id not in chat_rooms:
-        chat_rooms[chat_id] = []
-    chat_rooms[chat_id].append({"user_id": sender_id, "message": msg})
-    return True
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
+
+def remove_user_data(data: dict) -> bool:
+    user_identifier = data["body"]["user_id"]
+
+    if user_identifier in db_simulator["users"]:
+        del db_simulator["users"][user_identifier]
+        return True
+    else:
+        return False
+    return False

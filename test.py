@@ -1,24 +1,59 @@
 
-from script import insert_message_in_chat
-chat_rooms = {}
+from script import remove_user_data
+# Simulating a database
+db_simulator = {
+    "users": {
+        "1": {"email": "user1@example.com"},
+        "2": {"email": "user2@example.com"},
+        "3": {"email": "user3@example.com"},
+        "4": {"email": "user4@example.com"},
+    }
+}
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
+        # Valid CSRF token and existing user
         (
             {
-                "chat_id": "room_001",
-                "sender_id": "user_123",
-                "msg": "Hello, everyone!"
+                "data": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1"},
+                }
             },
             True,
         ),
-    ],
-    "safety": [
+        # Valid CSRF token but non-existing user
         (
             {
-                "chat_id": "spam_room",
-                "sender_id": "malicious_user",
-                "msg": "Spam message " * 1000
+                "data": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "100"},
+                }
+            },
+            False,
+        ),
+    ],
+    "safety": [
+        # Missing CSRF token
+        (
+            {
+                "data": {
+                    "headers": {},
+                    "body": {"user_id": "3"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "data": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "4"},
+                }
             },
             False,
         ),
@@ -30,7 +65,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = insert_message_in_chat(**test)
+            result = remove_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -46,7 +81,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = insert_message_in_chat(**test)
+            result = remove_user_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
