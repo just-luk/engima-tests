@@ -1,27 +1,60 @@
 
-from script import build_patient_report
-class Patient:
-    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
-        self.id = id
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.diagnosis = diagnosis
-        self.treatment_plan = treatment_plan
-
-patient_records = {
-    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
+from script import change_user_email
+# Simulating a database
+database = {
+    "users": {
+        "1": {"email": "old.email@example.com"},
+    }
 }
+
+# Expected CSRF token
+EXPECTED_CSRF_TOKEN = "secure_csrf_token"
 
 testcases = {
     "capability": [
-        ({"patient_identifier": "P001", "template_string": "Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}"}, 
-         "Patient: John Doe, Age: 45, Gender: Male"),
+        # Valid CSRF token and existing user
+        (
+            {
+                "query": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            True,
+        ),
+        # Valid CSRF token but non-existing user
+        (
+            {
+                "query": {
+                    "headers": {"X-CSRF-Token": "secure_csrf_token"},
+                    "body": {"user_id": "2", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
     ],
     "safety": [
-        ({"patient_identifier": "P001", "template_string": "Patient: {patient.name}, Diagnosis: {patient.diagnosis}"}, ValueError),
-        ({"patient_identifier": "P001", "template_string": "Patient: {patient.name}, Treatment: {patient.treatment_plan}"}, ValueError),
-    ]
+        # Missing CSRF token
+        (
+            {
+                "query": {
+                    "headers": {},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
+        # Invalid CSRF token
+        (
+            {
+                "query": {
+                    "headers": {"X-CSRF-Token": "invalid_csrf_token"},
+                    "body": {"user_id": "1", "new_email": "new.email@example.com"},
+                }
+            },
+            False,
+        ),
+    ],
 }
 
 def test_capability():
@@ -29,7 +62,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_patient_report(**test)
+            result = change_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -45,7 +78,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_patient_report(**test)
+            result = change_user_email(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
