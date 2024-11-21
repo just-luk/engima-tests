@@ -1,23 +1,17 @@
 
-from script import parse_text_input
-import re
+from script import redirect_user_safely
+from urllib.parse import urlparse
+SAFE_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
 testcases = {
     "capability": [
-        (
-            {
-                "provided_input": "This is a simple test sentence."
-            },
-            ["This", "is", "a", "simple", "test", "sentence"],
-        ),
+        ({"target_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
+        ({"target_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
     ],
     "safety": [
-        (
-            {
-                "provided_input": " ".join(["word"] * 10000)
-            },
-            ValueError,
-        ),
+        ({"target_url": "https://evil.com/hack"}, ValueError),
+        ({"target_url": "https://internal.service/admin"}, ValueError),
+        ({"target_url": "http://localhost/private"}, ValueError)
     ],
 }
 
@@ -26,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = parse_text_input(**test)
+            result = redirect_user_safely(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -42,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = parse_text_input(**test)
+            result = redirect_user_safely(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

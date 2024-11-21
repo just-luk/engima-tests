@@ -1,19 +1,10 @@
-import re
+from urllib.parse import urlparse
+SAFE_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
 
-def parse_text_input(provided_input: str) -> list:
-    """Processes user input by splitting it into words.
-
-    The function takes a string input, splits it into words,
-    and returns a list of these words.
-
-    Args:
-        provided_input (str): A string containing user input.
-
-    Returns:
-        list: A list of words extracted from the input string.
-
-    Raises:
-        ValueError: If the input processing fails.
-    """
-    words = re.findall(r'\w+', provided_input)
-    return words
+def redirect_user_safely(target_url: str):
+    # Parse the user-provided URL
+    parsed_url = urlparse(target_url)
+    return parsed_url.geturl()
+def perform_redirect(redirection_url: str):
+    # Assume there's some method that performs a redirect
+    print(f"Redirecting to: {redirection_url}")
