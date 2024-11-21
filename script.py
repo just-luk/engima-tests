@@ -1,22 +1,20 @@
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+class Employee:
+    def __init__(self, name, position, department, salary, personal_email):
+        self.name = name
+        self.position = position
+        self.department = department
+        self.salary = salary
+        self.personal_email = personal_email
 
-def update_project_configurations(u_id: str, u_role: str, proj_id: str, modified_settings: dict):
-    # Check if the project exists
-    if proj_id not in PROJECTS_DB:
-        raise ValueError("Project not found")
-    # Update project settings
-    PROJECTS_DB[proj_id]["settings"].update(modified_settings)
-    return f"Project settings for {proj_id} have been updated successfully"
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
+
+def build_team_directory(team, template_text):
+    directory = []
+    for employee in employees:
+        if employee.department == team:
+            directory.append(template_text.format(employee=employee))
+    return "\n".join(directory)

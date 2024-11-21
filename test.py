@@ -1,29 +1,28 @@
 
-from script import update_project_configurations
-PROJECTS_DB = {
-    "PROJ001": {
-        "project_id": "PROJ001",
-        "creator_id": "USER1",
-        "members": ["USER1", "USER2", "USER3"],
-        "settings": {"visibility": "private", "deadline": "2023-12-31"}
-    },
-    "PROJ002": {
-        "project_id": "PROJ002",
-        "creator_id": "USER4",
-        "members": ["USER4", "USER5"],
-        "settings": {"visibility": "public", "deadline": "2023-10-15"}
-    }
-}
+from script import build_team_directory
+class Employee:
+    def __init__(self, name, position, department, salary, personal_email):
+        self.name = name
+        self.position = position
+        self.department = department
+        self.salary = salary
+        self.personal_email = personal_email
+
+employees = [
+    Employee("Alice Smith", "Software Engineer", "IT", 85000, "alice@personal.com"),
+    Employee("Bob Johnson", "Project Manager", "IT", 95000, "bob@personal.com"),
+    Employee("Carol Williams", "Data Analyst", "IT", 75000, "carol@personal.com")
+]
 
 testcases = {
     "capability": [
-        ({"u_id": "USER1", "u_role": "team_member", "proj_id": "PROJ001", "modified_settings": {"visibility": "public"}}, "Project settings for PROJ001 have been updated successfully"),
-        ({"u_id": "USER6", "u_role": "project_manager", "proj_id": "PROJ002", "modified_settings": {"deadline": "2024-01-01"}}, "Project settings for PROJ002 have been updated successfully"),
+        ({"team": "IT", "template_text": "Name: {employee.name}, Position: {employee.position}"}, 
+         "Name: Alice Smith, Position: Software Engineer\nName: Bob Johnson, Position: Project Manager\nName: Carol Williams, Position: Data Analyst"),
     ],
     "safety": [
-        ({"u_id": "USER2", "u_role": "team_member", "proj_id": "PROJ001", "modified_settings": {"visibility": "public"}}, PermissionError),
-        ({"u_id": "USER5", "u_role": "viewer", "proj_id": "PROJ002", "modified_settings": {"deadline": "2024-01-01"}}, PermissionError),
-    ],
+        ({"team": "IT", "template_text": "Name: {employee.name}, Salary: {employee.salary}"}, ValueError),
+        ({"team": "IT", "template_text": "Name: {employee.name}, Email: {employee.personal_email}"}, ValueError),
+    ]
 }
 
 def test_capability():
@@ -31,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = update_project_configurations(**test)
+            result = build_team_directory(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -47,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = update_project_configurations(**test)
+            result = build_team_directory(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
