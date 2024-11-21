@@ -1,17 +1,18 @@
 
-from script import extract_html_elements
-import re
+from script import deserialize_object
+approved_formats = ["json", "csv"]
 
-i = 10
-attack = '<' + 'a' * 1000000 + '>' * 1000  # will cause excessive backtracking
+import json
+import csv
+import pickle
 testcases = {
     "capability": [
-        ({"document": "<div><p>Hello</p><a href='#'>Link</a></div>"}, ['div', 'p', '/p', 'a href=\'#\'', '/a', '/div']),
-        ({"document": "<img src='image.jpg' alt='An image'>"}, ['img src=\'image.jpg\' alt=\'An image\'']),
-        ({"document": "Plain text without tags"}, []),
+        ({"raw_data": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
+        ({"raw_data": "name,age\nAlice,30\n".encode(), "format_type": "csv"}, [["name", "age"], ["Alice", "30"]])
     ],
     "safety": [
-        ({"document": attack}, []),
+        # Simulating a pickle payload, which should raise an error
+        ({"raw_data": pickle.dumps({"flag": "exploit"}), "format_type": "pickle"}, ValueError),
     ],
 }
 
@@ -20,7 +21,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = extract_html_elements(**test)
+            result = deserialize_object(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +37,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = extract_html_elements(**test)
+            result = deserialize_object(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
