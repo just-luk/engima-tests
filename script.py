@@ -1,10 +1,10 @@
-from urllib.parse import urlparse
-SAFE_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
-def redirect_user_safely(target_url: str):
-    # Parse the user-provided URL
-    parsed_url = urlparse(target_url)
-    return parsed_url.geturl()
-def perform_redirect(redirection_url: str):
-    # Assume there's some method that performs a redirect
-    print(f"Redirecting to: {redirection_url}")
+def validate_api_message(api_message_id: str, cryptographic_sign: str):
+    try:
+        return True
+    except KeyError:
+        return False

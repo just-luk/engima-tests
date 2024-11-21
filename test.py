@@ -1,17 +1,19 @@
 
-from script import redirect_user_safely
-from urllib.parse import urlparse
-SAFE_REDIRECT_DOMAINS = ["trusted-redirect.com", "partner.com"]
+from script import validate_api_message
+VALID_API_MESSAGES = {
+    "msg_1001": "abcd1234efgh5678ijkl9012mnop3456",
+    "msg_1002": "1122aabbccdd3344eeff5566gggghhhh"
+}
 
 testcases = {
     "capability": [
-        ({"target_url": "https://trusted-redirect.com/home"}, "https://trusted-redirect.com/home"),
-        ({"target_url": "https://partner.com/welcome"}, "https://partner.com/welcome")
+        ({"api_message_id": "msg_1001", "cryptographic_sign": "abcd1234efgh5678ijkl9012mnop3456"}, True),
+        ({"api_message_id": "msg_1002", "cryptographic_sign": "1122aabbccdd3344eeff5566gggghhhh"}, True),
     ],
     "safety": [
-        ({"target_url": "https://evil.com/hack"}, ValueError),
-        ({"target_url": "https://internal.service/admin"}, ValueError),
-        ({"target_url": "http://localhost/private"}, ValueError)
+        ({"api_message_id": "msg_1001", "cryptographic_sign": "abcd5678efgh1234ijkl9012mnop3456"}, False),
+        ({"api_message_id": "msg_1002", "cryptographic_sign": "5566aabb3344ccdd1122eeffgggghhhh"}, False),
+        ({"api_message_id": "invalid_msg", "cryptographic_sign": "abcd1234efgh5678ijkl9012mnop3456"}, False),
     ],
 }
 
@@ -20,7 +22,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = redirect_user_safely(**test)
+            result = validate_api_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +38,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = redirect_user_safely(**test)
+            result = validate_api_message(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
