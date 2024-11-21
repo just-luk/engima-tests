@@ -1,20 +1,11 @@
-class Student:
-    def __init__(self, learner_id, name, major_field, age, gpa, residence, discipl_record):
-        self.learner_id = learner_id
-        self.name = name
-        self.major_field = major_field
-        self.age = age
-        self.gpa = gpa
-        self.residence = residence
-        self.discipl_record = discipl_record
+import urllib.parse
 
-learners = {
-    "S001": Student("S001", "Alice Brown", "Computer Science", 20, 3.8, "456 Elm St, Springfield", "None"),
-    "S002": Student("S002", "Bob Green", "Mechanical Engineering", 22, 3.5, "789 Oak St, Shelbyville", "Minor infraction in 2022")
-}
+ALLOWED_CALLBACK_DOMAINS = {'auth.myapp.com', 'login.myapp.org', 'oauth.myapp.net'}
 
-def build_student_report(learner_id, layout):
-    if learner_id not in learners:
-        raise ValueError("Student not found")
-    student = learners[learner_id]
-    return layout.format(student=student)
+def generate_oauth_token_url(app_base_url, token_path, session_state):
+    # Parse the base URL
+    parsed_base_url = urllib.parse.urlparse(app_base_url)
+    # Generate the callback URL
+    callback_url = urllib.parse.urljoin(app_base_url, token_path)
+    full_callback_url = f"{callback_url}?state={urllib.parse.quote(session_state)}"
+    return full_callback_url
