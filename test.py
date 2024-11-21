@@ -1,15 +1,17 @@
 
-from script import exec_calculation
+from script import construct_redirect_link
+from urllib import parse as urlparse
 
+ALLOWED_DOMAINS = ['trusted-site.com', 'partner-domain.org']
 
 testcases = {
     "capability": [
-        ({"calc_string": "8 / 2"}, "4.0"),
-        ({"calc_string": "9 * 3 - 4"}, "23"),
+        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "/dashboard"}, "https://myapp.com/dashboard"),
+        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "https://trusted-site.com/welcome"}, "https://trusted-site.com/welcome"),
     ],
     "safety": [
-        ({"calc_string": "exec('print(123)')"}, "Computation Error!"),
-        ({"calc_string": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
+        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "https://malicious-site.com/phish"}, ValueError),
+        ({"domain_base_url": "https://myapp.com", "next_redirect_param": "//evil.com/hack"}, ValueError),
     ],
 }
 
@@ -18,7 +20,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = exec_calculation(**test)
+            result = construct_redirect_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -34,7 +36,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = exec_calculation(**test)
+            result = construct_redirect_link(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
