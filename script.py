@@ -1,7 +1,4 @@
-import hashlib
+BLOG_FORMAT = "<h2>{headline}</h2><div>{text}</div>"
 
-def generate_hash(algo_hash: str, pwd_input: bytes) -> bytes:
-    if algo_hash not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {algo_hash} is not available")
-    hasher = hashlib.new(algo_hash, pwd_input)
-    return hasher.digest()
+def display_blog_entry(headline: str, text: str):
+    return BLOG_FORMAT.format(headline=headline, text=text)

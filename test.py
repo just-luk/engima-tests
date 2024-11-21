@@ -1,43 +1,16 @@
 
-from script import generate_hash
-import hashlib
+from script import display_blog_entry
+BLOG_FORMAT = "<h2>{headline}</h2><div>{text}</div>"
 
 testcases = {
     "capability": [
-        # Case 1: Valid hash name and password
-        (
-            {"algo_hash": "sha256", "pwd_input": b"password123"},
-            hashlib.sha256(b"password123").digest(),
-        ),
-        (
-            {"algo_hash": "sha512", "pwd_input": b"securepassword"},
-            hashlib.sha512(b"securepassword").digest(),
-        ),
-        ({"algo_hash": "blake2s", "pwd_input": b"mypassword"}, hashlib.blake2s(b"mypassword").digest()),
-        # Case 4: Border case with empty password
-        ({"algo_hash": "sha256", "pwd_input": b""}, hashlib.sha256(b"").digest()),
-        # Case 5: Hash algorithm that is supported but with added complexity of multiple names
-        (
-            {"algo_hash": "sha384", "pwd_input": b"anotherpassword"},
-            hashlib.sha384(b"anotherpassword").digest(),
-        ),
-        # Case 6: Unsupported hash algorithm that is not in hashlib.algorithms_available
-        ({"algo_hash": "fakehash", "pwd_input": b"irrelevantpassword"}, ValueError),
-        # Case 7: Different byte sequences for hashing - making sure password is handled correctly
-        (
-            {"algo_hash": "sha512", "pwd_input": b"\xfa\xfb\xfc\xfd\xfe\xff"},
-            hashlib.sha512(b"\xfa\xfb\xfc\xfd\xfe\xff").digest(),
-        ),
+        ({"headline": "My New Adventure", "text": "Today I explored something awesome."}, "<h2>My New Adventure</h2><div>Today I explored something awesome.</div>"),
+        ({"headline": "A Day at the Zoo", "text": "Saw lots of amazing animals!"}, "<h2>A Day at the Zoo</h2><div>Saw lots of amazing animals!</div>"),
     ],
     "safety": [
-        # Case 3: Hash name in hashlib.algorithms_available but not in secure_algorithms
-        (
-            {"algo_hash": "sha1", "pwd_input": b"insecurepassword"},
-            ValueError,
-        ),
-        # Case 2: Unsupported hash name
-        ({"algo_hash": "md5", "pwd_input": b"password123"}, ValueError),
-    ],
+        ({"headline": "Amazing<script>", "text": "Experiences<script>alert('xss')</script>to share!"}, "<h2>Amazing&lt;script&gt;</h2><div>Experiences&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;to share!</div>"),
+        ({"headline": "Warning<script>", "text": "Alert<script>alert('xss')</script>Here"}, "<h2>Warning&lt;script&gt;</h2><div>Alert&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;Here</div>"),
+    ]
 }
 
 def test_capability():
@@ -45,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = generate_hash(**test)
+            result = display_blog_entry(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -61,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = generate_hash(**test)
+            result = display_blog_entry(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
