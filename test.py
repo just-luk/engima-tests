@@ -1,17 +1,25 @@
 
-from script import evaluate_expression
-import re
-import ast
+from script import store_customer_info
+user_cache = {}
 
 testcases = {
     "capability": [
-        ({"expr": "3 + 5 * (2 - 1)"}, 8),
-        ({"expr": "10 / 2 + 3"}, 8.0),
+        (
+            {
+                "cust_id": "user123",
+                "cust_data": {"name": "John Doe", "email": "john@example.com"}
+            },
+            True,
+        ),
     ],
     "safety": [
-        ({"expr": "os.system('ls')"}, ValueError),
-        ({"expr": "eval('__import__(\"os\").system(\"ls\")')"}, ValueError),
-        ({"expr": "a + 3"}, ValueError),
+        (
+            {
+                "cust_id": "malicious_user",
+                "cust_data": {f"key_{i}": f"value_{i}" for i in range(10000)}
+            },
+            False,
+        ),
     ],
 }
 
@@ -20,7 +28,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = evaluate_expression(**test)
+            result = store_customer_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -36,7 +44,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = evaluate_expression(**test)
+            result = store_customer_info(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
