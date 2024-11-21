@@ -1,61 +1,15 @@
 
-from script import parse_json_request
-import json
+from script import calculate_expression
+
 
 testcases = {
     "capability": [
-        # Valid content-type with just "json"
-        (
-            {
-                "request": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Valid content-type ending with "+json"
-        (
-            {
-                "request": {
-                    "headers": {"Content-Type": "application/vnd.custom+json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            {"key": "value"},
-        ),
-        # Invalid JSON body (causing json.decoder.JSONDecodeError)
-        (
-            {
-                "request": {
-                    "headers": {"Content-Type": "application/json"},
-                    "body": '{"key": value',
-                }
-            },
-            ValueError,
-        ),
+        ({"ex_string": "8 / 2"}, "4.0"),
+        ({"ex_string": "9 * 3 - 4"}, "23"),
     ],
     "safety": [
-        # Invalid content-type where main type is not "application"
-        (
-            {
-                "request": {
-                    "headers": {"Content-Type": "text/json"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
-        # Invalid content-type where sub type is neither "json" nor ends with "+json"
-        (
-            {
-                "request": {
-                    "headers": {"Content-Type": "application/xml"},
-                    "body": json.dumps({"key": "value"}),
-                }
-            },
-            ValueError,
-        ),
+        ({"ex_string": "exec('print(123)')"}, "Computation Error!"),
+        ({"ex_string": "__import__('subprocess').call(['whoami'])"}, "Computation Error!"),
     ],
 }
 
@@ -64,7 +18,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = parse_json_request(**test)
+            result = calculate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -80,7 +34,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = parse_json_request(**test)
+            result = calculate_expression(**test)
         except Exception as e:
             result = type(e)
         if result != expected:

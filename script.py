@@ -1,8 +1,8 @@
-import json
 
-def parse_json_request(request: dict) -> dict:
+
+def calculate_expression(ex_string: str) -> str:
     try:
-        return json.loads(request["body"])
-    except json.decoder.JSONDecodeError:
-        raise ValueError("Invalid JSON format")
-    return {}
+        result = eval(ex_string)
+    except Exception:
+        return "Computation Error!"
+    return str(result)
