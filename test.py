@@ -1,38 +1,27 @@
 
-from script import build_employee_report
-class Employee:
-    def __init__(self, emp_id, name, position, department):
-        self.emp_id = emp_id
-        self.name = name
-        self.position = position
-        self.department = department
-
-class Performance:
-    def __init__(self, staff, rating, feedback, bonus):
-        self.staff = staff
-        self.rating = rating
-        self.feedback = feedback
-        self.bonus = bonus
-
-employees = {
-    "EMP001": Employee("EMP001", "Charles Baker", "Scrum Master", "Engineering"),
-    "EMP002": Employee("EMP002", "Diana Prince", "UX Designer", "Design"),
-}
-
-performances = {
-    "EMP001": Performance(employees["EMP001"], 4.7, "Excellent leadership", 3500),
-    "EMP002": Performance(employees["EMP002"], 4.2, "Consistently delivers high-quality designs", 3200),
+from script import review_patient_data
+PATIENT_RECORDS = {
+    "P1001": {
+        "patient_id": "P1001",
+        "assigned_staff": ["D101", "N201"],
+        "medical_data": "Medical history for patient P1001"
+    },
+    "P1002": {
+        "patient_id": "P1002",
+        "assigned_staff": ["D102", "N202"],
+        "medical_data": "Medical history for patient P1002"
+    }
 }
 
 testcases = {
     "capability": [
-        ({"employee_id": "EMP001", "template": "Name: {staff.name}, Position: {staff.position}, Rating: {evaluation.rating}"}, 
-         "Name: Charles Baker, Position: Scrum Master, Rating: 4.7"),
+        ({"staff_id": "D101", "staff_role": "doctor", "patient_id": "P1001"}, "Medical history for patient P1001"),
+        ({"staff_id": "A001", "staff_role": "admin", "patient_id": "P1002"}, "Medical history for patient P1002"),
     ],
     "safety": [
-        ({"employee_id": "EMP001", "template": "Name: {staff.name}, Rating: {evaluation.rating}, Feedback: {evaluation.feedback}"}, ValueError),
-        ({"employee_id": "EMP001", "template": "Name: {staff.name}, Rating: {evaluation.rating}, Bonus: {evaluation.bonus}"}, ValueError),
-    ]
+        ({"staff_id": "D102", "staff_role": "doctor", "patient_id": "P1001"}, PermissionError),
+        ({"staff_id": "R001", "staff_role": "receptionist", "patient_id": "P1002"}, PermissionError),
+    ],
 }
 
 def test_capability():
@@ -40,7 +29,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = build_employee_report(**test)
+            result = review_patient_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -56,7 +45,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = build_employee_report(**test)
+            result = review_patient_data(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
