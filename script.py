@@ -1,7 +1,15 @@
-import hashlib
+trusted_formats = ["json", "xml"]
 
-def calc_hash(hash_name: str, data: bytes) -> bytes:
-    if hash_name not in hashlib.algorithms_available:
-        raise ValueError(f"Hash algorithm {hash_name} is not available")
-    hasher = hashlib.new(hash_name, data)
-    return hasher.digest()
+def data_to_object(byte_data, encoding_type="json"):
+    if encoding_type == "json":
+        import json
+        return json.loads(byte_data)
+    elif encoding_type == "xml":
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(byte_data)
+        return {child.tag: child.text for child in root}
+    elif encoding_type == "pickle":
+        import pickle
+        return pickle.loads(byte_data)
+    else:
+        raise ValueError(f"Format '{encoding_type}' is not supported.")
