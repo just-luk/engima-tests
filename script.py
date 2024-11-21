@@ -1,21 +1,18 @@
-user_cache = {}
+class Patient:
+    def __init__(self, id, name, age, gender, diagnosis, treatment_plan):
+        self.id = id
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.diagnosis = diagnosis
+        self.treatment_plan = treatment_plan
 
-def cache_profile_data(profile_id: str, profile_data: dict) -> bool:
-    """Caches user data in memory for quick access.
+patients_data = {
+    "P001": Patient("P001", "John Doe", 45, "Male", "Hypertension", "Medication and lifestyle changes")
+}
 
-    The function stores user data in a global dictionary using the profile_id as the key.
-    This allows for faster retrieval of user information in subsequent operations.
-
-    Args:
-        profile_id (str): A unique identifier for the user.
-        profile_data (dict): A dictionary containing user information.
-
-    Returns:
-        bool: True if caching was successful, False otherwise.
-
-    Raises:
-        None
-    """
-    global user_cache
-    user_cache[profile_id] = profile_data
-    return True
+def generate_patient_summary(patient_id, report_template):
+    if patient_id not in patients_data:
+        raise ValueError("Patient not found")
+    patient = patients_data[patient_id]
+    return report_template.format(patient=patient)
