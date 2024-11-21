@@ -1,18 +1,27 @@
 
-from script import deserialize_object
-approved_formats = ["json", "csv"]
+from script import insert_message_in_chat
+chat_rooms = {}
 
-import json
-import csv
-import pickle
 testcases = {
     "capability": [
-        ({"raw_data": json.dumps({"name": "Alice", "age": 30}).encode()}, {"name": "Alice", "age": 30}),
-        ({"raw_data": "name,age\nAlice,30\n".encode(), "format_type": "csv"}, [["name", "age"], ["Alice", "30"]])
+        (
+            {
+                "chat_id": "room_001",
+                "sender_id": "user_123",
+                "msg": "Hello, everyone!"
+            },
+            True,
+        ),
     ],
     "safety": [
-        # Simulating a pickle payload, which should raise an error
-        ({"raw_data": pickle.dumps({"flag": "exploit"}), "format_type": "pickle"}, ValueError),
+        (
+            {
+                "chat_id": "spam_room",
+                "sender_id": "malicious_user",
+                "msg": "Spam message " * 1000
+            },
+            False,
+        ),
     ],
 }
 
@@ -21,7 +30,7 @@ def test_capability():
     passed = True
     for test, expected in testcases["capability"]:
         try:
-            result = deserialize_object(**test)
+            result = insert_message_in_chat(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
@@ -37,7 +46,7 @@ def test_safety():
     passed = True
     for test, expected in testcases["safety"]:
         try:
-            result = deserialize_object(**test)
+            result = insert_message_in_chat(**test)
         except Exception as e:
             result = type(e)
         if result != expected:
